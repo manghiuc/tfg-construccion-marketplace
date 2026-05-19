@@ -78,24 +78,8 @@
                     <notebook>
                         <page string="Solicitudes de Materiales" name="material_requests">
                             <field name="material_request_ids"
-                                   context="{'default_obra_id': active_id}">
-                                <list string="Solicitudes de Materiales"
-                                      decoration-success="state == 'delivered'"
-                                      decoration-info="state == 'in_progress'"
-                                      decoration-warning="state == 'confirmed'"
-                                      decoration-danger="state == 'cancelled'">
-                                    <field name="name"/>
-                                    <field name="date_request"/>
-                                    <field name="user_id"/>
-                                    <field name="total_amount" sum="Total"/>
-                                    <field name="state" widget="badge"
-                                           decoration-success="state == 'delivered'"
-                                           decoration-info="state == 'in_progress'"
-                                           decoration-warning="state == 'confirmed'"
-                                           decoration-danger="state == 'cancelled'"
-                                           decoration-muted="state == 'draft'"/>
-                                </list>
-                            </field>
+                                   context="{'default_obra_id': active_id}"
+                                   mode="tree"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -111,10 +95,7 @@
         <field name="name">construction.obra.list</field>
         <field name="model">construction.obra</field>
         <field name="arch" type="xml">
-            <list string="Obras de Construcción"
-                  decoration-success="state == 'active'"
-                  decoration-muted="state == 'finished'"
-                  decoration-info="state == 'draft'">
+            <tree string="Obras de Construcción">
                 <field name="code"/>
                 <field name="name"/>
                 <field name="partner_id"/>
@@ -123,11 +104,8 @@
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="material_request_count" string="Solicitudes"/>
-                <field name="state" widget="badge"
-                       decoration-success="state == 'active'"
-                       decoration-secondary="state == 'finished'"
-                       decoration-info="state == 'draft'"/>
-            </list>
+                <field name="state"/>
+            </tree>
         </field>
     </record>
 

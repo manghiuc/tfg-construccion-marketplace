@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ============================================================
-         ESTRUCTURA DE MENUS DEL MODULO CONSTRUCTION MARKETPLACE
-         ============================================================ -->
+    <!-- Estructura de menus del modulo Construction Marketplace -->
 
     <!-- Menu raiz del modulo (aparece en la barra de aplicaciones) -->
     <menuitem
@@ -13,7 +11,7 @@
         web_icon="construction_marketplace,static/description/icon.png"
         groups="base.group_user"/>
 
-    <!-- ---- OBRAS ---- -->
+    <!-- OBRAS -->
     <menuitem
         id="menu_construction_obras"
         name="Obras"
@@ -29,7 +27,7 @@
         sequence="10"
         groups="base.group_user"/>
 
-    <!-- ---- SOLICITUDES DE MATERIALES ---- -->
+    <!-- SOLICITUDES DE MATERIALES -->
     <menuitem
         id="menu_construction_requests"
         name="Solicitudes de Materiales"
@@ -45,7 +43,7 @@
         sequence="10"
         groups="base.group_user"/>
 
-    <!-- ---- CONFIGURACION (solo administradores) ---- -->
+    <!-- CONFIGURACION (solo administradores) -->
     <menuitem
         id="menu_construction_config"
         name="Configuración"

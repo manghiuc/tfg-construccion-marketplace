@@ -120,6 +120,49 @@ class ConstructionMaterialRequest(models.Model):
     )
 
     # -------------------------------------------------------------------------
+    # Entrega y transporte
+    # -------------------------------------------------------------------------
+    is_urgent = fields.Boolean(
+        string='Pedido Urgente',
+        default=False,
+        tracking=True,
+        help='Activa el suplemento de urgencia en el cálculo del transporte',
+    )
+    delivery_notes = fields.Text(
+        string='Preferencias / Notas de Entrega',
+        help='Instrucciones especiales para el repartidor: horario, acceso, etc.',
+    )
+    delivery_lat = fields.Float(
+        string='Latitud de Entrega',
+        digits=(9, 6),
+        help='Coordenada GPS de latitud del punto de entrega',
+    )
+    delivery_lon = fields.Float(
+        string='Longitud de Entrega',
+        digits=(9, 6),
+        help='Coordenada GPS de longitud del punto de entrega',
+    )
+    transport_cost = fields.Float(
+        string='Coste de Transporte (€)',
+        digits=(10, 2),
+        default=0.0,
+        help='Coste calculado del transporte según distancia, peso y urgencia',
+    )
+    transport_distance_km = fields.Float(
+        string='Distancia de Entrega (km)',
+        digits=(10, 3),
+        default=0.0,
+        help='Distancia en km entre el almacén y el punto de entrega',
+    )
+    total_with_transport = fields.Float(
+        string='Total con Transporte (€)',
+        compute='_compute_total_with_transport',
+        store=True,
+        digits='Account',
+        help='Suma del importe total de materiales y el coste de transporte',
+    )
+
+    # -------------------------------------------------------------------------
     # Información adicional
     # -------------------------------------------------------------------------
     notes = fields.Text(
@@ -160,6 +203,12 @@ class ConstructionMaterialRequest(models.Model):
         """Calcula el importe total sumando los subtotales de todas las líneas."""
         for record in self:
             record.total_amount = sum(record.line_ids.mapped('subtotal'))
+
+    @api.depends('total_amount', 'transport_cost')
+    def _compute_total_with_transport(self):
+        """Suma el importe de materiales y el coste de transporte."""
+        for record in self:
+            record.total_with_transport = record.total_amount + record.transport_cost
 
     # =========================================================================
     # Onchanges
@@ -315,6 +364,39 @@ class ConstructionMaterialRequest(models.Model):
         }
 
     # =========================================================================
+    # Transporte
+    # =========================================================================
+
+    def compute_transport_cost(self):
+        """
+        Llama al calculador de transporte y actualiza transport_cost y
+        transport_distance_km en el registro actual.
+
+        Requiere que delivery_lat y delivery_lon estén informados.
+        El peso se estima sumando product_qty de cada línea (en kg).
+        """
+        for record in self:
+            if not record.delivery_lat or not record.delivery_lon:
+                continue
+            calculator = self.env['construction.transport.calculator'].get_default_calculator()
+            total_weight_kg = sum(
+                line.product_qty * (line.product_id.weight or 1.0)
+                for line in record.line_ids
+            )
+            result = calculator.calculate_transport_cost(
+                delivery_lat=record.delivery_lat,
+                delivery_lon=record.delivery_lon,
+                total_weight_kg=total_weight_kg,
+                is_urgent=record.is_urgent,
+            )
+            record.transport_cost = result['total']
+            record.transport_distance_km = result['distance_km']
+            record._add_tracking_entry(
+                _('Transporte calculado: %.2f € — %.3f km') % (result['total'], result['distance_km'])
+            )
+        return True
+
+    # =========================================================================
     # Métodos auxiliares
     # =========================================================================
 
@@ -339,3 +421,58 @@ class ConstructionMaterialRequest(models.Model):
             'view_mode': 'form',
             'target': 'current',
         }
+
+    # =========================================================================
+    # Métodos de Cron Jobs
+    # =========================================================================
+
+    @api.model
+    def _cron_update_request_states(self):
+        """Cron: Actualiza estados de solicitudes según estado del pedido de venta."""
+        solicitudes = self.search([('state', 'in', ['confirmed', 'in_progress'])])
+        for sol in solicitudes:
+            if sol.sale_order_id and sol.sale_order_id.state == 'done':
+                now_str = fields.Datetime.to_string(fields.Datetime.now())
+                msg = '[AUTO] Pedido entregado según Odoo - %s' % now_str
+                sol.write({
+                    'state': 'delivered',
+                    'tracking_info': ((sol.tracking_info or '') + '\n' + msg).strip(),
+                })
+
+    @api.model
+    def _cron_alert_pending_requests(self):
+        """Cron: Envía alertas para solicitudes confirmadas sin procesar en más de 48h."""
+        from datetime import datetime, timedelta
+        hace_48h = datetime.now() - timedelta(hours=48)
+        solicitudes = self.search([
+            ('state', '=', 'confirmed'),
+            ('date_request', '<', hace_48h),
+        ])
+        for sol in solicitudes:
+            sol.message_post(
+                body=_(
+                    'ALERTA: Esta solicitud lleva más de 48 horas confirmada sin iniciar. '
+                    'Por favor, revísala.'
+                ),
+                subtype_xmlid='mail.mt_note',
+            )
+
+    @api.model
+    def _cron_weekly_material_report(self):
+        """Cron: Genera informe semanal de los 10 materiales más solicitados."""
+        from collections import Counter
+        lineas = self.env['construction.material.request.line'].search([])
+        conteo = Counter()
+        for linea in lineas:
+            conteo[linea.product_id.name] += linea.product_qty
+        top10 = conteo.most_common(10)
+        body = '<h3>Top 10 Materiales más solicitados esta semana</h3><ol>'
+        for nombre, qty in top10:
+            body += '<li>%s: %.0f unidades</li>' % (nombre, qty)
+        body += '</ol>'
+        self.env['mail.message'].create({
+            'subject': 'Reporte semanal: materiales más solicitados',
+            'body': body,
+            'message_type': 'email',
+            'model': 'construction.material.request',
+        })

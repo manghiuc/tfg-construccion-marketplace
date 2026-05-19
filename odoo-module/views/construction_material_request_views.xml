@@ -98,7 +98,7 @@
                         <page string="Materiales Solicitados" name="lines">
                             <field name="line_ids"
                                    readonly="state not in ['draft']">
-                                <list string="Líneas de Materiales"
+                                <tree string="Líneas de Materiales"
                                       editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id"
@@ -111,7 +111,7 @@
                                     <field name="price_unit"/>
                                     <field name="subtotal" readonly="1"/>
                                     <field name="notes"/>
-                                </list>
+                                </tree>
                             </field>
 
                             <!-- Total al pie de las lineas -->
@@ -147,7 +147,7 @@
         <field name="name">construction.material.request.list</field>
         <field name="model">construction.material.request</field>
         <field name="arch" type="xml">
-            <list string="Solicitudes de Materiales"
+            <tree string="Solicitudes de Materiales"
                   decoration-success="state == 'delivered'"
                   decoration-info="state == 'in_progress'"
                   decoration-warning="state == 'confirmed'"
@@ -167,7 +167,7 @@
                        decoration-warning="state == 'confirmed'"
                        decoration-danger="state == 'cancelled'"
                        decoration-muted="state == 'draft'"/>
-            </list>
+            </tree>
         </field>
     </record>
 

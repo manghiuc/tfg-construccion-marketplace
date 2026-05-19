@@ -33,9 +33,10 @@
         'views/construction_obra_views.xml',
         'views/construction_material_request_views.xml',
         'views/construction_menu_views.xml',
+    ],
+    'demo': [
         'data/demo_data.xml',
     ],
-    'demo': [],
     'installable': True,
     'application': True,
     'auto_install': False,
