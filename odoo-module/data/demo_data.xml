@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        DATOS DEMO - Construction Marketplace
+        3 obras y 5 solicitudes de materiales con líneas de productos de construcción.
+        Se cargan junto con el módulo (no son datos de demo separados).
+    -->
+
+    <!-- ==============================================================
+         SOCIOS / EMPRESAS DE EJEMPLO
+         ============================================================== -->
+    <record id="demo_partner_constructora_norte" model="res.partner">
+        <field name="name">Constructora del Norte S.L.</field>
+        <field name="is_company">True</field>
+        <field name="street">Calle Industria, 45</field>
+        <field name="city">Bilbao</field>
+        <field name="zip">48001</field>
+        <field name="country_id" ref="base.es"/>
+        <field name="phone">+34 944 111 222</field>
+        <field name="email">info@constructora-norte.es</field>
+    </record>
+
+    <record id="demo_partner_reformas_garcia" model="res.partner">
+        <field name="name">Reformas García e Hijos S.A.</field>
+        <field name="is_company">True</field>
+        <field name="street">Avenida de la Constitución, 12</field>
+        <field name="city">Sevilla</field>
+        <field name="zip">41001</field>
+        <field name="country_id" ref="base.es"/>
+        <field name="phone">+34 954 333 444</field>
+        <field name="email">admin@reformas-garcia.es</field>
+    </record>
+
+    <record id="demo_partner_edificaciones_madrid" model="res.partner">
+        <field name="name">Edificaciones Madrid Obras S.L.</field>
+        <field name="is_company">True</field>
+        <field name="street">Gran Vía, 78, 3º</field>
+        <field name="city">Madrid</field>
+        <field name="zip">28013</field>
+        <field name="country_id" ref="base.es"/>
+        <field name="phone">+34 914 555 666</field>
+        <field name="email">obras@edificaciones-madrid.es</field>
+    </record>
+
+    <!-- ==============================================================
+         CATEGORIAS DE PRODUCTO DE CONSTRUCCION
+         ============================================================== -->
+    <record id="demo_categ_materiales_base" model="product.category">
+        <field name="name">Materiales de Construcción</field>
+        <field name="parent_id" ref="product.product_category_all"/>
+    </record>
+
+    <record id="demo_categ_herramientas" model="product.category">
+        <field name="name">Herramientas y Equipos</field>
+        <field name="parent_id" ref="product.product_category_all"/>
+    </record>
+
+    <!-- ==============================================================
+         PRODUCTOS DE CONSTRUCCION
+         ============================================================== -->
+    <record id="demo_product_cemento" model="product.template">
+        <field name="name">Cemento Portland CEM II 42.5 (25 kg)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">8.50</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">CEM-001</field>
+        <field name="description_sale">Saco de cemento Portland 25 kg. Apto para morteros y hormigones estructurales.</field>
+    </record>
+
+    <record id="demo_product_arena" model="product.template">
+        <field name="name">Arena de Río Fina (m³)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">45.00</field>
+        <field name="uom_id" ref="uom.product_uom_cubic_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_cubic_meter"/>
+        <field name="default_code">ARE-001</field>
+        <field name="description_sale">Arena de río lavada, granulometría fina. Ideal para morteros de albañilería.</field>
+    </record>
+
+    <record id="demo_product_ladrillo" model="product.template">
+        <field name="name">Ladrillo Perforado 24x11.5x9 cm</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">0.28</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">LAD-001</field>
+        <field name="description_sale">Ladrillo perforado cerámico para muros de carga y tabicado.</field>
+    </record>
+
+    <record id="demo_product_varilla_corrugada" model="product.template">
+        <field name="name">Varilla Corrugada B500S ø12mm (12m)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">12.80</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">VAR-012</field>
+        <field name="description_sale">Varilla de acero corrugado B500S diámetro 12mm, longitud 12 metros.</field>
+    </record>
+
+    <record id="demo_product_azulejo" model="product.template">
+        <field name="name">Azulejo Porcelánico 60x60 Blanco (m²)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">18.90</field>
+        <field name="uom_id" ref="uom.product_uom_square_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_square_meter"/>
+        <field name="default_code">AZU-001</field>
+        <field name="description_sale">Azulejo porcelánico rectificado 60x60 cm. Acabado mate blanco polar.</field>
+    </record>
+
+    <!-- ==============================================================
+         OBRAS DE CONSTRUCCION (3 OBRAS)
+         ============================================================== -->
+
+    <!-- Obra 1: Residencial activa -->
+    <record id="demo_obra_residencial_norte" model="construction.obra">
+        <field name="name">Residencial Las Encinas - Fase II</field>
+        <field name="code">OBR-2025-001</field>
+        <field name="address">Calle Robles, 23 - Bilbao, Bizkaia</field>
+        <field name="partner_id" ref="demo_partner_constructora_norte"/>
+        <field name="responsible_id" ref="base.user_admin"/>
+        <field name="state">active</field>
+        <field name="date_start">2025-01-15</field>
+        <field name="date_end">2025-12-31</field>
+        <field name="description">
+            Construcción de bloque residencial de 24 viviendas en 6 plantas.
+            Fase II incluye estructura, cerramiento y acabados interiores.
+            Presupuesto: 2.400.000 €
+        </field>
+    </record>
+
+    <!-- Obra 2: Reforma en proceso -->
+    <record id="demo_obra_reforma_sevilla" model="construction.obra">
+        <field name="name">Reforma Integral Local Comercial Centro</field>
+        <field name="code">OBR-2025-002</field>
+        <field name="address">Avenida de la Constitución, 34 - Sevilla</field>
+        <field name="partner_id" ref="demo_partner_reformas_garcia"/>
+        <field name="responsible_id" ref="base.user_admin"/>
+        <field name="state">active</field>
+        <field name="date_start">2025-03-01</field>
+        <field name="date_end">2025-07-30</field>
+        <field name="description">
+            Reforma integral de local comercial de 350 m² en planta baja.
+            Incluye demolición parcial, redistribución de espacios, nuevas
+            instalaciones eléctricas, fontanería y acabados completos.
+        </field>
+    </record>
+
+    <!-- Obra 3: En borrador / planificación -->
+    <record id="demo_obra_edificio_madrid" model="construction.obra">
+        <field name="name">Edificio Oficinas Torre Sur Madrid</field>
+        <field name="code">OBR-2025-003</field>
+        <field name="address">Gran Vía, 100 - Madrid</field>
+        <field name="partner_id" ref="demo_partner_edificaciones_madrid"/>
+        <field name="responsible_id" ref="base.user_admin"/>
+        <field name="state">draft</field>
+        <field name="date_start">2025-09-01</field>
+        <field name="date_end">2027-06-30</field>
+        <field name="description">
+            Construcción de edificio de oficinas de 12 plantas y 4 sótanos.
+            Proyecto pendiente de licencia municipal. En fase de planificación
+            y contratación de proveedores de materiales.
+        </field>
+    </record>
+
+    <!-- ==============================================================
+         SOLICITUDES DE MATERIALES (5 SOLICITUDES)
+         ============================================================== -->
+
+    <!-- Solicitud 1: Confirmada para Obra 1 -->
+    <record id="demo_request_cemento_bilbao" model="construction.material.request">
+        <field name="name">SOL-2025-001</field>
+        <field name="obra_id" ref="demo_obra_residencial_norte"/>
+        <field name="partner_id" ref="demo_partner_constructora_norte"/>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="state">confirmed</field>
+        <field name="date_request">2025-04-10 09:00:00</field>
+        <field name="date_required">2025-04-20</field>
+        <field name="notes">Necesario para el hormigonado de forjado planta 3. Pedir con 3 días de antelación mínimo.</field>
+    </record>
+
+    <record id="demo_request_line_cemento_1" model="construction.material.request.line">
+        <field name="request_id" ref="demo_request_cemento_bilbao"/>
+        <field name="product_id" ref="demo_product_cemento"/>
+        <field name="product_name">Cemento Portland CEM II 42.5 (25 kg)</field>
+        <field name="product_qty">500</field>
+        <field name="price_unit">8.50</field>
+        <field name="notes">Calidad certificada, con albarán de entrega</field>
+    </record>
+
+    <record id="demo_request_line_arena_1" model="construction.material.request.line">
+        <field name="request_id" ref="demo_request_cemento_bilbao"/>
+        <field name="product_id" ref="demo_product_arena"/>
+        <field name="product_name">Arena de Río Fina (m³)</field>
+        <field name="product_qty">15</field>
+        <field name="price_unit">45.00</field>
+    </record>
+
+    <!-- Solicitud 2: En proceso para Obra 1 -->
+    <record id="demo_request_estructura_bilbao" model="construction.material.request">
+        <field name="name">SOL-2025-002</field>
+        <field name="obra_id" ref="demo_obra_residencial_norte"/>
+        <field name="partner_id" ref="demo_partner_constructora_norte"/>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="state">in_progress</field>
+        <field name="date_request">2025-04-05 14:30:00</field>
+        <field name="date_required">2025-04-15</field>
+        <field name="notes">Material para armado de pilares planta 2 y 3. Urgente.</field>
+        <field name="tracking_info">[2025-04-05 14:35:00] Solicitud confirmada por Administrator
+[2025-04-07 10:00:00] Solicitud puesta en proceso por Administrator</field>
+    </record>
+
+    <record id="demo_request_line_varilla_1" model="construction.material.request.line">
+        <field name="request_id" ref="demo_request_estructura_bilbao"/>
+        <field name="product_id" ref="demo_product_varilla_corrugada"/>
+        <field name="product_name">Varilla Corrugada B500S ø12mm</field>
+        <field name="product_qty">200</field>
+        <field name="price_unit">12.80</field>
+        <field name="notes">Longitud estándar 12m. Verificar certificado de calidad.</field>
+    </record>
+
+    <!-- Solicitud 3: Entregada para Obra 2 -->
+    <record id="demo_request_azulejo_sevilla" model="construction.material.request">
+        <field name="name">SOL-2025-003</field>
+        <field name="obra_id" ref="demo_obra_reforma_sevilla"/>
+        <field name="partner_id" ref="demo_partner_reformas_garcia"/>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="state">delivered</field>
+        <field name="date_request">2025-03-15 08:00:00</field>
+        <field name="date_required">2025-03-25</field>
+        <field name="notes">Revestimiento de suelos zona principal y aseos. Confirmar color blanco polar.</field>
+        <field name="tracking_info">[2025-03-15 08:10:00] Solicitud confirmada por Administrator
+[2025-03-18 11:00:00] Solicitud puesta en proceso por Administrator
+[2025-03-25 16:00:00] Materiales entregados. Marcado por Administrator</field>
+    </record>
+
+    <record id="demo_request_line_azulejo_1" model="construction.material.request.line">
+        <field name="request_id" ref="demo_request_azulejo_sevilla"/>
+        <field name="product_id" ref="demo_product_azulejo"/>
+        <field name="product_name">Azulejo Porcelánico 60x60 Blanco</field>
+        <field name="product_qty">280</field>
+        <field name="price_unit">18.90</field>
+        <field name="notes">Incluir 10% de desperdicio. Total real: 280 m²</field>
+    </record>
+
+    <!-- Solicitud 4: Borrador para Obra 2 -->
+    <record id="demo_request_ladrillo_sevilla" model="construction.material.request">
+        <field name="name">SOL-2025-004</field>
+        <field name="obra_id" ref="demo_obra_reforma_sevilla"/>
+        <field name="partner_id" ref="demo_partner_reformas_garcia"/>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="state">draft</field>
+        <field name="date_request">2025-05-01 10:00:00</field>
+        <field name="date_required">2025-05-15</field>
+        <field name="notes">Partición interior nueva zona de vestuarios. Pendiente de confirmación del plano definitivo.</field>
+    </record>
+
+    <record id="demo_request_line_ladrillo_1" model="construction.material.request.line">
+        <field name="request_id" ref="demo_request_ladrillo_sevilla"/>
+        <field name="product_id" ref="demo_product_ladrillo"/>
+        <field name="product_name">Ladrillo Perforado 24x11.5x9 cm</field>
+        <field name="product_qty">3500</field>
+        <field name="price_unit">0.28</field>
+        <field name="notes">Ladrillo cerámico standard, acabado visto no necesario</field>
+    </record>
+
+    <record id="demo_request_line_cemento_2" model="construction.material.request.line">
+        <field name="request_id" ref="demo_request_ladrillo_sevilla"/>
+        <field name="product_id" ref="demo_product_cemento"/>
+        <field name="product_name">Cemento Portland CEM II 42.5 (25 kg)</field>
+        <field name="product_qty">50</field>
+        <field name="price_unit">8.50</field>
+    </record>
+
+    <!-- Solicitud 5: Cancelada para Obra 3 -->
+    <record id="demo_request_cancelada_madrid" model="construction.material.request">
+        <field name="name">SOL-2025-005</field>
+        <field name="obra_id" ref="demo_obra_edificio_madrid"/>
+        <field name="partner_id" ref="demo_partner_edificaciones_madrid"/>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="state">cancelled</field>
+        <field name="date_request">2025-04-20 12:00:00</field>
+        <field name="notes">Solicitud adelantada - cancelada por retraso en inicio de obra pendiente de licencia.</field>
+        <field name="tracking_info">[2025-04-20 12:05:00] Solicitud cancelada por Administrator</field>
+    </record>
+
+    <record id="demo_request_line_varilla_2" model="construction.material.request.line">
+        <field name="request_id" ref="demo_request_cancelada_madrid"/>
+        <field name="product_id" ref="demo_product_varilla_corrugada"/>
+        <field name="product_name">Varilla Corrugada B500S ø12mm</field>
+        <field name="product_qty">500</field>
+        <field name="price_unit">12.80</field>
+        <field name="notes">Partida inicial para cimentación. Cancelado hasta obtener licencia.</field>
+    </record>
+
+</odoo>

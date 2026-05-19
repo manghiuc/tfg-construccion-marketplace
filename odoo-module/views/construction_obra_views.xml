@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         VISTAS DE OBRA DE CONSTRUCCION
+         ============================================================ -->
+
+    <!-- Vista formulario de Obra -->
+    <record id="view_construction_obra_form" model="ir.ui.view">
+        <field name="name">construction.obra.form</field>
+        <field name="model">construction.obra</field>
+        <field name="arch" type="xml">
+            <form string="Obra de Construcción">
+                <header>
+                    <button name="action_set_active"
+                            string="Activar"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_set_finished"
+                            string="Finalizar"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'active'"
+                            confirm="¿Confirma que desea marcar esta obra como finalizada?"/>
+                    <button name="action_set_draft"
+                            string="Volver a Borrador"
+                            type="object"
+                            invisible="state not in ['active', 'finished']"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,finished"/>
+                </header>
+
+                <sheet>
+                    <!-- Estadísticas en cabecera -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_material_requests"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-list">
+                            <field name="material_request_count"
+                                   string="Solicitudes"
+                                   widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"
+                                   placeholder="Nombre de la obra..."
+                                   required="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Información General">
+                            <field name="code" readonly="1"/>
+                            <field name="partner_id"
+                                   options="{'no_create': True}"/>
+                            <field name="responsible_id"
+                                   options="{'no_create': True}"/>
+                            <field name="address"/>
+                        </group>
+                        <group string="Planificación">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+                    </group>
+
+                    <group string="Descripción">
+                        <field name="description"
+                               nolabel="1"
+                               placeholder="Descripción detallada de la obra, materiales previstos, observaciones..."/>
+                    </group>
+
+                    <!-- Pestaña de solicitudes de materiales -->
+                    <notebook>
+                        <page string="Solicitudes de Materiales" name="material_requests">
+                            <field name="material_request_ids"
+                                   context="{'default_obra_id': active_id}">
+                                <list string="Solicitudes de Materiales"
+                                      decoration-success="state == 'delivered'"
+                                      decoration-info="state == 'in_progress'"
+                                      decoration-warning="state == 'confirmed'"
+                                      decoration-danger="state == 'cancelled'">
+                                    <field name="name"/>
+                                    <field name="date_request"/>
+                                    <field name="user_id"/>
+                                    <field name="total_amount" sum="Total"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'delivered'"
+                                           decoration-info="state == 'in_progress'"
+                                           decoration-warning="state == 'confirmed'"
+                                           decoration-danger="state == 'cancelled'"
+                                           decoration-muted="state == 'draft'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Chatter para trazabilidad -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista lista (tree) de Obra -->
+    <record id="view_construction_obra_list" model="ir.ui.view">
+        <field name="name">construction.obra.list</field>
+        <field name="model">construction.obra</field>
+        <field name="arch" type="xml">
+            <list string="Obras de Construcción"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state == 'finished'"
+                  decoration-info="state == 'draft'">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="responsible_id"/>
+                <field name="address"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="material_request_count" string="Solicitudes"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-secondary="state == 'finished'"
+                       decoration-info="state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista búsqueda de Obra -->
+    <record id="view_construction_obra_search" model="ir.ui.view">
+        <field name="name">construction.obra.search</field>
+        <field name="model">construction.obra</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Obras">
+                <field name="name" string="Nombre"/>
+                <field name="code" string="Código"/>
+                <field name="partner_id" string="Empresa/Cliente"/>
+                <field name="responsible_id" string="Responsable"/>
+                <separator/>
+                <filter name="filter_draft" string="Borrador"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_active" string="Activas"
+                        domain="[('state', '=', 'active')]"/>
+                <filter name="filter_finished" string="Finalizadas"
+                        domain="[('state', '=', 'finished')]"/>
+                <separator/>
+                <filter name="filter_my_obras" string="Mis Obras"
+                        domain="[('responsible_id', '=', uid)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_state" string="Estado"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_partner" string="Empresa/Cliente"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_responsible" string="Responsable"
+                            context="{'group_by': 'responsible_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de ventana para Obras -->
+    <record id="action_construction_obra" model="ir.actions.act_window">
+        <field name="name">Obras de Construcción</field>
+        <field name="res_model">construction.obra</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_construction_obra_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear primera obra de construcción
+            </p>
+            <p>
+                Gestiona tus obras de construcción y realiza solicitudes
+                de materiales de forma centralizada.
+            </p>
+        </field>
+    </record>
+
+</odoo>

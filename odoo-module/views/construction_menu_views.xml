@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         ESTRUCTURA DE MENUS DEL MODULO CONSTRUCTION MARKETPLACE
+         ============================================================ -->
+
+    <!-- Menu raiz del modulo (aparece en la barra de aplicaciones) -->
+    <menuitem
+        id="menu_construction_marketplace_root"
+        name="Construction Marketplace"
+        sequence="50"
+        web_icon="construction_marketplace,static/description/icon.png"
+        groups="base.group_user"/>
+
+    <!-- ---- OBRAS ---- -->
+    <menuitem
+        id="menu_construction_obras"
+        name="Obras"
+        parent="menu_construction_marketplace_root"
+        sequence="10"
+        groups="base.group_user"/>
+
+    <menuitem
+        id="menu_construction_obras_list"
+        name="Todas las Obras"
+        parent="menu_construction_obras"
+        action="action_construction_obra"
+        sequence="10"
+        groups="base.group_user"/>
+
+    <!-- ---- SOLICITUDES DE MATERIALES ---- -->
+    <menuitem
+        id="menu_construction_requests"
+        name="Solicitudes de Materiales"
+        parent="menu_construction_marketplace_root"
+        sequence="20"
+        groups="base.group_user"/>
+
+    <menuitem
+        id="menu_construction_requests_all"
+        name="Todas las Solicitudes"
+        parent="menu_construction_requests"
+        action="action_construction_material_request"
+        sequence="10"
+        groups="base.group_user"/>
+
+    <!-- ---- CONFIGURACION (solo administradores) ---- -->
+    <menuitem
+        id="menu_construction_config"
+        name="Configuración"
+        parent="menu_construction_marketplace_root"
+        sequence="90"
+        groups="base.group_system"/>
+
+</odoo>

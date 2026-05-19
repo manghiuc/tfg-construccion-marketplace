@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Secuencia automática para Obras de Construcción -->
+    <record id="sequence_construction_obra" model="ir.sequence">
+        <field name="name">Obra de Construcción</field>
+        <field name="code">construction.obra</field>
+        <field name="prefix">OBR-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Secuencia automática para Solicitudes de Materiales -->
+    <record id="sequence_construction_material_request" model="ir.sequence">
+        <field name="name">Solicitud de Materiales de Construcción</field>
+        <field name="code">construction.material.request</field>
+        <field name="prefix">SOL-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

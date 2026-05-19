@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         VISTAS DE SOLICITUD DE MATERIALES
+         ============================================================ -->
+
+    <!-- Vista formulario de Solicitud de Materiales -->
+    <record id="view_construction_material_request_form" model="ir.ui.view">
+        <field name="name">construction.material.request.form</field>
+        <field name="model">construction.material.request</field>
+        <field name="arch" type="xml">
+            <form string="Solicitud de Materiales">
+                <header>
+                    <!-- Botones de flujo de estado -->
+                    <button name="action_confirm"
+                            string="Confirmar Solicitud"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"
+                            confirm="¿Confirmar esta solicitud de materiales?"/>
+                    <button name="action_set_in_progress"
+                            string="Poner en Proceso"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_set_delivered"
+                            string="Marcar como Entregada"
+                            type="object"
+                            class="btn-success"
+                            invisible="state != 'in_progress'"
+                            confirm="¿Confirmar la entrega de los materiales?"/>
+                    <button name="action_convert_to_sale"
+                            string="Convertir a Pedido de Venta"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state not in ['confirmed', 'in_progress'] or sale_order_id != False"/>
+                    <button name="action_cancel"
+                            string="Cancelar"
+                            type="object"
+                            invisible="state in ['draft', 'delivered', 'cancelled']"
+                            confirm="¿Cancelar esta solicitud de materiales?"/>
+                    <button name="action_reset_draft"
+                            string="Volver a Borrador"
+                            type="object"
+                            invisible="state not in ['confirmed', 'cancelled']"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,in_progress,delivered"/>
+                </header>
+
+                <sheet>
+                    <!-- Botón de pedido de venta vinculado -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_order"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-shopping-cart"
+                                invisible="not sale_order_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Pedido de Venta</span>
+                                <span class="o_stat_value">
+                                    <field name="sale_order_id"/>
+                                </span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Información de la Solicitud">
+                            <field name="obra_id"
+                                   required="1"
+                                   options="{'no_create': True}"
+                                   readonly="state != 'draft'"/>
+                            <field name="partner_id"
+                                   options="{'no_create': True}"/>
+                            <field name="user_id"
+                                   options="{'no_create': True}"/>
+                            <field name="date_request"/>
+                            <field name="date_required"/>
+                        </group>
+                        <group string="Importes">
+                            <field name="total_amount"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Lineas de materiales -->
+                    <notebook>
+                        <page string="Materiales Solicitados" name="lines">
+                            <field name="line_ids"
+                                   readonly="state not in ['draft']">
+                                <list string="Líneas de Materiales"
+                                      editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id"
+                                           required="1"
+                                           domain="[('sale_ok', '=', True)]"/>
+                                    <field name="product_name"/>
+                                    <field name="product_qty" required="1"/>
+                                    <field name="product_uom_id"
+                                           options="{'no_open': True, 'no_create': True}"/>
+                                    <field name="price_unit"/>
+                                    <field name="subtotal" readonly="1"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+
+                            <!-- Total al pie de las lineas -->
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="total_amount"
+                                       string="Total Solicitud"
+                                       readonly="1"/>
+                            </group>
+                        </page>
+
+                        <page string="Notas e Información" name="notes_tracking">
+                            <group>
+                                <field name="notes"
+                                       placeholder="Observaciones, requisitos especiales, urgencia..."/>
+                            </group>
+                            <group string="Historial de Seguimiento">
+                                <field name="tracking_info"
+                                       nolabel="1"
+                                       readonly="1"
+                                       placeholder="El historial de seguimiento aparecerá aquí automáticamente..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista lista (tree) de Solicitud de Materiales -->
+    <record id="view_construction_material_request_list" model="ir.ui.view">
+        <field name="name">construction.material.request.list</field>
+        <field name="model">construction.material.request</field>
+        <field name="arch" type="xml">
+            <list string="Solicitudes de Materiales"
+                  decoration-success="state == 'delivered'"
+                  decoration-info="state == 'in_progress'"
+                  decoration-warning="state == 'confirmed'"
+                  decoration-danger="state == 'cancelled'"
+                  decoration-muted="state == 'draft'">
+                <field name="name"/>
+                <field name="obra_id"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <field name="date_request"/>
+                <field name="date_required"/>
+                <field name="total_amount" sum="Total"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'delivered'"
+                       decoration-info="state == 'in_progress'"
+                       decoration-warning="state == 'confirmed'"
+                       decoration-danger="state == 'cancelled'"
+                       decoration-muted="state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista búsqueda de Solicitud de Materiales -->
+    <record id="view_construction_material_request_search" model="ir.ui.view">
+        <field name="name">construction.material.request.search</field>
+        <field name="model">construction.material.request</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Solicitudes">
+                <field name="name" string="Referencia"/>
+                <field name="obra_id" string="Obra"/>
+                <field name="partner_id" string="Empresa/Cliente"/>
+                <field name="user_id" string="Solicitante"/>
+                <separator/>
+                <filter name="filter_draft" string="Borrador"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmadas"
+                        domain="[('state', '=', 'confirmed')]"/>
+                <filter name="filter_in_progress" string="En Proceso"
+                        domain="[('state', '=', 'in_progress')]"/>
+                <filter name="filter_delivered" string="Entregadas"
+                        domain="[('state', '=', 'delivered')]"/>
+                <filter name="filter_cancelled" string="Canceladas"
+                        domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter name="filter_my_requests" string="Mis Solicitudes"
+                        domain="[('user_id', '=', uid)]"/>
+                <filter name="filter_no_sale" string="Sin Pedido de Venta"
+                        domain="[('sale_order_id', '=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_state" string="Estado"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_obra" string="Obra"
+                            context="{'group_by': 'obra_id'}"/>
+                    <filter name="group_partner" string="Empresa/Cliente"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_user" string="Solicitante"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter name="group_date" string="Fecha de Solicitud"
+                            context="{'group_by': 'date_request:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de ventana para Solicitudes de Materiales -->
+    <record id="action_construction_material_request" model="ir.actions.act_window">
+        <field name="name">Solicitudes de Materiales</field>
+        <field name="res_model">construction.material.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_construction_material_request_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear primera solicitud de materiales
+            </p>
+            <p>
+                Gestiona las solicitudes de materiales para tus obras
+                y conviértelas en pedidos de venta de forma automática.
+            </p>
+        </field>
+    </record>
+
+</odoo>
