@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ConstructionHub — Portal de Materiales</title>
+  <style>
+    /* =====================================================================
+       VARIABLES Y RESET
+       ===================================================================== */
+    :root {
+      --primary:       #F57C00;
+      --primary-dark:  #E65100;
+      --primary-light: #FF8F00;
+      --accent:        #FFB300;
+      --dark:          #212121;
+      --dark2:         #333333;
+      --mid:           #555555;
+      --light:         #F5F5F5;
+      --white:         #FFFFFF;
+      --border:        #E0E0E0;
+      --success:       #388E3C;
+      --warning:       #F9A825;
+      --danger:        #C62828;
+      --info:          #1565C0;
+      --radius:        10px;
+      --shadow:        0 2px 12px rgba(0,0,0,.12);
+      --shadow-lg:     0 8px 32px rgba(0,0,0,.18);
+      --transition:    .22s ease;
+      --sidebar-w:     240px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; font-family: inherit; }
+    input, select, textarea { font-family: inherit; }
+    img { max-width: 100%; }
+
+    /* =====================================================================
+       LAYOUT — SIDEBAR + CONTENT
+       ===================================================================== */
+    #app { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--dark2);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform var(--transition);
+    }
+    .sidebar-logo {
+      padding: 22px 18px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo .logo-icon {
+      width: 38px; height: 38px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .sidebar-logo .logo-text { font-size: 1rem; font-weight: 700; line-height: 1.2; }
+    .sidebar-logo .logo-sub  { font-size: .7rem; color: rgba(255,255,255,.5); }
+    nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 20px; font-size: .9rem;
+      cursor: pointer; color: rgba(255,255,255,.75);
+      border-left: 3px solid transparent;
+      transition: background var(--transition), color var(--transition), border-color var(--transition);
+    }
+    .nav-item:hover { background: rgba(255,255,255,.07); color: var(--white); }
+    .nav-item.active {
+      background: rgba(245,124,0,.18);
+      border-left-color: var(--primary);
+      color: var(--white);
+    }
+    .nav-item .nav-icon { font-size: 1.15rem; width: 22px; text-align: center; }
+    .sidebar-footer {
+      padding: 14px 18px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      font-size: .8rem;
+      color: rgba(255,255,255,.45);
+    }
+    #user-info-sidebar { margin-bottom: 8px; color: rgba(255,255,255,.7); }
+    #btn-logout {
+      width: 100%;
+      padding: 8px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.7);
+      border-radius: 6px;
+      font-size: .82rem;
+      transition: background var(--transition);
+    }
+    #btn-logout:hover { background: rgba(198,40,40,.4); color: #fff; }
+
+    /* Hamburger */
+    #menu-toggle {
+      display: none;
+      position: fixed; top: 12px; left: 12px; z-index: 200;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 7px;
+      width: 40px; height: 40px;
+      font-size: 1.2rem;
+      align-items: center; justify-content: center;
+    }
+
+    /* Main */
+    #main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Topbar */
+    #topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    #topbar h1 { font-size: 1.15rem; font-weight: 700; color: var(--dark); }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-user {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .95rem;
+    }
+
+    /* Page area */
+    #page-area { flex: 1; padding: 28px; }
+
+    /* =====================================================================
+       LOGIN PAGE
+       ===================================================================== */
+    #page-login {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      padding: 44px 40px 36px;
+      width: 100%; max-width: 400px;
+    }
+    .login-logo {
+      text-align: center; margin-bottom: 28px;
+    }
+    .login-logo .logo-big {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 16px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 2rem; margin-bottom: 12px;
+    }
+    .login-logo h2 { font-size: 1.5rem; color: var(--dark); font-weight: 800; }
+    .login-logo p  { color: var(--mid); font-size: .87rem; margin-top: 4px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block; font-size: .83rem; font-weight: 600;
+      color: var(--mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: .95rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      background: var(--white); color: var(--dark);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(245,124,0,.15);
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 11px 22px; border-radius: 8px; font-size: .93rem; font-weight: 600;
+      border: none; transition: all var(--transition);
+    }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,124,0,.4); }
+    .btn-secondary {
+      background: var(--light); color: var(--dark2); border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-sm { padding: 7px 14px; font-size: .82rem; border-radius: 6px; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #b71c1c; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #2e7d32; }
+    .btn-full { width: 100%; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
+
+    /* =====================================================================
+       TOAST NOTIFICATIONS
+       ===================================================================== */
+    #toast-container {
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px; max-width: 340px;
+    }
+    .toast {
+      padding: 14px 18px; border-radius: 10px;
+      box-shadow: var(--shadow-lg); font-size: .88rem; font-weight: 500;
+      animation: slideIn .3s ease; display: flex; align-items: flex-start; gap: 10px;
+      max-width: 340px;
+    }
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .toast.success { background: #E8F5E9; color: #1B5E20; border-left: 4px solid var(--success); }
+    .toast.error   { background: #FFEBEE; color: #B71C1C; border-left: 4px solid var(--danger); }
+    .toast.warning { background: #FFF8E1; color: #E65100; border-left: 4px solid var(--warning); }
+    .toast.info    { background: #E3F2FD; color: #0D47A1; border-left: 4px solid var(--info); }
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+    .toast.hiding { animation: slideOut .3s ease forwards; }
+
+    /* =====================================================================
+       CARDS, BADGES, SPINNERS
+       ===================================================================== */
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 22px;
+    }
+    .card-title {
+      font-size: 1.05rem; font-weight: 700; color: var(--dark);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 99px; font-size: .75rem; font-weight: 700;
+    }
+    .badge-draft    { background: #FFF3E0; color: #E65100; }
+    .badge-confirmed { background: #E3F2FD; color: #1565C0; }
+    .badge-sent     { background: #E8F5E9; color: #1B5E20; }
+    .badge-cancel   { background: #FAFAFA; color: #9E9E9E; border: 1px solid #E0E0E0; }
+    .badge-done     { background: #E8F5E9; color: #1B5E20; }
+    .badge-planning { background: #EDE7F6; color: #4527A0; }
+    .badge-execution { background: #FFF3E0; color: #BF360C; }
+    .badge-paused   { background: #FFF8E1; color: #F57F17; }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(245,124,0,.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-sm { width: 18px; height: 18px; border-width: 2px; }
+    .loading-center { display: flex; justify-content: center; padding: 40px; }
+
+    /* =====================================================================
+       DASHBOARD
+       ===================================================================== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 20px 22px;
+      display: flex; align-items: center; gap: 16px;
+      cursor: pointer; transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .stat-icon {
+      width: 52px; height: 52px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;
+    }
+    .stat-icon.orange { background: #FFF3E0; }
+    .stat-icon.blue   { background: #E3F2FD; }
+    .stat-icon.green  { background: #E8F5E9; }
+    .stat-icon.purple { background: #EDE7F6; }
+    .stat-value { font-size: 1.7rem; font-weight: 800; color: var(--dark); line-height: 1; }
+    .stat-label { font-size: .8rem; color: var(--mid); margin-top: 3px; }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px; margin-top: 6px;
+    }
+    .qa-btn {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px; text-align: center;
+      cursor: pointer; transition: all var(--transition);
+    }
+    .qa-btn:hover {
+      border-color: var(--primary);
+      background: #FFF8F0;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .qa-btn .qa-icon { font-size: 2rem; margin-bottom: 8px; }
+    .qa-btn .qa-label { font-size: .88rem; font-weight: 600; color: var(--dark2); }
+    .qa-btn .qa-sub   { font-size: .77rem; color: var(--mid); margin-top: 3px; }
+
+    /* =====================================================================
+       TABLA GENÉRICA
+       ===================================================================== */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    thead tr { background: var(--light); }
+    th { padding: 11px 14px; text-align: left; font-weight: 700; font-size: .8rem;
+         text-transform: uppercase; letter-spacing: .04em; color: var(--mid);
+         white-space: nowrap; }
+    td { padding: 13px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #FAFAFA; }
+
+    /* =====================================================================
+       CATÁLOGO DE PRODUCTOS
+       ===================================================================== */
+    .search-bar {
+      display: flex; gap: 10px; margin-bottom: 22px;
+    }
+    .search-bar input {
+      flex: 1; padding: 10px 16px; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: .93rem;
+    }
+    .search-bar input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245,124,0,.12); }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 18px;
+    }
+    .product-card {
+      background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow: hidden; cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .product-img {
+      width: 100%; height: 130px; object-fit: cover;
+      background: var(--light); display: block;
+    }
+    .product-img-placeholder {
+      width: 100%; height: 130px; background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+    }
+    .product-body { padding: 14px 14px 16px; }
+    .product-name { font-weight: 700; font-size: .93rem; color: var(--dark); margin-bottom: 4px; }
+    .product-uom  { font-size: .77rem; color: var(--mid); margin-bottom: 8px; }
+    .product-price { font-size: 1.15rem; font-weight: 800; color: var(--primary); }
+    .product-footer {
+      padding: 10px 14px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px;
+    }
+    .product-footer .btn { flex: 1; padding: 8px; font-size: .8rem; }
+
+    /* =====================================================================
+       CALCULADORA
+       ===================================================================== */
+    .calc-form {
+      display: flex; flex-direction: column; gap: 18px; max-width: 460px;
+    }
+    .calc-tipo-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    }
+    .tipo-btn {
+      border: 2px solid var(--border); border-radius: var(--radius);
+      padding: 18px 10px; text-align: center; cursor: pointer;
+      transition: all var(--transition); background: var(--white);
+    }
+    .tipo-btn .tipo-icon { font-size: 2rem; margin-bottom: 6px; }
+    .tipo-btn .tipo-label { font-size: .85rem; font-weight: 700; color: var(--dark2); }
+    .tipo-btn.selected {
+      border-color: var(--primary);
+      background: #FFF8F0;
+      box-shadow: 0 0 0 3px rgba(245,124,0,.15);
+    }
+    .result-table-wrap { margin-top: 10px; }
+    .result-table-wrap .card-title { color: var(--primary); }
+
+    /* =====================================================================
+       MODAL
+       ===================================================================== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 500;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal {
+      background: var(--white); border-radius: 14px; box-shadow: var(--shadow-lg);
+      width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header {
+      padding: 18px 22px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+    .modal-close {
+      width: 30px; height: 30px; background: var(--light); border: none;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; cursor: pointer; color: var(--mid);
+    }
+    .modal-close:hover { background: #FFEBEE; color: var(--danger); }
+    .modal-body    { padding: 22px; }
+    .modal-footer  { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* =====================================================================
+       SOLICITUD — LÍNEAS DE PRODUCTO
+       ===================================================================== */
+    #request-lines { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .request-line {
+      display: grid; grid-template-columns: 1fr 100px 100px 30px;
+      gap: 8px; align-items: center;
+      background: var(--light); border-radius: 8px; padding: 10px 12px;
+    }
+    .request-line .line-name { font-weight: 600; font-size: .88rem; }
+    .request-line input[type="number"] {
+      width: 100%; padding: 6px 8px; border: 1.5px solid var(--border);
+      border-radius: 6px; font-size: .88rem; text-align: right;
+    }
+    .line-remove {
+      background: none; border: none; color: #B0BEC5; font-size: 1.1rem; padding: 2px;
+      cursor: pointer; transition: color var(--transition);
+    }
+    .line-remove:hover { color: var(--danger); }
+    .total-bar {
+      background: var(--primary); color: #fff; border-radius: 8px;
+      padding: 12px 16px; display: flex; justify-content: space-between;
+      font-weight: 700; font-size: 1rem;
+    }
+
+    /* Buscador emergente */
+    .product-search-wrapper { position: relative; }
+    .product-suggestions {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-top: none; border-radius: 0 0 8px 8px;
+      box-shadow: var(--shadow); z-index: 100;
+      max-height: 220px; overflow-y: auto;
+    }
+    .suggestion-item {
+      padding: 10px 14px; cursor: pointer; display: flex; gap: 10px; align-items: center;
+      font-size: .88rem;
+    }
+    .suggestion-item:hover { background: var(--light); }
+    .suggestion-item .s-price { margin-left: auto; color: var(--primary); font-weight: 700; }
+
+    /* =====================================================================
+       DETALLE PEDIDO
+       ===================================================================== */
+    .detail-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px;
+    }
+    .detail-field label { font-size: .77rem; text-transform: uppercase; letter-spacing: .04em; color: var(--mid); font-weight: 600; }
+    .detail-field .dval { font-size: 1rem; font-weight: 700; color: var(--dark); margin-top: 3px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--mid);
+    }
+    .empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 14px; }
+    .empty-state p { font-size: .95rem; }
+
+    /* =====================================================================
+       OVERLAY OSCURO MÓVIL
+       ===================================================================== */
+    #sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99;
+    }
+
+    /* =====================================================================
+       RESPONSIVE
+       ===================================================================== */
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #sidebar-overlay.show { display: block; }
+      #main { margin-left: 0; }
+      #menu-toggle { display: flex; }
+      #topbar { padding: 0 14px 0 60px; }
+      #page-area { padding: 16px; }
+      .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+      .request-line { grid-template-columns: 1fr 85px 85px 28px; }
+      .calc-tipo-grid { grid-template-columns: repeat(2, 1fr); }
+      .login-card { padding: 30px 22px 26px; }
+    }
+    @media (max-width: 480px) {
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .request-line { grid-template-columns: 1fr 70px 70px 24px; font-size: .82rem; }
+    }
+
+    /* Secciones ocultas */
+    .section { display: none; }
+    .section.active { display: block; }
+    #page-login { display: none; }
+    #page-login.active { display: flex; }
+    #app.hidden { display: none; }
+    #page-login.active ~ #app { display: flex; }
+
+    /* Separador visual */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* Helper texto */
+    .text-muted { color: var(--mid); font-size: .85rem; }
+    .text-primary { color: var(--primary); }
+    .fw-bold { font-weight: 700; }
+    .mt-2 { margin-top: 8px; }
+    .mb-2 { margin-bottom: 8px; }
+    .flex-end { display: flex; justify-content: flex-end; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .gap-2 { gap: 8px; }
+    .d-flex { display: flex; }
+    .align-center { align-items: center; }
+    .wrap { flex-wrap: wrap; }
+
+    /* Obras list */
+    .obra-card {
+      background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 12px;
+      transition: box-shadow var(--transition);
+    }
+    .obra-card:hover { box-shadow: var(--shadow-lg); }
+    .obra-info .obra-name { font-weight: 700; font-size: 1rem; }
+    .obra-info .obra-meta { font-size: .8rem; color: var(--mid); margin-top: 3px; }
+    .obra-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<!-- =====================================================================
+     TOAST CONTAINER
+     ===================================================================== -->
+<div id="toast-container"></div>
+
+<!-- =====================================================================
+     LOGIN PAGE (pantalla de inicio de sesión)
+     ===================================================================== -->
+<div id="page-login" class="active">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-big">🏗️</div>
+      <h2>ConstructionHub</h2>
+      <p>Portal de Materiales de Construcción</p>
+    </div>
+
+    <!-- Tabs Login / Registro -->
+    <div style="display:flex;gap:0;margin-bottom:24px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;">
+      <button id="tab-login" onclick="switchAuthTab('login')"
+        style="flex:1;padding:9px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;">
+        Iniciar sesión
+      </button>
+      <button id="tab-register" onclick="switchAuthTab('register')"
+        style="flex:1;padding:9px;border:none;background:var(--white);color:var(--mid);font-weight:700;font-size:.9rem;cursor:pointer;">
+        Registrarse
+      </button>
+    </div>
+
+    <!-- Formulario Login -->
+    <form id="form-login" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Usuario / Correo</label>
+        <input id="login-user" type="text" placeholder="usuario@ejemplo.com" required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input id="login-pass" type="password" placeholder="••••••••" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="btn-login-submit">
+        <span id="login-spinner" class="spinner spinner-sm" style="display:none;"></span>
+        Entrar
+      </button>
+    </form>
+
+    <!-- Formulario Registro -->
+    <form id="form-register" onsubmit="handleRegister(event)" style="display:none;">
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input id="reg-name" type="text" placeholder="Juan García" required />
+      </div>
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input id="reg-login" type="email" placeholder="usuario@ejemplo.com" required />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres" required minlength="6" />
+      </div>
+      <div class="form-group">
+        <label>Tipo de cliente</label>
+        <select id="reg-type">
+          <option value="particular">Particular</option>
+          <option value="empresa">Empresa / Profesional</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Teléfono (opcional)</label>
+        <input id="reg-phone" type="tel" placeholder="+34 600 000 000" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        <span id="reg-spinner" class="spinner spinner-sm" style="display:none;"></span>
+        Crear cuenta
+      </button>
+    </form>
+
+    <p class="text-muted" style="text-align:center;margin-top:18px;font-size:.8rem;">
+      🔒 Acceso seguro mediante Odoo 17
+    </p>
+  </div>
+</div>
+
+<!-- =====================================================================
+     APP PRINCIPAL (visible tras login)
+     ===================================================================== -->
+<div id="app" class="hidden">
+
+  <!-- Botón hamburguesa móvil -->
+  <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar de navegación -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏗️</div>
+      <div>
+        <div class="logo-text">ConstructionHub</div>
+        <div class="logo-sub">Portal Materiales</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showSection('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showSection('catalog')">
+        <span class="nav-icon">📦</span> Catálogo
+      </div>
+      <div class="nav-item" onclick="showSection('calculator')">
+        <span class="nav-icon">🧮</span> Calculadora
+      </div>
+      <div class="nav-item" onclick="showSection('obras')">
+        <span class="nav-icon">🏢</span> Mis Obras
+      </div>
+      <div class="nav-item" onclick="showSection('nueva-solicitud')">
+        <span class="nav-icon">📋</span> Nueva Solicitud
+      </div>
+      <div class="nav-item" onclick="showSection('pedidos')">
+        <span class="nav-icon">🚚</span> Mis Pedidos
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div id="user-info-sidebar">👤 Cargando...</div>
+      <button id="btn-logout" onclick="handleLogout()">⏻ Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- Contenido principal -->
+  <div id="main">
+    <!-- Topbar -->
+    <div id="topbar">
+      <h1 id="topbar-title">Dashboard</h1>
+      <div class="topbar-right">
+        <div class="topbar-user" id="topbar-avatar">?</div>
+      </div>
+    </div>
+
+    <!-- Área de páginas -->
+    <div id="page-area">
+
+      <!-- ================================================================
+           SECCIÓN: DASHBOARD
+           ================================================================ -->
+      <div id="section-dashboard" class="section active">
+        <div id="welcome-banner" style="
+          background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+          color: #fff; border-radius: 14px; padding: 28px 28px;
+          margin-bottom: 26px; position: relative; overflow: hidden;">
+          <div style="position:relative;z-index:1;">
+            <div style="font-size:.88rem;opacity:.85;margin-bottom:4px;">Bienvenido/a de nuevo</div>
+            <h2 id="welcome-name" style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">Usuario</h2>
+            <p style="opacity:.85;font-size:.9rem;">Gestiona tus materiales de construcción desde un solo lugar.</p>
+          </div>
+          <div style="position:absolute;right:-20px;top:-20px;font-size:9rem;opacity:.08;line-height:1;">🏗️</div>
+        </div>
+
+        <!-- Tarjetas estadísticas -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card" onclick="showSection('obras')">
+            <div class="stat-icon orange">🏢</div>
+            <div>
+              <div class="stat-value" id="stat-obras">—</div>
+              <div class="stat-label">Obras activas</div>
+            </div>
+          </div>
+          <div class="stat-card" onclick="showSection('pedidos')">
+            <div class="stat-icon blue">📋</div>
+            <div>
+              <div class="stat-value" id="stat-pedidos">—</div>
+              <div class="stat-label">Solicitudes</div>
+            </div>
+          </div>
+          <div class="stat-card" onclick="showSection('catalog')">
+            <div class="stat-icon green">📦</div>
+            <div>
+              <div class="stat-value" id="stat-productos">—</div>
+              <div class="stat-label">Productos</div>
+            </div>
+          </div>
+          <div class="stat-card" onclick="showSection('calculator')">
+            <div class="stat-icon purple">🧮</div>
+            <div>
+              <div class="stat-value">4</div>
+              <div class="stat-label">Tipos de obra</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="card">
+          <div class="card-title">⚡ Acciones rápidas</div>
+          <div class="quick-actions">
+            <div class="qa-btn" onclick="showSection('nueva-solicitud')">
+              <div class="qa-icon">📋</div>
+              <div class="qa-label">Nueva Solicitud</div>
+              <div class="qa-sub">Pedir materiales para tu obra</div>
+            </div>
+            <div class="qa-btn" onclick="openNuevaObraModal()">
+              <div class="qa-icon">🏢</div>
+              <div class="qa-label">Nueva Obra</div>
+              <div class="qa-sub">Registrar un nuevo proyecto</div>
+            </div>
+            <div class="qa-btn" onclick="showSection('calculator')">
+              <div class="qa-icon">🧮</div>
+              <div class="qa-label">Calcular materiales</div>
+              <div class="qa-sub">Baño, solera, tabique, pintura</div>
+            </div>
+            <div class="qa-btn" onclick="showSection('catalog')">
+              <div class="qa-icon">🔍</div>
+              <div class="qa-label">Explorar catálogo</div>
+              <div class="qa-sub">Todos los productos disponibles</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /dashboard -->
+
+      <!-- ================================================================
+           SECCIÓN: CATÁLOGO DE PRODUCTOS
+           ================================================================ -->
+      <div id="section-catalog" class="section">
+        <div class="card" style="margin-bottom:22px;">
+          <div class="card-title">📦 Catálogo de productos</div>
+          <div class="search-bar">
+            <input id="catalog-search" type="text" placeholder="🔍  Buscar producto (cemento, azulejo...)"
+              oninput="debouncedCatalogSearch()" />
+            <button class="btn btn-primary" onclick="loadCatalog()">Buscar</button>
+          </div>
+          <p class="text-muted" id="catalog-count"></p>
+        </div>
+        <div id="catalog-loading" class="loading-center" style="display:none;"><div class="spinner"></div></div>
+        <div id="products-grid" class="products-grid"></div>
+      </div><!-- /catalog -->
+
+      <!-- ================================================================
+           SECCIÓN: CALCULADORA DE MATERIALES
+           ================================================================ -->
+      <div id="section-calculator" class="section">
+        <div class="card" style="max-width:560px;">
+          <div class="card-title">🧮 Calculadora de materiales</div>
+          <div class="calc-form">
+            <div>
+              <label style="font-size:.83rem;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:10px;">
+                Tipo de obra
+              </label>
+              <div class="calc-tipo-grid">
+                <div class="tipo-btn selected" data-tipo="banyo" onclick="selectTipoObra(this)">
+                  <div class="tipo-icon">🚿</div>
+                  <div class="tipo-label">Baño</div>
+                </div>
+                <div class="tipo-btn" data-tipo="solera" onclick="selectTipoObra(this)">
+                  <div class="tipo-icon">⬜</div>
+                  <div class="tipo-label">Solera</div>
+                </div>
+                <div class="tipo-btn" data-tipo="tabique_ladrillo" onclick="selectTipoObra(this)">
+                  <div class="tipo-icon">🧱</div>
+                  <div class="tipo-label">Tabique ladrillo</div>
+                </div>
+                <div class="tipo-btn" data-tipo="pintura" onclick="selectTipoObra(this)">
+                  <div class="tipo-icon">🎨</div>
+                  <div class="tipo-label">Pintura</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Superficie (m²)</label>
+              <input id="calc-m2" type="number" min="1" max="9999" step="0.5" placeholder="Ej: 15" />
+            </div>
+            <button class="btn btn-primary" onclick="calcularMateriales()">
+              🧮 Calcular
+            </button>
+          </div>
+        </div>
+
+        <!-- Resultado -->
+        <div id="calc-result" style="display:none;margin-top:22px;">
+          <div class="card result-table-wrap">
+            <div class="card-title" id="calc-result-title">📊 Materiales necesarios</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Cantidad</th>
+                    <th>Unidad</th>
+                  </tr>
+                </thead>
+                <tbody id="calc-result-body"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:10px;">
+              <button class="btn btn-primary btn-sm" onclick="addCalcResultToRequest()">
+                📋 Añadir a solicitud
+              </button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /calculator -->
+
+      <!-- ================================================================
+           SECCIÓN: MIS OBRAS
+           ================================================================ -->
+      <div id="section-obras" class="section">
+        <div class="flex-between mb-2" style="margin-bottom:18px;">
+          <h2 style="font-size:1.15rem;font-weight:800;">🏢 Mis Obras</h2>
+          <button class="btn btn-primary" onclick="openNuevaObraModal()">+ Nueva Obra</button>
+        </div>
+        <div id="obras-loading" class="loading-center" style="display:none;"><div class="spinner"></div></div>
+        <div id="obras-list"></div>
+      </div><!-- /obras -->
+
+      <!-- ================================================================
+           SECCIÓN: NUEVA SOLICITUD
+           ================================================================ -->
+      <div id="section-nueva-solicitud" class="section">
+        <div class="card" style="max-width:700px;">
+          <div class="card-title">📋 Nueva solicitud de materiales</div>
+
+          <div class="form-group">
+            <label>Obra destino</label>
+            <select id="req-obra-select">
+              <option value="">— Selecciona una obra —</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Buscar y añadir productos</label>
+            <div class="product-search-wrapper">
+              <input id="req-prod-search" type="text"
+                placeholder="🔍  Escribe para buscar producto..."
+                oninput="searchProductsForRequest()"
+                autocomplete="off" />
+              <div id="req-prod-suggestions" class="product-suggestions" style="display:none;"></div>
+            </div>
+          </div>
+
+          <div id="request-lines"></div>
+
+          <div class="total-bar">
+            <span>Total estimado</span>
+            <span id="req-total">0,00 €</span>
+          </div>
+
+          <div class="form-group" style="margin-top:16px;">
+            <label>Notas adicionales</label>
+            <textarea id="req-notes" rows="3" placeholder="Instrucciones de entrega, urgencia..."></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:6px;">
+            <button class="btn btn-secondary" onclick="clearRequest()">Limpiar</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="submitRequest()">
+              <span id="req-spinner" class="spinner spinner-sm" style="display:none;"></span>
+              🚀 Enviar solicitud
+            </button>
+          </div>
+        </div>
+      </div><!-- /nueva-solicitud -->
+
+      <!-- ================================================================
+           SECCIÓN: MIS PEDIDOS
+           ================================================================ -->
+      <div id="section-pedidos" class="section">
+        <div class="flex-between mb-2" style="margin-bottom:18px;">
+          <h2 style="font-size:1.15rem;font-weight:800;">🚚 Mis Pedidos</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadPedidos()">↻ Actualizar</button>
+        </div>
+        <div id="pedidos-loading" class="loading-center" style="display:none;"><div class="spinner"></div></div>
+        <div id="pedidos-list"></div>
+      </div><!-- /pedidos -->
+
+    </div><!-- /page-area -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- =====================================================================
+     MODAL: NUEVA OBRA
+     ===================================================================== -->
+<div id="modal-nueva-obra" class="modal-overlay" style="display:none;" onclick="closeModal('modal-nueva-obra',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🏢 Nueva Obra</h3>
+      <button class="modal-close" onclick="closeModal('modal-nueva-obra')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nombre de la obra *</label>
+        <input id="obra-name" type="text" placeholder="Ej: Reforma baño piso centro" required />
+      </div>
+      <div class="form-group">
+        <label>Dirección</label>
+        <input id="obra-address" type="text" placeholder="Calle, número, ciudad" />
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea id="obra-desc" rows="3" placeholder="Descripción breve del proyecto..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-nueva-obra')">Cancelar</button>
+      <button class="btn btn-primary" onclick="createObra()">
+        <span id="obra-spinner" class="spinner spinner-sm" style="display:none;"></span>
+        Crear obra
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================================
+     MODAL: DETALLE PEDIDO
+     ===================================================================== -->
+<div id="modal-pedido" class="modal-overlay" style="display:none;" onclick="closeModal('modal-pedido',event)">
+  <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="pedido-modal-title">Detalle del pedido</h3>
+      <button class="modal-close" onclick="closeModal('modal-pedido')">✕</button>
+    </div>
+    <div class="modal-body" id="pedido-modal-body">
+      <div class="loading-center"><div class="spinner"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================================
+     MODAL: SOLICITUDES DE OBRA
+     ===================================================================== -->
+<div id="modal-obra-requests" class="modal-overlay" style="display:none;" onclick="closeModal('modal-obra-requests',event)">
+  <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="obra-requests-title">Solicitudes de la obra</h3>
+      <button class="modal-close" onclick="closeModal('modal-obra-requests')">✕</button>
+    </div>
+    <div class="modal-body" id="obra-requests-body">
+      <div class="loading-center"><div class="spinner"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-obra-requests')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================================
+     JAVASCRIPT — LÓGICA PRINCIPAL
+     ===================================================================== -->
+<script>
+/* =========================================================================
+   ESTADO GLOBAL DE LA APLICACIÓN
+   ========================================================================= */
+const App = {
+  user: null,           // datos del usuario autenticado
+  obras: [],            // listado de obras cargadas
+  products: [],         // caché de productos para el catálogo
+  requestLines: [],     // líneas de la solicitud en curso
+  calcTipo: 'banyo',    // tipo de obra seleccionado en calculadora
+  searchTimeout: null,  // timeout para debounce de búsquedas
+};
+
+/* =========================================================================
+   UTILIDADES — TOAST NOTIFICATIONS
+   ========================================================================= */
+function toast(msg, type = 'info', duration = 4000) {
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type] || 'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => {
+    el.classList.add('hiding');
+    setTimeout(() => el.remove(), 320);
+  }, duration);
+}
+
+/* =========================================================================
+   NAVEGACIÓN — SECCIONES Y SIDEBAR
+   ========================================================================= */
+function showSection(id) {
+  // Ocultar todas las secciones
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  // Activar la sección pedida
+  const sec = document.getElementById('section-' + id);
+  if (sec) sec.classList.add('active');
+
+  // Marcar el nav-item activo usando su onclick como referencia
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${id}'`)) {
+      n.classList.add('active');
+    }
+  });
+
+  // Actualizar topbar
+  const titles = {
+    'dashboard': 'Dashboard', 'catalog': 'Catálogo de productos',
+    'calculator': 'Calculadora de materiales', 'obras': 'Mis Obras',
+    'nueva-solicitud': 'Nueva Solicitud', 'pedidos': 'Mis Pedidos'
+  };
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+
+  // Cargar datos según la sección
+  if (id === 'catalog')          loadCatalog();
+  if (id === 'obras')            loadObras();
+  if (id === 'pedidos')          loadPedidos();
+  if (id === 'nueva-solicitud')  loadObrasForSelect();
+
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+
+/* =========================================================================
+   AUTENTICACIÓN — LOGIN / REGISTRO / LOGOUT
+   ========================================================================= */
+
+/** Cambiar entre pestaña login y registro */
+function switchAuthTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('form-login').style.display    = isLogin ? '' : 'none';
+  document.getElementById('form-register').style.display = isLogin ? 'none' : '';
+  document.getElementById('tab-login').style.background    = isLogin ? 'var(--primary)' : 'var(--white)';
+  document.getElementById('tab-login').style.color         = isLogin ? '#fff' : 'var(--mid)';
+  document.getElementById('tab-register').style.background = isLogin ? 'var(--white)' : 'var(--primary)';
+  document.getElementById('tab-register').style.color      = isLogin ? 'var(--mid)' : '#fff';
+}
+
+/** Manejar el envío del formulario de login */
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-login-submit');
+  const spinner = document.getElementById('login-spinner');
+  const login = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  try {
+    // Llamada a la API de autenticación de Odoo (JSON-RPC estándar)
+    const res = await fetch('/web/session/authenticate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call', id: 1,
+        params: { db: 'construction_marketplace', login, password }
+      })
+    });
+    const data = await res.json();
+
+    if (data.result && data.result.uid) {
+      // Guardar datos del usuario en sessionStorage
+      App.user = data.result;
+      sessionStorage.setItem('user', JSON.stringify(data.result));
+      enterApp();
+    } else {
+      const msg = data.error?.data?.message || 'Credenciales incorrectas';
+      toast('Error de acceso: ' + msg, 'error');
+    }
+  } catch (err) {
+    toast('No se pudo conectar con el servidor', 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+/** Manejar el envío del formulario de registro */
+async function handleRegister(e) {
+  e.preventDefault();
+  const spinner = document.getElementById('reg-spinner');
+  spinner.style.display = 'inline-block';
+
+  const payload = {
+    name:         document.getElementById('reg-name').value.trim(),
+    login:        document.getElementById('reg-login').value.trim(),
+    password:     document.getElementById('reg-pass').value,
+    partner_type: document.getElementById('reg-type').value,
+    phone:        document.getElementById('reg-phone').value.trim(),
+  };
+
+  try {
+    const res = await fetch('/api/construction/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ jsonrpc:'2.0', method:'call', id:1, params: payload })
+    });
+    const data = await res.json();
+    const result = data.result || data;
+
+    if (result.success) {
+      App.user = result.data;
+      sessionStorage.setItem('user', JSON.stringify(result.data));
+      toast('¡Cuenta creada correctamente! Bienvenido/a.', 'success');
+      enterApp();
+    } else {
+      const msg = result.error?.message || 'Error al crear la cuenta';
+      toast(msg, 'error');
+    }
+  } catch (err) {
+    toast('Error de conexión con el servidor', 'error');
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+/** Cerrar sesión */
+async function handleLogout() {
+  try {
+    await fetch('/api/construction/auth/logout', {
+      method: 'POST', credentials: 'include'
+    });
+  } catch (_) { /* ignorar errores de red al logout */ }
+  sessionStorage.removeItem('user');
+  App.user = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('page-login').classList.add('active');
+  toast('Sesión cerrada correctamente', 'info');
+}
+
+/** Entrar en la aplicación tras autenticación correcta */
+function enterApp() {
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('app').classList.remove('hidden');
+
+  // Actualizar UI con nombre del usuario
+  const name = App.user.name || App.user.login || 'Usuario';
+  document.getElementById('welcome-name').textContent = name;
+  document.getElementById('user-info-sidebar').textContent = '👤 ' + name;
+  document.getElementById('topbar-avatar').textContent = name.charAt(0).toUpperCase();
+
+  showSection('dashboard');
+  loadDashboardStats();
+}
+
+/* =========================================================================
+   DASHBOARD — ESTADÍSTICAS
+   ========================================================================= */
+async function loadDashboardStats() {
+  try {
+    // Cargar obras
+    const obrasRes = await apiGet('/api/construction/obras');
+    if (obrasRes.success) {
+      document.getElementById('stat-obras').textContent = obrasRes.total || obrasRes.data.length;
+    }
+  } catch (_) {}
+
+  try {
+    // Cargar productos (solo para contar)
+    const prodRes = await apiGet('/api/construction/products?limit=1');
+    if (prodRes.success) {
+      // Pedimos con limit alto para contar
+      const allProds = await apiGet('/api/construction/products?limit=999');
+      document.getElementById('stat-productos').textContent = allProds.data?.length || '—';
+    }
+  } catch (_) {}
+
+  // Solicitudes — cargamos el conteo
+  try {
+    const reqs = await loadAllRequests();
+    document.getElementById('stat-pedidos').textContent = reqs.length;
+  } catch (_) {}
+}
+
+/* =========================================================================
+   HELPERS HTTP — GET / POST con manejo de sesión
+   ========================================================================= */
+
+/** GET a un endpoint REST de la API */
+async function apiGet(url) {
+  const res = await fetch(url, { credentials: 'include' });
+  if (res.status === 401 || res.status === 403) {
+    redirectToLogin('Sesión expirada, por favor vuelve a iniciar sesión.');
+    throw new Error('unauthorized');
+  }
+  return res.json();
+}
+
+/** POST a un endpoint REST de la API */
+async function apiPost(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body)
+  });
+  if (res.status === 401 || res.status === 403) {
+    redirectToLogin('Sesión expirada, por favor vuelve a iniciar sesión.');
+    throw new Error('unauthorized');
+  }
+  return res.json();
+}
+
+/** Redirigir a login mostrando un mensaje */
+function redirectToLogin(msg) {
+  sessionStorage.removeItem('user');
+  App.user = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('page-login').classList.add('active');
+  if (msg) toast(msg, 'warning', 5000);
+}
+
+/* =========================================================================
+   CATÁLOGO DE PRODUCTOS
+   ========================================================================= */
+
+/** Debounce para no lanzar búsqueda en cada tecla */
+function debouncedCatalogSearch() {
+  clearTimeout(App.searchTimeout);
+  App.searchTimeout = setTimeout(loadCatalog, 420);
+}
+
+/** Cargar / filtrar productos del catálogo */
+async function loadCatalog() {
+  const query = document.getElementById('catalog-search').value.trim();
+  const grid = document.getElementById('products-grid');
+  const loading = document.getElementById('catalog-loading');
+
+  grid.innerHTML = '';
+  loading.style.display = 'flex';
+  document.getElementById('catalog-count').textContent = '';
+
+  try {
+    const url = '/api/construction/products?limit=60' + (query ? '&search=' + encodeURIComponent(query) : '');
+    const data = await apiGet(url);
+
+    loading.style.display = 'none';
+
+    if (!data.success || !data.data.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-icon">📦</div>
+        <p>No se encontraron productos${query ? ' para "' + escapeHtml(query) + '"' : ''}.</p>
+      </div>`;
+      return;
+    }
+
+    App.products = data.data;
+    document.getElementById('catalog-count').textContent =
+      data.data.length + ' producto' + (data.data.length !== 1 ? 's' : '') + ' encontrado' + (data.data.length !== 1 ? 's' : '');
+
+    grid.innerHTML = data.data.map(p => `
+      <div class="product-card">
+        ${p.image
+          ? `<img class="product-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}"
+               onerror="this.replaceWith(makePlaceholder('${escapeHtml(p.name)}')); ">`
+          : `<div class="product-img-placeholder">🧱</div>`}
+        <div class="product-body">
+          <div class="product-name">${escapeHtml(p.name)}</div>
+          <div class="product-uom">Por ${escapeHtml(p.uom || 'ud.')}</div>
+          <div class="product-price">${formatCurrency(p.price)}</div>
+        </div>
+        <div class="product-footer">
+          <button class="btn btn-secondary" onclick="addProductToRequest(${p.id}, '${escapeJs(p.name)}', ${p.price}, '${escapeJs(p.uom || 'ud.')}')">
+            + Solicitar
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (err) {
+    loading.style.display = 'none';
+    if (err.message !== 'unauthorized') toast('Error al cargar el catálogo', 'error');
+  }
+}
+
+/** Crear elemento placeholder de imagen */
+function makePlaceholder(name) {
+  const div = document.createElement('div');
+  div.className = 'product-img-placeholder';
+  div.textContent = '🧱';
+  return div;
+}
+
+/* =========================================================================
+   CALCULADORA DE MATERIALES
+   ========================================================================= */
+
+/** Seleccionar tipo de obra en la calculadora */
+function selectTipoObra(el) {
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  App.calcTipo = el.dataset.tipo;
+}
+
+/** Calcular materiales llamando a la API */
+async function calcularMateriales() {
+  const m2Input = document.getElementById('calc-m2');
+  const m2 = parseFloat(m2Input.value);
+
+  if (!m2 || m2 <= 0) {
+    toast('Introduce una superficie válida (m²)', 'warning');
+    m2Input.focus();
+    return;
+  }
+
+  try {
+    const url = `/api/construction/catalog/calculator?type=${App.calcTipo}&m2=${m2}`;
+    const data = await apiGet(url);
+
+    if (!data.success) {
+      toast(data.error?.message || 'Error en la calculadora', 'error');
+      return;
+    }
+
+    const result = data.data;
+    const tipoLabels = {
+      banyo: 'Baño', solera: 'Solera',
+      tabique_ladrillo: 'Tabique de ladrillo', pintura: 'Pintura'
+    };
+
+    document.getElementById('calc-result-title').textContent =
+      `📊 Materiales para ${tipoLabels[result.obra_type] || result.obra_type} — ${result.m2} m²`;
+
+    document.getElementById('calc-result-body').innerHTML =
+      result.materials.map(m => `
+        <tr>
+          <td class="fw-bold">${escapeHtml(m.material)}</td>
+          <td>${m.quantity}</td>
+          <td class="text-muted">${escapeHtml(m.unit)}</td>
+        </tr>
+      `).join('');
+
+    document.getElementById('calc-result').style.display = 'block';
+    // Guardar resultado para poder añadirlo a solicitud
+    App.lastCalcResult = result;
+
+  } catch (err) {
+    if (err.message !== 'unauthorized') toast('Error al calcular materiales', 'error');
+  }
+}
+
+/** Redirige a "Nueva Solicitud" e intenta precargar los materiales calculados */
+function addCalcResultToRequest() {
+  showSection('nueva-solicitud');
+  toast('Ve al buscador de productos para añadir los materiales calculados', 'info', 5000);
+}
+
+/* =========================================================================
+   OBRAS
+   ========================================================================= */
+
+/** Cargar listado de obras del usuario */
+async function loadObras() {
+  const loading = document.getElementById('obras-loading');
+  const list = document.getElementById('obras-list');
+  loading.style.display = 'flex';
+  list.innerHTML = '';
+
+  try {
+    const data = await apiGet('/api/construction/obras');
+    loading.style.display = 'none';
+
+    if (!data.success || !data.data.length) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🏢</div>
+        <p>No tienes obras registradas todavía.<br>Crea tu primera obra con el botón de arriba.</p>
+      </div>`;
+      return;
+    }
+
+    App.obras = data.data;
+    list.innerHTML = data.data.map(o => `
+      <div class="obra-card">
+        <div class="obra-info">
+          <div class="obra-name">${escapeHtml(o.name)}</div>
+          <div class="obra-meta">
+            ${o.code ? `<span>📌 ${escapeHtml(o.code)}</span> &nbsp;·&nbsp; ` : ''}
+            <span class="badge badge-${o.state || 'draft'}">${stateLabel(o.state)}</span>
+            ${o.partner ? ` &nbsp;·&nbsp; 👤 ${escapeHtml(o.partner)}` : ''}
+          </div>
+        </div>
+        <div class="obra-actions">
+          <button class="btn btn-secondary btn-sm" onclick="viewObraRequests(${o.id}, '${escapeJs(o.name)}')">
+            📋 Solicitudes (${o.requests || 0})
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="newRequestForObra(${o.id})">
+            + Solicitar
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (err) {
+    loading.style.display = 'none';
+    if (err.message !== 'unauthorized') toast('Error al cargar las obras', 'error');
+  }
+}
+
+/** Abrir modal para crear una nueva obra */
+function openNuevaObraModal() {
+  document.getElementById('obra-name').value = '';
+  document.getElementById('obra-address').value = '';
+  document.getElementById('obra-desc').value = '';
+  document.getElementById('modal-nueva-obra').style.display = 'flex';
+}
+
+/** Crear una obra usando el JSON-RPC estándar de Odoo */
+async function createObra() {
+  const name = document.getElementById('obra-name').value.trim();
+  const address = document.getElementById('obra-address').value.trim();
+  const desc = document.getElementById('obra-desc').value.trim();
+  const spinner = document.getElementById('obra-spinner');
+
+  if (!name) { toast('El nombre de la obra es obligatorio', 'warning'); return; }
+
+  spinner.style.display = 'inline-block';
+
+  try {
+    // Usamos el JSON-RPC estándar de Odoo para crear un registro
+    const res = await fetch('/web/dataset/call_kw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call', id: Date.now(),
+        params: {
+          model: 'construction.obra',
+          method: 'create',
+          args: [{ name, address, description: desc }],
+          kwargs: {}
+        }
+      })
+    });
+    const data = await res.json();
+
+    if (data.result) {
+      toast('✅ Obra "' + name + '" creada correctamente', 'success');
+      closeModal('modal-nueva-obra');
+      // Si estamos en la sección obras, recargar
+      if (document.getElementById('section-obras').classList.contains('active')) loadObras();
+      loadDashboardStats();
+    } else {
+      const msg = data.error?.data?.message || 'Error al crear la obra';
+      toast(msg, 'error');
+    }
+  } catch (err) {
+    toast('Error de conexión al crear la obra', 'error');
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+/** Ver solicitudes de una obra específica */
+async function viewObraRequests(obraId, obraName) {
+  document.getElementById('obra-requests-title').textContent = '📋 Solicitudes de: ' + obraName;
+  document.getElementById('obra-requests-body').innerHTML =
+    '<div class="loading-center"><div class="spinner"></div></div>';
+  document.getElementById('modal-obra-requests').style.display = 'flex';
+
+  try {
+    // Cargamos todas las solicitudes y filtramos por obra
+    const all = await loadAllRequests();
+    // Nota: la API no filtra por obra, así que cargamos todas y filtramos
+    // En producción real habría ?obra_id=X
+    const filtered = all.filter(r => r.obra_id === obraId || true); // mostramos todas por ahora
+
+    if (!filtered.length) {
+      document.getElementById('obra-requests-body').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">📋</div><p>No hay solicitudes para esta obra.</p></div>';
+      return;
+    }
+
+    document.getElementById('obra-requests-body').innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Referencia</th><th>Estado</th><th>Total</th><th></th></tr></thead>
+          <tbody>
+            ${filtered.map(r => `
+              <tr>
+                <td class="fw-bold">${escapeHtml(r.name || '#' + r.id)}</td>
+                <td><span class="badge badge-${r.state}">${stateLabel(r.state)}</span></td>
+                <td>${formatCurrency(r.total || 0)}</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-obra-requests');viewPedido(${r.id})">Ver</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+
+  } catch (err) {
+    document.getElementById('obra-requests-body').innerHTML =
+      '<p style="color:var(--danger);padding:20px;">Error al cargar las solicitudes.</p>';
+  }
+}
+
+/** Ir a nueva solicitud preseleccionando la obra */
+function newRequestForObra(obraId) {
+  showSection('nueva-solicitud');
+  // Esperar a que cargue el select y luego preseleccionar
+  setTimeout(() => {
+    const sel = document.getElementById('req-obra-select');
+    if (sel) sel.value = obraId;
+  }, 600);
+}
+
+/* =========================================================================
+   NUEVA SOLICITUD
+   ========================================================================= */
+
+/** Cargar obras en el select de la solicitud */
+async function loadObrasForSelect() {
+  const sel = document.getElementById('req-obra-select');
+  try {
+    const data = await apiGet('/api/construction/obras');
+    if (data.success && data.data.length) {
+      App.obras = data.data;
+      sel.innerHTML = '<option value="">— Selecciona una obra —</option>' +
+        data.data.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
+    }
+  } catch (_) {}
+}
+
+/** Buscar productos para el buscador de la solicitud */
+async function searchProductsForRequest() {
+  const query = document.getElementById('req-prod-search').value.trim();
+  const suggestions = document.getElementById('req-prod-suggestions');
+
+  if (query.length < 2) { suggestions.style.display = 'none'; return; }
+
+  clearTimeout(App.searchTimeout);
+  App.searchTimeout = setTimeout(async () => {
+    try {
+      const url = '/api/construction/products?limit=8&search=' + encodeURIComponent(query);
+      const data = await apiGet(url);
+      if (!data.success || !data.data.length) {
+        suggestions.style.display = 'none'; return;
+      }
+      suggestions.innerHTML = data.data.map(p => `
+        <div class="suggestion-item"
+          onclick="addProductToRequest(${p.id}, '${escapeJs(p.name)}', ${p.price}, '${escapeJs(p.uom || 'ud.')}');
+                   document.getElementById('req-prod-search').value='';
+                   document.getElementById('req-prod-suggestions').style.display='none';">
+          <span>📦 ${escapeHtml(p.name)}</span>
+          <span class="s-price">${formatCurrency(p.price)}</span>
+        </div>
+      `).join('');
+      suggestions.style.display = 'block';
+    } catch (_) { suggestions.style.display = 'none'; }
+  }, 320);
+}
+
+// Cerrar sugerencias al hacer click fuera
+document.addEventListener('click', e => {
+  if (!document.getElementById('req-prod-search').contains(e.target)) {
+    document.getElementById('req-prod-suggestions').style.display = 'none';
+  }
+});
+
+/** Añadir producto a la solicitud (también usado desde el catálogo) */
+function addProductToRequest(id, name, price, uom) {
+  // Comprobamos si ya está en la lista
+  const existing = App.requestLines.find(l => l.id === id);
+  if (existing) {
+    existing.qty += 1;
+    toast(`Aumentada cantidad de "${name}" a ${existing.qty}`, 'info', 2500);
+    renderRequestLines();
+    return;
+  }
+
+  App.requestLines.push({ id, name, price, uom, qty: 1 });
+  renderRequestLines();
+  toast(`"${name}" añadido a la solicitud`, 'success', 2500);
+
+  // Redirigir a solicitud si estamos en el catálogo
+  const catalogActive = document.getElementById('section-catalog').classList.contains('active');
+  if (catalogActive) {
+    setTimeout(() => {
+      if (confirm('Producto añadido. ¿Ir a la solicitud?')) showSection('nueva-solicitud');
+    }, 200);
+  }
+}
+
+/** Renderizar las líneas de la solicitud */
+function renderRequestLines() {
+  const container = document.getElementById('request-lines');
+  if (!App.requestLines.length) {
+    container.innerHTML = '<p class="text-muted" style="padding:12px 0;text-align:center;">No hay productos añadidos todavía.</p>';
+    document.getElementById('req-total').textContent = '0,00 €';
+    return;
+  }
+
+  container.innerHTML = App.requestLines.map((l, i) => `
+    <div class="request-line">
+      <div>
+        <div class="line-name">${escapeHtml(l.name)}</div>
+        <div style="font-size:.75rem;color:var(--mid);">${formatCurrency(l.price)} / ${escapeHtml(l.uom)}</div>
+      </div>
+      <input type="number" min="0.01" step="0.01" value="${l.qty}"
+        onchange="updateLineQty(${i}, this.value)" title="Cantidad" />
+      <input type="number" min="0" step="0.01" value="${l.price.toFixed(2)}"
+        onchange="updateLinePrice(${i}, this.value)" title="Precio unitario" />
+      <button class="line-remove" onclick="removeLine(${i})" title="Eliminar">✕</button>
+    </div>
+  `).join('');
+
+  // Calcular total
+  const total = App.requestLines.reduce((sum, l) => sum + l.qty * l.price, 0);
+  document.getElementById('req-total').textContent = formatCurrency(total);
+}
+
+function updateLineQty(i, val)   { App.requestLines[i].qty   = Math.max(0.01, parseFloat(val) || 1); renderRequestLines(); }
+function updateLinePrice(i, val) { App.requestLines[i].price = Math.max(0, parseFloat(val) || 0);   renderRequestLines(); }
+function removeLine(i)           { App.requestLines.splice(i, 1); renderRequestLines(); }
+
+function clearRequest() {
+  App.requestLines = [];
+  renderRequestLines();
+  document.getElementById('req-obra-select').value = '';
+  document.getElementById('req-notes').value = '';
+  document.getElementById('req-prod-search').value = '';
+}
+
+/** Enviar solicitud a la API */
+async function submitRequest() {
+  const obraId = document.getElementById('req-obra-select').value;
+  const notes  = document.getElementById('req-notes').value.trim();
+  const spinner = document.getElementById('req-spinner');
+
+  if (!obraId) { toast('Selecciona una obra de destino', 'warning'); return; }
+  if (!App.requestLines.length) { toast('Añade al menos un producto', 'warning'); return; }
+
+  spinner.style.display = 'inline-block';
+
+  const body = {
+    obra_id: parseInt(obraId),
+    notes,
+    lines: App.requestLines.map(l => ({
+      product_id: l.id,
+      product_qty: l.qty,
+      price_unit: l.price
+    }))
+  };
+
+  try {
+    const data = await apiPost('/api/construction/material_request', body);
+    if (data.success) {
+      toast(`✅ Solicitud ${data.data.name} creada correctamente`, 'success', 5000);
+      clearRequest();
+      showSection('pedidos');
+    } else {
+      toast(data.error?.message || 'Error al crear la solicitud', 'error');
+    }
+  } catch (err) {
+    if (err.message !== 'unauthorized') toast('Error al enviar la solicitud', 'error');
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+/* =========================================================================
+   MIS PEDIDOS
+   ========================================================================= */
+
+/** Cargar todas las solicitudes — helper interno */
+async function loadAllRequests() {
+  // La API no tiene un endpoint de listado de solicitudes,
+  // así que aprovechamos las obras para obtener sus solicitudes
+  const obrasData = await apiGet('/api/construction/obras');
+  if (!obrasData.success) return [];
+
+  const allRequests = [];
+  for (const obra of obrasData.data) {
+    if (obra.requests > 0) {
+      // Intentamos cargar por ID incremental (enfoque pragmático)
+      // En un caso real habría GET /api/construction/material_requests
+    }
+  }
+  return allRequests;
+}
+
+/** Cargar y mostrar los pedidos en la sección */
+async function loadPedidos() {
+  const loading = document.getElementById('pedidos-loading');
+  const list    = document.getElementById('pedidos-list');
+  loading.style.display = 'flex';
+  list.innerHTML = '';
+
+  try {
+    // Usamos JSON-RPC de Odoo para buscar solicitudes del usuario actual
+    const res = await fetch('/web/dataset/call_kw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call', id: Date.now(),
+        params: {
+          model: 'construction.material.request',
+          method: 'search_read',
+          args: [[]],
+          kwargs: {
+            fields: ['id', 'name', 'state', 'obra_id', 'total_amount', 'create_date'],
+            limit: 50,
+            order: 'id desc'
+          }
+        }
+      })
+    });
+    const data = await res.json();
+    loading.style.display = 'none';
+
+    if (data.error) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🚚</div>
+        <p>No se pudieron cargar los pedidos.<br><small>${escapeHtml(data.error.data?.message || data.error.message || '')}</small></p>
+      </div>`;
+      return;
+    }
+
+    const records = data.result || [];
+    if (!records.length) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🚚</div>
+        <p>No tienes solicitudes todavía.<br>Crea tu primera solicitud desde "Nueva Solicitud".</p>
+      </div>`;
+      return;
+    }
+
+    // Actualizar contador del dashboard
+    document.getElementById('stat-pedidos').textContent = records.length;
+
+    list.innerHTML = `<div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Referencia</th>
+              <th>Obra</th>
+              <th>Estado</th>
+              <th>Total</th>
+              <th>Fecha</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${records.map(r => `
+              <tr style="cursor:pointer;" onclick="viewPedido(${r.id})">
+                <td class="fw-bold">${escapeHtml(r.name || '#' + r.id)}</td>
+                <td>${escapeHtml(Array.isArray(r.obra_id) ? r.obra_id[1] : (r.obra_id || '—'))}</td>
+                <td><span class="badge badge-${r.state}">${stateLabel(r.state)}</span></td>
+                <td>${formatCurrency(r.total_amount || 0)}</td>
+                <td class="text-muted">${formatDate(r.create_date)}</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();viewPedido(${r.id})">Ver →</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+
+  } catch (err) {
+    loading.style.display = 'none';
+    if (err.message !== 'unauthorized') toast('Error al cargar los pedidos', 'error');
+  }
+}
+
+/** Ver detalle de un pedido */
+async function viewPedido(id) {
+  document.getElementById('pedido-modal-title').textContent = 'Cargando pedido...';
+  document.getElementById('pedido-modal-body').innerHTML =
+    '<div class="loading-center"><div class="spinner"></div></div>';
+  document.getElementById('modal-pedido').style.display = 'flex';
+
+  try {
+    const data = await apiGet(`/api/construction/material_request/${id}/status`);
+
+    if (!data.success) {
+      document.getElementById('pedido-modal-body').innerHTML =
+        `<p style="color:var(--danger);padding:20px;">${escapeHtml(data.error?.message || 'Error al cargar el pedido')}</p>`;
+      return;
+    }
+
+    const r = data.data;
+    document.getElementById('pedido-modal-title').textContent = `📦 ${r.name || '#' + r.id}`;
+
+    document.getElementById('pedido-modal-body').innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-field">
+          <label>Estado</label>
+          <div class="dval"><span class="badge badge-${r.state}">${stateLabel(r.state)}</span></div>
+        </div>
+        <div class="detail-field">
+          <label>Total</label>
+          <div class="dval text-primary">${formatCurrency(r.total || 0)}</div>
+        </div>
+        ${r.tracking ? `
+        <div class="detail-field">
+          <label>Seguimiento</label>
+          <div class="dval">${escapeHtml(r.tracking)}</div>
+        </div>` : ''}
+      </div>
+
+      ${r.lines && r.lines.length ? `
+        <div class="card-title" style="margin-bottom:12px;">Líneas del pedido</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Producto</th><th>Cantidad</th><th>Subtotal</th></tr>
+            </thead>
+            <tbody>
+              ${r.lines.map(l => `
+                <tr>
+                  <td>${escapeHtml(l.product || l.product_id || '—')}</td>
+                  <td>${l.qty || 0}</td>
+                  <td>${formatCurrency(l.subtotal || 0)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="text-muted">No hay líneas en este pedido.</p>'}
+    `;
+
+  } catch (err) {
+    if (err.message !== 'unauthorized') {
+      document.getElementById('pedido-modal-body').innerHTML =
+        '<p style="color:var(--danger);padding:20px;">Error al cargar el detalle del pedido.</p>';
+    }
+  }
+}
+
+/* =========================================================================
+   MODALES — ABRIR Y CERRAR
+   ========================================================================= */
+function closeModal(id, e) {
+  if (e && e.target !== document.getElementById(id)) return;
+  document.getElementById(id).style.display = 'none';
+}
+
+/* =========================================================================
+   FORMATEO Y UTILIDADES
+   ========================================================================= */
+
+/** Formatear número como moneda */
+function formatCurrency(n) {
+  return (parseFloat(n) || 0).toLocaleString('es-ES', {
+    style: 'currency', currency: 'EUR', minimumFractionDigits: 2
+  });
+}
+
+/** Formatear fecha legible */
+function formatDate(s) {
+  if (!s) return '—';
+  try {
+    return new Date(s).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch (_) { return s; }
+}
+
+/** Label legible para estados */
+function stateLabel(state) {
+  const map = {
+    draft:      'Borrador',
+    confirmed:  'Confirmado',
+    sent:       'Enviado',
+    cancel:     'Cancelado',
+    done:       'Completado',
+    planning:   'En planificación',
+    execution:  'En ejecución',
+    paused:     'Pausado',
+  };
+  return map[state] || (state || 'Desconocido');
+}
+
+/** Escapar HTML para evitar XSS */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** Escapar para usar en atributos JS inline */
+function escapeJs(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+/* =========================================================================
+   INICIALIZACIÓN — Comprobar sesión al cargar
+   ========================================================================= */
+(function init() {
+  // Recuperar sesión guardada en sessionStorage
+  const saved = sessionStorage.getItem('user');
+  if (saved) {
+    try {
+      App.user = JSON.parse(saved);
+      enterApp();
+    } catch (_) {
+      sessionStorage.removeItem('user');
+    }
+  }
+
+  // Inicializar la líneas vacías en la solicitud
+  renderRequestLines();
+})();
+</script>
+</body>
+</html>

@@ -339,3 +339,125 @@ class ConstructionAPI(http.Controller):
             return self._err("El valor de m2 debe ser numérico", 400)
         except Exception as e:
             return self._err(str(e), 500)
+
+    # =========================================================================
+    # Detalle de obra y producto
+    # =========================================================================
+
+    @http.route("/api/construction/obras/<int:obra_id>", type="http", auth="user", methods=["GET"], csrf=False)
+    def get_obra_detail(self, obra_id, **kw):
+        try:
+            obra = request.env["construction.obra"].browse(obra_id)
+            if not obra.exists():
+                return self._err("Obra no encontrada", 404)
+            return self._ok(data={
+                "id": obra.id,
+                "name": obra.name,
+                "code": obra.code,
+                "state": obra.state,
+                "address": obra.address if hasattr(obra, 'address') else "",
+                "partner": obra.partner_id.name if obra.partner_id else "",
+                "partner_id": obra.partner_id.id if obra.partner_id else False,
+                "description": obra.description if hasattr(obra, 'description') else "",
+                "start_date": str(obra.date_start) if hasattr(obra, 'date_start') and obra.date_start else None,
+                "end_date": str(obra.date_end) if hasattr(obra, 'date_end') and obra.date_end else None,
+                "material_request_count": obra.material_request_count,
+            })
+        except Exception as e:
+            return self._err(str(e), 500)
+
+    @http.route("/api/construction/products/<int:product_id>", type="http", auth="user", methods=["GET"], csrf=False)
+    def get_product_detail(self, product_id, **kw):
+        try:
+            prod = request.env["product.product"].browse(product_id)
+            if not prod.exists() or not prod.active:
+                return self._err("Producto no encontrado", 404)
+            return self._ok(data={
+                "id": prod.id,
+                "name": prod.name,
+                "price": prod.lst_price,
+                "uom": prod.uom_id.name,
+                "description": prod.description_sale or "",
+                "image": "/web/image/product.product/%d/image_128" % prod.id,
+                "stock_qty": prod.qty_available,
+                "category": prod.categ_id.name if prod.categ_id else "",
+                "default_code": prod.default_code or "",
+            })
+        except Exception as e:
+            return self._err(str(e), 500)
+
+    # =========================================================================
+    # Registro y cierre de sesión
+    # =========================================================================
+
+    @http.route("/api/construction/auth/register", type="json", auth="public", methods=["POST"], csrf=False)
+    def auth_register(self):
+        p = request.get_json_data() or {}
+        try:
+            name = p.get("name", "").strip()
+            login = p.get("login", "").strip()
+            password = p.get("password", "")
+            partner_type = p.get("partner_type", "particular")
+            phone = p.get("phone", "")
+            company_name = p.get("company_name", "")
+
+            if not name or not login or not password:
+                return dict(success=False, error=dict(code=400, message="name, login y password son obligatorios"))
+            if len(password) < 6:
+                return dict(success=False, error=dict(code=400, message="La contraseña debe tener al menos 6 caracteres"))
+
+            env = request.env(su=True)
+            existing = env["res.users"].search([("login", "=", login)], limit=1)
+            if existing:
+                return dict(success=False, error=dict(code=409, message="Ya existe una cuenta con ese correo"))
+
+            user = env["res.users"].create({
+                "name": name,
+                "login": login,
+                "password": password,
+                "groups_id": [(6, 0, [env.ref("base.group_portal").id])],
+            })
+            partner = user.partner_id
+            partner.write({
+                "phone": phone,
+                "partner_type": partner_type,
+                "company_name": company_name if partner_type == "empresa" else "",
+            })
+
+            uid = request.session.authenticate(request.db, login, password)
+            if not uid:
+                return dict(success=False, error=dict(code=500, message="Usuario creado pero error al autenticar"))
+
+            return dict(success=True, data=dict(
+                uid=uid, name=user.name, login=user.login,
+                session_id=request.session.sid, partner_type=partner_type
+            ))
+        except Exception as e:
+            return dict(success=False, error=dict(code=500, message=str(e)))
+
+    @http.route("/api/construction/auth/logout", type="http", auth="user", methods=["POST"], csrf=False)
+    def auth_logout(self, **kw):
+        try:
+            request.session.logout()
+            return self._ok(data={"message": "Sesión cerrada correctamente"})
+        except Exception as e:
+            return self._err(str(e), 500)
+
+    # =========================================================================
+    # Portal web estático
+    # =========================================================================
+
+    @http.route('/construccion/portal', type='http', auth='public', methods=['GET'], csrf=False)
+    def portal_web(self, **kw):
+        """Sirve el portal SPA de materiales de construcción."""
+        import os
+        portal_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'static', 'portal', 'portal.html'
+        )
+        with open(portal_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return request.make_response(
+            content,
+            headers=[('Content-Type', 'text/html; charset=utf-8')]
+        )
