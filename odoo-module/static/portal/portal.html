@@ -1,1933 +1,1796 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ConstructionHub — Portal de Materiales</title>
-  <style>
-    /* =====================================================================
-       VARIABLES Y RESET
-       ===================================================================== */
-    :root {
-      --primary:       #F57C00;
-      --primary-dark:  #E65100;
-      --primary-light: #FF8F00;
-      --accent:        #FFB300;
-      --dark:          #212121;
-      --dark2:         #333333;
-      --mid:           #555555;
-      --light:         #F5F5F5;
-      --white:         #FFFFFF;
-      --border:        #E0E0E0;
-      --success:       #388E3C;
-      --warning:       #F9A825;
-      --danger:        #C62828;
-      --info:          #1565C0;
-      --radius:        10px;
-      --shadow:        0 2px 12px rgba(0,0,0,.12);
-      --shadow-lg:     0 8px 32px rgba(0,0,0,.18);
-      --transition:    .22s ease;
-      --sidebar-w:     240px;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 15px; }
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--light);
-      color: var(--dark);
-      min-height: 100vh;
-    }
-    a { text-decoration: none; color: inherit; }
-    button { cursor: pointer; font-family: inherit; }
-    input, select, textarea { font-family: inherit; }
-    img { max-width: 100%; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction Marketplace</title>
+<style>
+  /* ==============================
+     RESET & BASE
+     ============================== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* =====================================================================
-       LAYOUT — SIDEBAR + CONTENT
-       ===================================================================== */
-    #app { display: flex; min-height: 100vh; }
+  :root {
+    --primary: #F57C00;
+    --primary-dark: #E65100;
+    --primary-light: #FFB74D;
+    --primary-bg: #FFF3E0;
+    --sidebar-bg: #1a1a2e;
+    --sidebar-hover: #16213e;
+    --sidebar-active: #0f3460;
+    --sidebar-text: #a8b2d8;
+    --sidebar-text-active: #ffffff;
+    --white: #ffffff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --green: #10b981;
+    --green-bg: #d1fae5;
+    --red: #ef4444;
+    --red-bg: #fee2e2;
+    --yellow: #f59e0b;
+    --yellow-bg: #fef3c7;
+    --blue: #3b82f6;
+    --blue-bg: #dbeafe;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+    --transition: 0.2s ease;
+    --sidebar-width: 240px;
+    --header-height: 64px;
+  }
 
-    /* Sidebar */
-    #sidebar {
-      width: var(--sidebar-w);
-      background: var(--dark2);
-      color: var(--white);
-      display: flex;
-      flex-direction: column;
+  body {
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ==============================
+     AUTH SCREEN
+     ============================== */
+  #auth-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #E65100 100%);
+    padding: 20px;
+  }
+
+  .auth-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .auth-logo-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .auth-logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gray-900);
+  }
+
+  .auth-logo p {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-top: 4px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .auth-tab.active {
+    background: var(--white);
+    color: var(--primary);
+    box-shadow: var(--shadow);
+  }
+
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--gray-800);
+    background: var(--white);
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(245, 124, 0, 0.1);
+  }
+
+  .form-group input.error {
+    border-color: var(--red);
+  }
+
+  .field-error {
+    font-size: 12px;
+    color: var(--red);
+    margin-top: 4px;
+    display: none;
+  }
+
+  .field-error.visible { display: block; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: var(--white);
+    width: 100%;
+    padding: 13px;
+    font-size: 15px;
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,124,0,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 1.5px solid var(--gray-200);
+  }
+  .btn-secondary:hover { background: var(--gray-200); }
+
+  .btn-danger { background: var(--red); color: white; }
+  .btn-danger:hover { opacity: 0.9; }
+
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .btn-icon { padding: 8px; border-radius: var(--radius-sm); }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .loading .spinner { display: inline-block; }
+  .loading .btn-text { display: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .server-error {
+    background: var(--red-bg);
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .server-error.visible { display: block; }
+
+  /* ==============================
+     APP LAYOUT
+     ============================== */
+  #app-screen { display: none; height: 100vh; overflow: hidden; }
+
+  .app-layout {
+    display: flex;
+    height: 100%;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width var(--transition), transform var(--transition);
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  .sidebar-logo {
+    padding: 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .sidebar-logo-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .sidebar-logo-text span {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--sidebar-text);
+    margin-top: 1px;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 8px;
+    overflow-y: auto;
+  }
+
+  .sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  .nav-section {
+    margin-bottom: 8px;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(168,178,216,0.5);
+    padding: 8px 12px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--sidebar-text);
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .nav-item:hover {
+    background: var(--sidebar-hover);
+    color: var(--white);
+  }
+
+  .nav-item.active {
+    background: var(--sidebar-active);
+    color: var(--white);
+  }
+
+  .nav-item.active .nav-icon {
+    color: var(--primary-light);
+  }
+
+  .nav-icon {
+    font-size: 18px;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .nav-label { overflow: hidden; }
+
+  .sidebar-footer {
+    padding: 12px 8px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+
+  .user-card:hover { background: var(--sidebar-hover); }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .user-info { overflow: hidden; flex: 1; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--sidebar-text); }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background var(--transition);
+    flex-shrink: 0;
+    border: none;
+  }
+  .logout-btn:hover { background: rgba(239,68,68,0.3); }
+
+  /* MAIN CONTENT */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .header {
+    height: var(--header-height);
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow);
+  }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    color: var(--gray-600);
+    font-size: 20px;
+  }
+  .hamburger:hover { background: var(--gray-100); }
+
+  .page-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+    flex: 1;
+  }
+
+  .page-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .page-body::-webkit-scrollbar { width: 6px; }
+  .page-body::-webkit-scrollbar-track { background: transparent; }
+  .page-body::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+
+  /* ==============================
+     SECTIONS
+     ============================== */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ==============================
+     DASHBOARD
+     ============================== */
+  .greeting {
+    margin-bottom: 24px;
+  }
+  .greeting h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-900);
+  }
+  .greeting p { color: var(--gray-500); font-size: 14px; margin-top: 4px; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow var(--transition), transform var(--transition);
+    cursor: pointer;
+  }
+
+  .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+  .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .stat-icon.orange { background: var(--primary-bg); }
+  .stat-icon.green { background: var(--green-bg); }
+  .stat-icon.blue { background: var(--blue-bg); }
+  .stat-icon.yellow { background: var(--yellow-bg); }
+
+  .stat-info { flex: 1; min-width: 0; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--gray-900); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+
+  .quick-actions {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .quick-actions h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 16px;
+  }
+
+  .quick-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .quick-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--gray-50);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .quick-btn:hover { background: var(--primary-bg); border-color: var(--primary-light); color: var(--primary-dark); }
+  .quick-btn .icon { font-size: 16px; }
+
+  /* ==============================
+     CATALOG
+     ============================== */
+  .search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+
+  .search-input-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .search-input-wrap input {
+    width: 100%;
+    padding: 11px 14px 11px 40px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--white);
+    transition: border-color var(--transition);
+    outline: none;
+  }
+
+  .search-input-wrap input:focus { border-color: var(--primary); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .product-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow var(--transition), transform var(--transition);
+    cursor: pointer;
+    border: 1.5px solid transparent;
+  }
+
+  .product-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+    border-color: var(--primary-light);
+  }
+
+  .product-image {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: var(--gray-300);
+    overflow: hidden;
+  }
+
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-body {
+    padding: 14px;
+  }
+
+  .product-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 6px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-price {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary-dark);
+  }
+
+  .product-uom {
+    font-size: 12px;
+    color: var(--gray-400);
+    font-weight: 400;
+  }
+
+  .product-action {
+    margin-top: 12px;
+  }
+
+  .btn-add {
+    width: 100%;
+    padding: 9px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-add:hover { background: var(--primary-dark); }
+
+  /* ==============================
+     CALCULATOR
+     ============================== */
+  .calc-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .calc-type-btn {
+    background: var(--white);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 20px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .calc-type-btn:hover { border-color: var(--primary); background: var(--primary-bg); }
+  .calc-type-btn.selected { border-color: var(--primary); background: var(--primary-bg); }
+  .calc-type-btn .type-icon { font-size: 32px; }
+  .calc-type-btn .type-name { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+
+  .calc-form {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .calc-form h3 { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 16px; }
+
+  .calc-input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .calc-input-row .form-group { flex: 1; margin-bottom: 0; }
+
+  .calc-results {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    display: none;
+  }
+
+  .calc-results.visible { display: block; }
+
+  .calc-results h3 { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 16px; }
+
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .results-table th {
+    background: var(--gray-50);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .results-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-700);
+  }
+
+  .results-table tr:last-child td { border-bottom: none; }
+  .results-table tr:hover td { background: var(--gray-50); }
+
+  /* ==============================
+     OBRAS
+     ============================== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-header h3 { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+
+  .obras-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .obra-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow var(--transition);
+    border-left: 4px solid var(--gray-200);
+  }
+
+  .obra-card:hover { box-shadow: var(--shadow-md); }
+  .obra-card.state-active { border-left-color: var(--green); }
+  .obra-card.state-draft { border-left-color: var(--gray-400); }
+  .obra-card.state-cancel { border-left-color: var(--red); }
+
+  .obra-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .obra-info { flex: 1; min-width: 0; }
+  .obra-name { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+  .obra-code { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+  .obra-stats { font-size: 12px; color: var(--gray-500); margin-top: 6px; display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .obra-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ==============================
+     SOLICITUDES / PEDIDOS
+     ============================== */
+  .requests-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .request-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .request-card:hover { box-shadow: var(--shadow-md); transform: translateX(3px); }
+
+  .request-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--blue-bg);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .request-info { flex: 1; min-width: 0; }
+  .request-name { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+  .request-meta { font-size: 12px; color: var(--gray-400); margin-top: 3px; }
+
+  /* ==============================
+     NUEVA SOLICITUD
+     ============================== */
+  .request-form-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .request-form-card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .product-search-wrap {
+    position: relative;
+  }
+
+  .product-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+  }
+
+  .product-suggestions.visible { display: block; }
+
+  .suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background var(--transition);
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover { background: var(--gray-50); }
+
+  .suggestion-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: var(--gray-100);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .suggestion-name { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+  .suggestion-price { font-size: 12px; color: var(--primary); }
+
+  .cart-table-wrap { overflow-x: auto; }
+
+  .cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 600px;
+  }
+
+  .cart-table th {
+    background: var(--gray-50);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .cart-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: middle;
+  }
+
+  .cart-table tr:last-child td { border-bottom: none; }
+
+  .qty-input {
+    width: 70px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+  }
+
+  .qty-input:focus { border-color: var(--primary); }
+
+  .cart-total {
+    text-align: right;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-900);
+    padding: 16px 0 0;
+    border-top: 2px solid var(--gray-200);
+    margin-top: 8px;
+  }
+
+  .cart-total span { color: var(--primary-dark); font-size: 20px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--gray-400);
+  }
+
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; }
+
+  /* ==============================
+     BADGES
+     ============================== */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-green { background: var(--green-bg); color: #065f46; }
+  .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+  .badge-red { background: var(--red-bg); color: #991b1b; }
+  .badge-yellow { background: var(--yellow-bg); color: #92400e; }
+  .badge-blue { background: var(--blue-bg); color: #1e40af; }
+
+  /* ==============================
+     MODALS
+     ============================== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition), visibility var(--transition);
+  }
+
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+
+  .modal {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    transform: scale(0.95) translateY(10px);
+    transition: transform var(--transition);
+  }
+
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--gray-100);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--gray-500);
+    transition: background var(--transition);
+  }
+  .modal-close:hover { background: var(--gray-200); }
+
+  .modal-footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* ==============================
+     TOAST
+     ============================== */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-lg);
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: auto;
+    animation: slideIn 0.3s ease forwards;
+    max-width: 360px;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(20px); }
+  }
+
+  .toast.hide { animation: slideOut 0.3s ease forwards; }
+
+  .toast-success { background: #065f46; color: white; }
+  .toast-error { background: #991b1b; color: white; }
+  .toast-info { background: #1e40af; color: white; }
+  .toast-warning { background: #92400e; color: white; }
+
+  .toast-icon { font-size: 16px; flex-shrink: 0; }
+  .toast-message { flex: 1; }
+
+  /* ==============================
+     PRODUCT DETAIL MODAL
+     ============================== */
+  .product-detail-img {
+    width: 100%;
+    height: 200px;
+    border-radius: var(--radius-sm);
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    color: var(--gray-300);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .product-detail-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-detail-price {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 8px;
+  }
+
+  .product-detail-uom { font-size: 14px; color: var(--gray-500); }
+
+  /* ==============================
+     DETAIL ROWS
+     ============================== */
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: var(--gray-500); }
+  .detail-value { font-weight: 600; color: var(--gray-800); }
+
+  /* ==============================
+     LOADING SPINNER
+     ============================== */
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--gray-200);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* ==============================
+     INFO CARD
+     ============================== */
+  .info-card {
+    background: var(--blue-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #1e40af;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ==============================
+     FORM ROW
+     ============================== */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* ==============================
+     RESPONSIVE
+     ============================== */
+  @media (max-width: 768px) {
+    .sidebar {
       position: fixed;
-      top: 0; left: 0; bottom: 0;
-      z-index: 100;
-      transition: transform var(--transition);
-    }
-    .sidebar-logo {
-      padding: 22px 18px 16px;
-      border-bottom: 1px solid rgba(255,255,255,.1);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .sidebar-logo .logo-icon {
-      width: 38px; height: 38px;
-      background: var(--primary);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-    .sidebar-logo .logo-text { font-size: 1rem; font-weight: 700; line-height: 1.2; }
-    .sidebar-logo .logo-sub  { font-size: .7rem; color: rgba(255,255,255,.5); }
-    nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-    .nav-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 20px; font-size: .9rem;
-      cursor: pointer; color: rgba(255,255,255,.75);
-      border-left: 3px solid transparent;
-      transition: background var(--transition), color var(--transition), border-color var(--transition);
-    }
-    .nav-item:hover { background: rgba(255,255,255,.07); color: var(--white); }
-    .nav-item.active {
-      background: rgba(245,124,0,.18);
-      border-left-color: var(--primary);
-      color: var(--white);
-    }
-    .nav-item .nav-icon { font-size: 1.15rem; width: 22px; text-align: center; }
-    .sidebar-footer {
-      padding: 14px 18px;
-      border-top: 1px solid rgba(255,255,255,.1);
-      font-size: .8rem;
-      color: rgba(255,255,255,.45);
-    }
-    #user-info-sidebar { margin-bottom: 8px; color: rgba(255,255,255,.7); }
-    #btn-logout {
-      width: 100%;
-      padding: 8px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.12);
-      color: rgba(255,255,255,.7);
-      border-radius: 6px;
-      font-size: .82rem;
-      transition: background var(--transition);
-    }
-    #btn-logout:hover { background: rgba(198,40,40,.4); color: #fff; }
-
-    /* Hamburger */
-    #menu-toggle {
-      display: none;
-      position: fixed; top: 12px; left: 12px; z-index: 200;
-      background: var(--primary); color: #fff;
-      border: none; border-radius: 7px;
-      width: 40px; height: 40px;
-      font-size: 1.2rem;
-      align-items: center; justify-content: center;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      transform: translateX(-100%);
     }
 
-    /* Main */
-    #main {
-      margin-left: var(--sidebar-w);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    /* Topbar */
-    #topbar {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      height: 60px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 50;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
-    #topbar h1 { font-size: 1.15rem; font-weight: 700; color: var(--dark); }
-    .topbar-right { display: flex; align-items: center; gap: 16px; }
-    .topbar-user {
-      background: var(--primary);
-      color: #fff;
-      border-radius: 50%;
-      width: 34px; height: 34px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: .95rem;
-    }
-
-    /* Page area */
-    #page-area { flex: 1; padding: 28px; }
-
-    /* =====================================================================
-       LOGIN PAGE
-       ===================================================================== */
-    #page-login {
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    }
-    .login-card {
-      background: var(--white);
-      border-radius: 16px;
+    .sidebar.open {
+      transform: translateX(0);
       box-shadow: var(--shadow-lg);
-      padding: 44px 40px 36px;
-      width: 100%; max-width: 400px;
-    }
-    .login-logo {
-      text-align: center; margin-bottom: 28px;
-    }
-    .login-logo .logo-big {
-      width: 64px; height: 64px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 16px;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 2rem; margin-bottom: 12px;
-    }
-    .login-logo h2 { font-size: 1.5rem; color: var(--dark); font-weight: 800; }
-    .login-logo p  { color: var(--mid); font-size: .87rem; margin-top: 4px; }
-    .form-group { margin-bottom: 18px; }
-    .form-group label {
-      display: block; font-size: .83rem; font-weight: 600;
-      color: var(--mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em;
-    }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%; padding: 11px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px; font-size: .95rem;
-      transition: border-color var(--transition), box-shadow var(--transition);
-      background: var(--white); color: var(--dark);
-    }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(245,124,0,.15);
-    }
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-      padding: 11px 22px; border-radius: 8px; font-size: .93rem; font-weight: 600;
-      border: none; transition: all var(--transition);
-    }
-    .btn-primary {
-      background: var(--primary); color: #fff;
-    }
-    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,124,0,.4); }
-    .btn-secondary {
-      background: var(--light); color: var(--dark2); border: 1.5px solid var(--border);
-    }
-    .btn-secondary:hover { background: var(--border); }
-    .btn-sm { padding: 7px 14px; font-size: .82rem; border-radius: 6px; }
-    .btn-danger { background: var(--danger); color: #fff; }
-    .btn-danger:hover { background: #b71c1c; }
-    .btn-success { background: var(--success); color: #fff; }
-    .btn-success:hover { background: #2e7d32; }
-    .btn-full { width: 100%; }
-    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-    /* =====================================================================
-       TOAST NOTIFICATIONS
-       ===================================================================== */
-    #toast-container {
-      position: fixed; top: 20px; right: 20px; z-index: 9999;
-      display: flex; flex-direction: column; gap: 10px; max-width: 340px;
-    }
-    .toast {
-      padding: 14px 18px; border-radius: 10px;
-      box-shadow: var(--shadow-lg); font-size: .88rem; font-weight: 500;
-      animation: slideIn .3s ease; display: flex; align-items: flex-start; gap: 10px;
-      max-width: 340px;
-    }
-    .toast-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
-    .toast.success { background: #E8F5E9; color: #1B5E20; border-left: 4px solid var(--success); }
-    .toast.error   { background: #FFEBEE; color: #B71C1C; border-left: 4px solid var(--danger); }
-    .toast.warning { background: #FFF8E1; color: #E65100; border-left: 4px solid var(--warning); }
-    .toast.info    { background: #E3F2FD; color: #0D47A1; border-left: 4px solid var(--info); }
-    @keyframes slideIn {
-      from { transform: translateX(120%); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
-    }
-    @keyframes slideOut {
-      from { transform: translateX(0);    opacity: 1; }
-      to   { transform: translateX(120%); opacity: 0; }
-    }
-    .toast.hiding { animation: slideOut .3s ease forwards; }
-
-    /* =====================================================================
-       CARDS, BADGES, SPINNERS
-       ===================================================================== */
-    .card {
-      background: var(--white); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 22px;
-    }
-    .card-title {
-      font-size: 1.05rem; font-weight: 700; color: var(--dark);
-      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
     }
 
-    .badge {
-      display: inline-flex; align-items: center;
-      padding: 3px 10px; border-radius: 99px; font-size: .75rem; font-weight: 700;
-    }
-    .badge-draft    { background: #FFF3E0; color: #E65100; }
-    .badge-confirmed { background: #E3F2FD; color: #1565C0; }
-    .badge-sent     { background: #E8F5E9; color: #1B5E20; }
-    .badge-cancel   { background: #FAFAFA; color: #9E9E9E; border: 1px solid #E0E0E0; }
-    .badge-done     { background: #E8F5E9; color: #1B5E20; }
-    .badge-planning { background: #EDE7F6; color: #4527A0; }
-    .badge-execution { background: #FFF3E0; color: #BF360C; }
-    .badge-paused   { background: #FFF8E1; color: #F57F17; }
+    .hamburger { display: flex; }
 
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid rgba(245,124,0,.2);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner-sm { width: 18px; height: 18px; border-width: 2px; }
-    .loading-center { display: flex; justify-content: center; padding: 40px; }
-
-    /* =====================================================================
-       DASHBOARD
-       ===================================================================== */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 18px; margin-bottom: 28px;
-    }
-    .stat-card {
-      background: var(--white); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 20px 22px;
-      display: flex; align-items: center; gap: 16px;
-      cursor: pointer; transition: transform var(--transition), box-shadow var(--transition);
-    }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-    .stat-icon {
-      width: 52px; height: 52px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;
-    }
-    .stat-icon.orange { background: #FFF3E0; }
-    .stat-icon.blue   { background: #E3F2FD; }
-    .stat-icon.green  { background: #E8F5E9; }
-    .stat-icon.purple { background: #EDE7F6; }
-    .stat-value { font-size: 1.7rem; font-weight: 800; color: var(--dark); line-height: 1; }
-    .stat-label { font-size: .8rem; color: var(--mid); margin-top: 3px; }
-
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px; margin-top: 6px;
-    }
-    .qa-btn {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px; text-align: center;
-      cursor: pointer; transition: all var(--transition);
-    }
-    .qa-btn:hover {
-      border-color: var(--primary);
-      background: #FFF8F0;
-      transform: translateY(-2px);
-      box-shadow: var(--shadow);
-    }
-    .qa-btn .qa-icon { font-size: 2rem; margin-bottom: 8px; }
-    .qa-btn .qa-label { font-size: .88rem; font-weight: 600; color: var(--dark2); }
-    .qa-btn .qa-sub   { font-size: .77rem; color: var(--mid); margin-top: 3px; }
-
-    /* =====================================================================
-       TABLA GENÉRICA
-       ===================================================================== */
-    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
-    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    thead tr { background: var(--light); }
-    th { padding: 11px 14px; text-align: left; font-weight: 700; font-size: .8rem;
-         text-transform: uppercase; letter-spacing: .04em; color: var(--mid);
-         white-space: nowrap; }
-    td { padding: 13px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: #FAFAFA; }
-
-    /* =====================================================================
-       CATÁLOGO DE PRODUCTOS
-       ===================================================================== */
-    .search-bar {
-      display: flex; gap: 10px; margin-bottom: 22px;
-    }
-    .search-bar input {
-      flex: 1; padding: 10px 16px; border: 1.5px solid var(--border);
-      border-radius: 8px; font-size: .93rem;
-    }
-    .search-bar input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245,124,0,.12); }
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 18px;
-    }
-    .product-card {
-      background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
-      overflow: hidden; cursor: pointer;
-      transition: transform var(--transition), box-shadow var(--transition);
-    }
-    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-    .product-img {
-      width: 100%; height: 130px; object-fit: cover;
-      background: var(--light); display: block;
-    }
-    .product-img-placeholder {
-      width: 100%; height: 130px; background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
-      display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
-    }
-    .product-body { padding: 14px 14px 16px; }
-    .product-name { font-weight: 700; font-size: .93rem; color: var(--dark); margin-bottom: 4px; }
-    .product-uom  { font-size: .77rem; color: var(--mid); margin-bottom: 8px; }
-    .product-price { font-size: 1.15rem; font-weight: 800; color: var(--primary); }
-    .product-footer {
-      padding: 10px 14px; border-top: 1px solid var(--border);
-      display: flex; gap: 8px;
-    }
-    .product-footer .btn { flex: 1; padding: 8px; font-size: .8rem; }
-
-    /* =====================================================================
-       CALCULADORA
-       ===================================================================== */
-    .calc-form {
-      display: flex; flex-direction: column; gap: 18px; max-width: 460px;
-    }
-    .calc-tipo-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
-    }
-    .tipo-btn {
-      border: 2px solid var(--border); border-radius: var(--radius);
-      padding: 18px 10px; text-align: center; cursor: pointer;
-      transition: all var(--transition); background: var(--white);
-    }
-    .tipo-btn .tipo-icon { font-size: 2rem; margin-bottom: 6px; }
-    .tipo-btn .tipo-label { font-size: .85rem; font-weight: 700; color: var(--dark2); }
-    .tipo-btn.selected {
-      border-color: var(--primary);
-      background: #FFF8F0;
-      box-shadow: 0 0 0 3px rgba(245,124,0,.15);
-    }
-    .result-table-wrap { margin-top: 10px; }
-    .result-table-wrap .card-title { color: var(--primary); }
-
-    /* =====================================================================
-       MODAL
-       ===================================================================== */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 500;
-      display: flex; align-items: center; justify-content: center; padding: 16px;
-    }
-    .modal {
-      background: var(--white); border-radius: 14px; box-shadow: var(--shadow-lg);
-      width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
-    }
-    .modal-header {
-      padding: 18px 22px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
-    .modal-close {
-      width: 30px; height: 30px; background: var(--light); border: none;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; cursor: pointer; color: var(--mid);
-    }
-    .modal-close:hover { background: #FFEBEE; color: var(--danger); }
-    .modal-body    { padding: 22px; }
-    .modal-footer  { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
-
-    /* =====================================================================
-       SOLICITUD — LÍNEAS DE PRODUCTO
-       ===================================================================== */
-    #request-lines { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-    .request-line {
-      display: grid; grid-template-columns: 1fr 100px 100px 30px;
-      gap: 8px; align-items: center;
-      background: var(--light); border-radius: 8px; padding: 10px 12px;
-    }
-    .request-line .line-name { font-weight: 600; font-size: .88rem; }
-    .request-line input[type="number"] {
-      width: 100%; padding: 6px 8px; border: 1.5px solid var(--border);
-      border-radius: 6px; font-size: .88rem; text-align: right;
-    }
-    .line-remove {
-      background: none; border: none; color: #B0BEC5; font-size: 1.1rem; padding: 2px;
-      cursor: pointer; transition: color var(--transition);
-    }
-    .line-remove:hover { color: var(--danger); }
-    .total-bar {
-      background: var(--primary); color: #fff; border-radius: 8px;
-      padding: 12px 16px; display: flex; justify-content: space-between;
-      font-weight: 700; font-size: 1rem;
-    }
-
-    /* Buscador emergente */
-    .product-search-wrapper { position: relative; }
-    .product-suggestions {
-      position: absolute; top: 100%; left: 0; right: 0;
-      background: var(--white); border: 1.5px solid var(--border);
-      border-top: none; border-radius: 0 0 8px 8px;
-      box-shadow: var(--shadow); z-index: 100;
-      max-height: 220px; overflow-y: auto;
-    }
-    .suggestion-item {
-      padding: 10px 14px; cursor: pointer; display: flex; gap: 10px; align-items: center;
-      font-size: .88rem;
-    }
-    .suggestion-item:hover { background: var(--light); }
-    .suggestion-item .s-price { margin-left: auto; color: var(--primary); font-weight: 700; }
-
-    /* =====================================================================
-       DETALLE PEDIDO
-       ===================================================================== */
-    .detail-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px;
-    }
-    .detail-field label { font-size: .77rem; text-transform: uppercase; letter-spacing: .04em; color: var(--mid); font-weight: 600; }
-    .detail-field .dval { font-size: 1rem; font-weight: 700; color: var(--dark); margin-top: 3px; }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center; padding: 60px 20px; color: var(--mid);
-    }
-    .empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 14px; }
-    .empty-state p { font-size: .95rem; }
-
-    /* =====================================================================
-       OVERLAY OSCURO MÓVIL
-       ===================================================================== */
-    #sidebar-overlay {
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
       display: none;
-      position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99;
     }
 
-    /* =====================================================================
-       RESPONSIVE
-       ===================================================================== */
-    @media (max-width: 768px) {
-      #sidebar { transform: translateX(-100%); }
-      #sidebar.open { transform: translateX(0); }
-      #sidebar-overlay.show { display: block; }
-      #main { margin-left: 0; }
-      #menu-toggle { display: flex; }
-      #topbar { padding: 0 14px 0 60px; }
-      #page-area { padding: 16px; }
-      .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-      .request-line { grid-template-columns: 1fr 85px 85px 28px; }
-      .calc-tipo-grid { grid-template-columns: repeat(2, 1fr); }
-      .login-card { padding: 30px 22px 26px; }
-    }
-    @media (max-width: 480px) {
-      .products-grid { grid-template-columns: repeat(2, 1fr); }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .request-line { grid-template-columns: 1fr 70px 70px 24px; font-size: .82rem; }
-    }
+    .sidebar-overlay.visible { display: block; }
 
-    /* Secciones ocultas */
-    .section { display: none; }
-    .section.active { display: block; }
-    #page-login { display: none; }
-    #page-login.active { display: flex; }
-    #app.hidden { display: none; }
-    #page-login.active ~ #app { display: flex; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+    .page-body { padding: 16px; }
+  }
 
-    /* Separador visual */
-    .divider { height: 1px; background: var(--border); margin: 20px 0; }
-
-    /* Helper texto */
-    .text-muted { color: var(--mid); font-size: .85rem; }
-    .text-primary { color: var(--primary); }
-    .fw-bold { font-weight: 700; }
-    .mt-2 { margin-top: 8px; }
-    .mb-2 { margin-bottom: 8px; }
-    .flex-end { display: flex; justify-content: flex-end; }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .gap-2 { gap: 8px; }
-    .d-flex { display: flex; }
-    .align-center { align-items: center; }
-    .wrap { flex-wrap: wrap; }
-
-    /* Obras list */
-    .obra-card {
-      background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px; margin-bottom: 12px;
-      transition: box-shadow var(--transition);
-    }
-    .obra-card:hover { box-shadow: var(--shadow-lg); }
-    .obra-info .obra-name { font-weight: 700; font-size: 1rem; }
-    .obra-info .obra-meta { font-size: .8rem; color: var(--mid); margin-top: 3px; }
-    .obra-actions { display: flex; gap: 8px; flex-shrink: 0; }
-  </style>
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .calc-input-row { flex-direction: column; }
+    .form-row { grid-template-columns: 1fr; }
+    .obra-actions { flex-direction: column; }
+  }
+</style>
 </head>
 <body>
 
-<!-- =====================================================================
-     TOAST CONTAINER
-     ===================================================================== -->
+<!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
-<!-- =====================================================================
-     LOGIN PAGE (pantalla de inicio de sesión)
-     ===================================================================== -->
-<div id="page-login" class="active">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="logo-big">🏗️</div>
-      <h2>ConstructionHub</h2>
-      <p>Portal de Materiales de Construcción</p>
+<!-- ==============================
+     AUTH SCREEN
+     ============================== -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">&#127959;</div>
+      <h1>Construction Marketplace</h1>
+      <p>Portal de gesti&oacute;n de obras y materiales</p>
     </div>
 
-    <!-- Tabs Login / Registro -->
-    <div style="display:flex;gap:0;margin-bottom:24px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;">
-      <button id="tab-login" onclick="switchAuthTab('login')"
-        style="flex:1;padding:9px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;">
-        Iniciar sesión
-      </button>
-      <button id="tab-register" onclick="switchAuthTab('register')"
-        style="flex:1;padding:9px;border:none;background:var(--white);color:var(--mid);font-weight:700;font-size:.9rem;cursor:pointer;">
-        Registrarse
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar sesi&oacute;n</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Crear cuenta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login-form" class="auth-form active">
+      <div id="login-error" class="server-error"></div>
+
+      <div class="form-group">
+        <label>Correo electr&oacute;nico</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email">
+        <div class="field-error" id="login-email-err">Introduce un email v&aacute;lido.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Contrase&ntilde;a</label>
+        <input type="password" id="login-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password">
+        <div class="field-error" id="login-pass-err">La contrase&ntilde;a es obligatoria.</div>
+      </div>
+
+      <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+        <div class="spinner"></div>
+        <span class="btn-text">Entrar</span>
       </button>
     </div>
 
-    <!-- Formulario Login -->
-    <form id="form-login" onsubmit="handleLogin(event)">
-      <div class="form-group">
-        <label>Usuario / Correo</label>
-        <input id="login-user" type="text" placeholder="usuario@ejemplo.com" required autocomplete="username" />
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input id="login-pass" type="password" placeholder="••••••••" required autocomplete="current-password" />
-      </div>
-      <button type="submit" class="btn btn-primary btn-full" id="btn-login-submit">
-        <span id="login-spinner" class="spinner spinner-sm" style="display:none;"></span>
-        Entrar
-      </button>
-    </form>
+    <!-- REGISTER -->
+    <div id="register-form" class="auth-form">
+      <div id="register-error" class="server-error"></div>
 
-    <!-- Formulario Registro -->
-    <form id="form-register" onsubmit="handleRegister(event)" style="display:none;">
       <div class="form-group">
-        <label>Nombre completo</label>
-        <input id="reg-name" type="text" placeholder="Juan García" required />
+        <label>Nombre completo *</label>
+        <input type="text" id="reg-name" placeholder="Juan Garc&iacute;a Mart&iacute;nez" autocomplete="name">
+        <div class="field-error" id="reg-name-err">El nombre es obligatorio.</div>
       </div>
-      <div class="form-group">
-        <label>Correo electrónico</label>
-        <input id="reg-login" type="email" placeholder="usuario@ejemplo.com" required />
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres" required minlength="6" />
-      </div>
-      <div class="form-group">
-        <label>Tipo de cliente</label>
-        <select id="reg-type">
-          <option value="particular">Particular</option>
-          <option value="empresa">Empresa / Profesional</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Teléfono (opcional)</label>
-        <input id="reg-phone" type="tel" placeholder="+34 600 000 000" />
-      </div>
-      <button type="submit" class="btn btn-primary btn-full">
-        <span id="reg-spinner" class="spinner spinner-sm" style="display:none;"></span>
-        Crear cuenta
-      </button>
-    </form>
 
-    <p class="text-muted" style="text-align:center;margin-top:18px;font-size:.8rem;">
-      🔒 Acceso seguro mediante Odoo 17
-    </p>
+      <div class="form-group">
+        <label>Correo electr&oacute;nico *</label>
+        <input type="email" id="reg-email" placeholder="tu@email.com" autocomplete="email">
+        <div class="field-error" id="reg-email-err">Introduce un email v&aacute;lido.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Contrase&ntilde;a * (m&iacute;nimo 6 caracteres)</label>
+        <input type="password" id="reg-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password">
+        <div class="field-error" id="reg-pass-err">La contrase&ntilde;a debe tener al menos 6 caracteres.</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de cliente *</label>
+          <select id="reg-type">
+            <option value="">Seleccionar...</option>
+            <option value="particular">Particular</option>
+            <option value="autonomo">Aut&oacute;nomo</option>
+            <option value="empresa">Empresa</option>
+          </select>
+          <div class="field-error" id="reg-type-err">Selecciona un tipo de cliente.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Tel&eacute;fono (opcional)</label>
+          <input type="tel" id="reg-phone" placeholder="+34 600 000 000" autocomplete="tel">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="register-btn" onclick="doRegister()">
+        <div class="spinner"></div>
+        <span class="btn-text">Crear cuenta</span>
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- =====================================================================
-     APP PRINCIPAL (visible tras login)
-     ===================================================================== -->
-<div id="app" class="hidden">
+<!-- ==============================
+     APP SCREEN
+     ============================== -->
+<div id="app-screen">
+  <div class="app-layout">
 
-  <!-- Botón hamburguesa móvil -->
-  <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
-  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+    <!-- Sidebar overlay (movil) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-  <!-- Sidebar de navegación -->
-  <aside id="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-icon">🏗️</div>
-      <div>
-        <div class="logo-text">ConstructionHub</div>
-        <div class="logo-sub">Portal Materiales</div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">&#127959;</div>
+        <div class="sidebar-logo-text">
+          Construction
+          <span>Marketplace</span>
+        </div>
       </div>
-    </div>
-    <nav>
-      <div class="nav-item active" onclick="showSection('dashboard')">
-        <span class="nav-icon">🏠</span> Dashboard
-      </div>
-      <div class="nav-item" onclick="showSection('catalog')">
-        <span class="nav-icon">📦</span> Catálogo
-      </div>
-      <div class="nav-item" onclick="showSection('calculator')">
-        <span class="nav-icon">🧮</span> Calculadora
-      </div>
-      <div class="nav-item" onclick="showSection('obras')">
-        <span class="nav-icon">🏢</span> Mis Obras
-      </div>
-      <div class="nav-item" onclick="showSection('nueva-solicitud')">
-        <span class="nav-icon">📋</span> Nueva Solicitud
-      </div>
-      <div class="nav-item" onclick="showSection('pedidos')">
-        <span class="nav-icon">🚚</span> Mis Pedidos
-      </div>
-    </nav>
-    <div class="sidebar-footer">
-      <div id="user-info-sidebar">👤 Cargando...</div>
-      <button id="btn-logout" onclick="handleLogout()">⏻ Cerrar sesión</button>
-    </div>
-  </aside>
 
-  <!-- Contenido principal -->
-  <div id="main">
-    <!-- Topbar -->
-    <div id="topbar">
-      <h1 id="topbar-title">Dashboard</h1>
-      <div class="topbar-right">
-        <div class="topbar-user" id="topbar-avatar">?</div>
-      </div>
-    </div>
-
-    <!-- Área de páginas -->
-    <div id="page-area">
-
-      <!-- ================================================================
-           SECCIÓN: DASHBOARD
-           ================================================================ -->
-      <div id="section-dashboard" class="section active">
-        <div id="welcome-banner" style="
-          background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-          color: #fff; border-radius: 14px; padding: 28px 28px;
-          margin-bottom: 26px; position: relative; overflow: hidden;">
-          <div style="position:relative;z-index:1;">
-            <div style="font-size:.88rem;opacity:.85;margin-bottom:4px;">Bienvenido/a de nuevo</div>
-            <h2 id="welcome-name" style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">Usuario</h2>
-            <p style="opacity:.85;font-size:.9rem;">Gestiona tus materiales de construcción desde un solo lugar.</p>
-          </div>
-          <div style="position:absolute;right:-20px;top:-20px;font-size:9rem;opacity:.08;line-height:1;">🏗️</div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-label">Principal</div>
+          <button class="nav-item active" data-section="dashboard" onclick="goTo('dashboard')">
+            <span class="nav-icon">&#128202;</span>
+            <span class="nav-label">Dashboard</span>
+          </button>
+          <button class="nav-item" data-section="catalog" onclick="goTo('catalog')">
+            <span class="nav-icon">&#128722;</span>
+            <span class="nav-label">Cat&aacute;logo</span>
+          </button>
+          <button class="nav-item" data-section="calculator" onclick="goTo('calculator')">
+            <span class="nav-icon">&#129518;</span>
+            <span class="nav-label">Calculadora</span>
+          </button>
         </div>
 
-        <!-- Tarjetas estadísticas -->
-        <div class="stats-grid" id="stats-grid">
-          <div class="stat-card" onclick="showSection('obras')">
-            <div class="stat-icon orange">🏢</div>
-            <div>
-              <div class="stat-value" id="stat-obras">—</div>
-              <div class="stat-label">Obras activas</div>
-            </div>
-          </div>
-          <div class="stat-card" onclick="showSection('pedidos')">
-            <div class="stat-icon blue">📋</div>
-            <div>
-              <div class="stat-value" id="stat-pedidos">—</div>
-              <div class="stat-label">Solicitudes</div>
-            </div>
-          </div>
-          <div class="stat-card" onclick="showSection('catalog')">
-            <div class="stat-icon green">📦</div>
-            <div>
-              <div class="stat-value" id="stat-productos">—</div>
-              <div class="stat-label">Productos</div>
-            </div>
-          </div>
-          <div class="stat-card" onclick="showSection('calculator')">
-            <div class="stat-icon purple">🧮</div>
-            <div>
-              <div class="stat-value">4</div>
-              <div class="stat-label">Tipos de obra</div>
-            </div>
-          </div>
+        <div class="nav-section">
+          <div class="nav-section-label">Gesti&oacute;n</div>
+          <button class="nav-item" data-section="obras" onclick="goTo('obras')">
+            <span class="nav-icon">&#127968;</span>
+            <span class="nav-label">Mis Obras</span>
+          </button>
+          <button class="nav-item" data-section="new-request" onclick="goTo('new-request')">
+            <span class="nav-icon">&#128221;</span>
+            <span class="nav-label">Nueva Solicitud</span>
+          </button>
+          <button class="nav-item" data-section="orders" onclick="goTo('orders')">
+            <span class="nav-icon">&#128230;</span>
+            <span class="nav-label">Mis Pedidos</span>
+          </button>
         </div>
+      </nav>
 
-        <!-- Acciones rápidas -->
-        <div class="card">
-          <div class="card-title">⚡ Acciones rápidas</div>
-          <div class="quick-actions">
-            <div class="qa-btn" onclick="showSection('nueva-solicitud')">
-              <div class="qa-icon">📋</div>
-              <div class="qa-label">Nueva Solicitud</div>
-              <div class="qa-sub">Pedir materiales para tu obra</div>
-            </div>
-            <div class="qa-btn" onclick="openNuevaObraModal()">
-              <div class="qa-icon">🏢</div>
-              <div class="qa-label">Nueva Obra</div>
-              <div class="qa-sub">Registrar un nuevo proyecto</div>
-            </div>
-            <div class="qa-btn" onclick="showSection('calculator')">
-              <div class="qa-icon">🧮</div>
-              <div class="qa-label">Calcular materiales</div>
-              <div class="qa-sub">Baño, solera, tabique, pintura</div>
-            </div>
-            <div class="qa-btn" onclick="showSection('catalog')">
-              <div class="qa-icon">🔍</div>
-              <div class="qa-label">Explorar catálogo</div>
-              <div class="qa-sub">Todos los productos disponibles</div>
-            </div>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebar-username">Usuario</div>
+            <div class="user-role" id="sidebar-email">&mdash;</div>
           </div>
+          <button class="logout-btn" onclick="doLogout()" title="Cerrar sesi&oacute;n">&#10005;</button>
         </div>
-      </div><!-- /dashboard -->
+      </div>
+    </aside>
 
-      <!-- ================================================================
-           SECCIÓN: CATÁLOGO DE PRODUCTOS
-           ================================================================ -->
-      <div id="section-catalog" class="section">
-        <div class="card" style="margin-bottom:22px;">
-          <div class="card-title">📦 Catálogo de productos</div>
-          <div class="search-bar">
-            <input id="catalog-search" type="text" placeholder="🔍  Buscar producto (cemento, azulejo...)"
-              oninput="debouncedCatalogSearch()" />
-            <button class="btn btn-primary" onclick="loadCatalog()">Buscar</button>
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <header class="header">
+        <button class="hamburger" onclick="openSidebar()">&#9776;</button>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div id="header-actions"></div>
+      </header>
+
+      <main class="page-body">
+
+        <!-- DASHBOARD -->
+        <div class="section active" id="section-dashboard">
+          <div class="greeting">
+            <h2>&#128075; Bienvenido/a, <span id="greeting-name">Usuario</span></h2>
+            <p id="greeting-date">Cargando informaci&oacute;n...</p>
           </div>
-          <p class="text-muted" id="catalog-count"></p>
-        </div>
-        <div id="catalog-loading" class="loading-center" style="display:none;"><div class="spinner"></div></div>
-        <div id="products-grid" class="products-grid"></div>
-      </div><!-- /catalog -->
 
-      <!-- ================================================================
-           SECCIÓN: CALCULADORA DE MATERIALES
-           ================================================================ -->
-      <div id="section-calculator" class="section">
-        <div class="card" style="max-width:560px;">
-          <div class="card-title">🧮 Calculadora de materiales</div>
-          <div class="calc-form">
-            <div>
-              <label style="font-size:.83rem;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:10px;">
-                Tipo de obra
-              </label>
-              <div class="calc-tipo-grid">
-                <div class="tipo-btn selected" data-tipo="banyo" onclick="selectTipoObra(this)">
-                  <div class="tipo-icon">🚿</div>
-                  <div class="tipo-label">Baño</div>
-                </div>
-                <div class="tipo-btn" data-tipo="solera" onclick="selectTipoObra(this)">
-                  <div class="tipo-icon">⬜</div>
-                  <div class="tipo-label">Solera</div>
-                </div>
-                <div class="tipo-btn" data-tipo="tabique_ladrillo" onclick="selectTipoObra(this)">
-                  <div class="tipo-icon">🧱</div>
-                  <div class="tipo-label">Tabique ladrillo</div>
-                </div>
-                <div class="tipo-btn" data-tipo="pintura" onclick="selectTipoObra(this)">
-                  <div class="tipo-icon">🎨</div>
-                  <div class="tipo-label">Pintura</div>
-                </div>
+          <div class="stats-grid">
+            <div class="stat-card" onclick="goTo('obras')">
+              <div class="stat-icon orange">&#127968;</div>
+              <div class="stat-info">
+                <div class="stat-value" id="stat-obras">&mdash;</div>
+                <div class="stat-label">Obras activas</div>
               </div>
             </div>
-            <div class="form-group" style="margin:0;">
-              <label>Superficie (m²)</label>
-              <input id="calc-m2" type="number" min="1" max="9999" step="0.5" placeholder="Ej: 15" />
+            <div class="stat-card" onclick="goTo('orders')">
+              <div class="stat-icon yellow">&#9200;</div>
+              <div class="stat-info">
+                <div class="stat-value" id="stat-pending">&mdash;</div>
+                <div class="stat-label">Solicitudes totales</div>
+              </div>
             </div>
-            <button class="btn btn-primary" onclick="calcularMateriales()">
-              🧮 Calcular
-            </button>
+            <div class="stat-card" onclick="goTo('catalog')">
+              <div class="stat-icon green">&#128230;</div>
+              <div class="stat-info">
+                <div class="stat-value" id="stat-products">&mdash;</div>
+                <div class="stat-label">Productos disponibles</div>
+              </div>
+            </div>
+            <div class="stat-card" onclick="goTo('obras')">
+              <div class="stat-icon blue">&#128203;</div>
+              <div class="stat-info">
+                <div class="stat-value" id="stat-orders">&mdash;</div>
+                <div class="stat-label">Total obras</div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Resultado -->
-        <div id="calc-result" style="display:none;margin-top:22px;">
-          <div class="card result-table-wrap">
-            <div class="card-title" id="calc-result-title">📊 Materiales necesarios</div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Material</th>
-                    <th>Cantidad</th>
-                    <th>Unidad</th>
-                  </tr>
-                </thead>
-                <tbody id="calc-result-body"></tbody>
-              </table>
-            </div>
-            <div style="margin-top:14px;display:flex;gap:10px;">
-              <button class="btn btn-primary btn-sm" onclick="addCalcResultToRequest()">
-                📋 Añadir a solicitud
+          <div class="quick-actions">
+            <h3>Accesos r&aacute;pidos</h3>
+            <div class="quick-buttons">
+              <button class="quick-btn" onclick="goTo('catalog')">
+                <span class="icon">&#128722;</span> Ver cat&aacute;logo
+              </button>
+              <button class="quick-btn" onclick="goTo('new-request')">
+                <span class="icon">&#10133;</span> Nueva solicitud
+              </button>
+              <button class="quick-btn" onclick="openNewObraModal()">
+                <span class="icon">&#127959;</span> Nueva obra
+              </button>
+              <button class="quick-btn" onclick="goTo('calculator')">
+                <span class="icon">&#129518;</span> Calculadora
+              </button>
+              <button class="quick-btn" onclick="goTo('orders')">
+                <span class="icon">&#128230;</span> Mis pedidos
               </button>
             </div>
           </div>
         </div>
-      </div><!-- /calculator -->
 
-      <!-- ================================================================
-           SECCIÓN: MIS OBRAS
-           ================================================================ -->
-      <div id="section-obras" class="section">
-        <div class="flex-between mb-2" style="margin-bottom:18px;">
-          <h2 style="font-size:1.15rem;font-weight:800;">🏢 Mis Obras</h2>
-          <button class="btn btn-primary" onclick="openNuevaObraModal()">+ Nueva Obra</button>
+        <!-- CATALOG -->
+        <div class="section" id="section-catalog">
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <span class="search-icon">&#128269;</span>
+              <input type="text" id="catalog-search" placeholder="Buscar productos..." oninput="debouncedCatalogSearch(this.value)">
+            </div>
+          </div>
+          <div class="products-grid" id="products-grid">
+            <div class="empty-state" style="grid-column:1/-1">
+              <div class="empty-icon">&#8987;</div>
+              <p>Cargando productos...</p>
+            </div>
+          </div>
         </div>
-        <div id="obras-loading" class="loading-center" style="display:none;"><div class="spinner"></div></div>
-        <div id="obras-list"></div>
-      </div><!-- /obras -->
 
-      <!-- ================================================================
-           SECCIÓN: NUEVA SOLICITUD
-           ================================================================ -->
-      <div id="section-nueva-solicitud" class="section">
-        <div class="card" style="max-width:700px;">
-          <div class="card-title">📋 Nueva solicitud de materiales</div>
-
-          <div class="form-group">
-            <label>Obra destino</label>
-            <select id="req-obra-select">
-              <option value="">— Selecciona una obra —</option>
-            </select>
+        <!-- CALCULATOR -->
+        <div class="section" id="section-calculator">
+          <div class="calc-types">
+            <button class="calc-type-btn" onclick="selectCalcType(this, 'banyo')">
+              <span class="type-icon">&#128705;</span>
+              <span class="type-name">Ba&ntilde;o</span>
+            </button>
+            <button class="calc-type-btn" onclick="selectCalcType(this, 'solera')">
+              <span class="type-icon">&#127959;</span>
+              <span class="type-name">Solera</span>
+            </button>
+            <button class="calc-type-btn" onclick="selectCalcType(this, 'tabique_ladrillo')">
+              <span class="type-icon">&#129521;</span>
+              <span class="type-name">Tabique</span>
+            </button>
+            <button class="calc-type-btn" onclick="selectCalcType(this, 'pintura')">
+              <span class="type-icon">&#127912;</span>
+              <span class="type-name">Pintura</span>
+            </button>
           </div>
 
-          <div class="form-group">
-            <label>Buscar y añadir productos</label>
-            <div class="product-search-wrapper">
-              <input id="req-prod-search" type="text"
-                placeholder="🔍  Escribe para buscar producto..."
-                oninput="searchProductsForRequest()"
-                autocomplete="off" />
-              <div id="req-prod-suggestions" class="product-suggestions" style="display:none;"></div>
+          <div class="calc-form">
+            <h3>Par&aacute;metros del c&aacute;lculo</h3>
+            <div class="calc-input-row">
+              <div class="form-group">
+                <label>Metros cuadrados</label>
+                <input type="number" id="calc-m2" placeholder="Ej: 15" min="1" step="0.5">
+              </div>
+              <button class="btn btn-primary" id="calc-btn" onclick="doCalculate()" style="width:auto;padding:11px 24px;margin-bottom:0;">
+                <div class="spinner"></div>
+                <span class="btn-text">&#9889; Calcular</span>
+              </button>
             </div>
           </div>
 
-          <div id="request-lines"></div>
+          <div class="calc-results" id="calc-results">
+            <h3>Materiales necesarios &mdash; <span id="calc-result-type"></span> (<span id="calc-result-m2"></span> m&sup2;)</h3>
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Unidad</th>
+                  <th>Cantidad</th>
+                </tr>
+              </thead>
+              <tbody id="calc-result-body"></tbody>
+            </table>
+            <div style="margin-top:16px;">
+              <button class="btn btn-primary" style="width:auto;" onclick="calcToRequest()">
+                &#128221; Crear solicitud con estos materiales
+              </button>
+            </div>
+          </div>
+        </div>
 
-          <div class="total-bar">
-            <span>Total estimado</span>
-            <span id="req-total">0,00 €</span>
+        <!-- OBRAS -->
+        <div class="section" id="section-obras">
+          <div class="section-header">
+            <h3>Mis Obras</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openNewObraModal()">
+              &#10133; Nueva obra
+            </button>
+          </div>
+          <div class="obras-list" id="obras-list">
+            <div class="empty-state">
+              <div class="empty-icon">&#8987;</div>
+              <p>Cargando obras...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- NUEVA SOLICITUD -->
+        <div class="section" id="section-new-request">
+          <div class="request-form-card">
+            <h3>&#128203; Datos de la solicitud</h3>
+
+            <div class="form-group">
+              <label>Obra *</label>
+              <select id="req-obra" onchange="onObraChange()">
+                <option value="">Seleccionar obra...</option>
+              </select>
+              <div class="field-error" id="req-obra-err">Selecciona una obra.</div>
+            </div>
+
+            <div class="form-group">
+              <label>Notas (opcional)</label>
+              <input type="text" id="req-notes" placeholder="Instrucciones especiales, prioridad...">
+            </div>
           </div>
 
-          <div class="form-group" style="margin-top:16px;">
-            <label>Notas adicionales</label>
-            <textarea id="req-notes" rows="3" placeholder="Instrucciones de entrega, urgencia..."></textarea>
+          <div class="request-form-card">
+            <h3>&#128722; A&ntilde;adir productos</h3>
+            <div class="form-group">
+              <div class="product-search-wrap">
+                <input type="text" id="req-product-search"
+                  placeholder="Buscar producto para a&ntilde;adir..."
+                  oninput="debouncedReqSearch(this.value)"
+                  autocomplete="off">
+                <div class="product-suggestions" id="product-suggestions"></div>
+              </div>
+            </div>
           </div>
 
-          <div style="display:flex;gap:10px;margin-top:6px;">
-            <button class="btn btn-secondary" onclick="clearRequest()">Limpiar</button>
-            <button class="btn btn-primary" style="flex:1;" onclick="submitRequest()">
-              <span id="req-spinner" class="spinner spinner-sm" style="display:none;"></span>
-              🚀 Enviar solicitud
+          <div class="request-form-card">
+            <h3>&#128230; L&iacute;neas de solicitud</h3>
+            <div class="cart-table-wrap">
+              <table class="cart-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Precio unit.</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="cart-body"></tbody>
+              </table>
+            </div>
+            <div id="cart-empty" class="empty-state" style="display:none;">
+              <div class="empty-icon">&#128461;</div>
+              <p>No has a&ntilde;adido ning&uacute;n producto a&uacute;n.</p>
+            </div>
+            <div class="cart-total" id="cart-total-row" style="display:none;">
+              Total: <span id="cart-total">0,00 &euro;</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="clearCart()">&#128465; Limpiar</button>
+            <button class="btn btn-primary" style="width:auto;" id="confirm-request-btn" onclick="confirmRequest()">
+              <div class="spinner"></div>
+              <span class="btn-text">&#9989; Confirmar solicitud</span>
             </button>
           </div>
         </div>
-      </div><!-- /nueva-solicitud -->
 
-      <!-- ================================================================
-           SECCIÓN: MIS PEDIDOS
-           ================================================================ -->
-      <div id="section-pedidos" class="section">
-        <div class="flex-between mb-2" style="margin-bottom:18px;">
-          <h2 style="font-size:1.15rem;font-weight:800;">🚚 Mis Pedidos</h2>
-          <button class="btn btn-secondary btn-sm" onclick="loadPedidos()">↻ Actualizar</button>
+        <!-- PEDIDOS -->
+        <div class="section" id="section-orders">
+          <div class="section-header">
+            <h3>Mis Pedidos</h3>
+            <button class="btn btn-secondary btn-sm" onclick="loadOrders()">&#128260; Actualizar</button>
+          </div>
+          <div class="requests-list" id="orders-list">
+            <div class="empty-state">
+              <div class="empty-icon">&#8987;</div>
+              <p>Cargando pedidos...</p>
+            </div>
+          </div>
         </div>
-        <div id="pedidos-loading" class="loading-center" style="display:none;"><div class="spinner"></div></div>
-        <div id="pedidos-list"></div>
-      </div><!-- /pedidos -->
 
-    </div><!-- /page-area -->
-  </div><!-- /main -->
-</div><!-- /app -->
-
-<!-- =====================================================================
-     MODAL: NUEVA OBRA
-     ===================================================================== -->
-<div id="modal-nueva-obra" class="modal-overlay" style="display:none;" onclick="closeModal('modal-nueva-obra',event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3>🏢 Nueva Obra</h3>
-      <button class="modal-close" onclick="closeModal('modal-nueva-obra')">✕</button>
+      </main>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Nombre de la obra *</label>
-        <input id="obra-name" type="text" placeholder="Ej: Reforma baño piso centro" required />
-      </div>
-      <div class="form-group">
-        <label>Dirección</label>
-        <input id="obra-address" type="text" placeholder="Calle, número, ciudad" />
-      </div>
-      <div class="form-group">
-        <label>Descripción</label>
-        <textarea id="obra-desc" rows="3" placeholder="Descripción breve del proyecto..."></textarea>
-      </div>
+  </div>
+</div>
+
+<!-- ==============================
+     MODALS
+     ============================== -->
+
+<!-- Nueva Obra -->
+<div class="modal-overlay" id="modal-new-obra">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">&#127959; Nueva Obra</div>
+      <button class="modal-close" onclick="closeModal('modal-new-obra')">&#10005;</button>
+    </div>
+    <div id="modal-obra-error" class="server-error"></div>
+    <div class="form-group">
+      <label>Nombre de la obra *</label>
+      <input type="text" id="obra-name" placeholder="Ej: Reforma cocina Calle Mayor 15">
+      <div class="field-error" id="obra-name-err">El nombre es obligatorio.</div>
+    </div>
+    <div class="form-group">
+      <label>Direcci&oacute;n</label>
+      <input type="text" id="obra-address" placeholder="Calle, n&uacute;mero, ciudad...">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-nueva-obra')">Cancelar</button>
-      <button class="btn btn-primary" onclick="createObra()">
-        <span id="obra-spinner" class="spinner spinner-sm" style="display:none;"></span>
-        Crear obra
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-obra')">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto;" id="save-obra-btn" onclick="saveObra()">
+        <div class="spinner"></div>
+        <span class="btn-text">Crear obra</span>
       </button>
     </div>
   </div>
 </div>
 
-<!-- =====================================================================
-     MODAL: DETALLE PEDIDO
-     ===================================================================== -->
-<div id="modal-pedido" class="modal-overlay" style="display:none;" onclick="closeModal('modal-pedido',event)">
-  <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
+<!-- Detalle Producto -->
+<div class="modal-overlay" id="modal-product-detail">
+  <div class="modal">
     <div class="modal-header">
-      <h3 id="pedido-modal-title">Detalle del pedido</h3>
-      <button class="modal-close" onclick="closeModal('modal-pedido')">✕</button>
+      <div class="modal-title" id="modal-product-title">Producto</div>
+      <button class="modal-close" onclick="closeModal('modal-product-detail')">&#10005;</button>
     </div>
-    <div class="modal-body" id="pedido-modal-body">
-      <div class="loading-center"><div class="spinner"></div></div>
-    </div>
+    <div class="product-detail-img" id="product-detail-img">&#128230;</div>
+    <div class="product-detail-price" id="product-detail-price">&mdash;</div>
+    <div class="product-detail-uom" id="product-detail-uom"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-product-detail')">Cerrar</button>
+      <button class="btn btn-primary" style="width:auto;" id="modal-add-product-btn">
+        &#10133; A&ntilde;adir a solicitud
+      </button>
     </div>
   </div>
 </div>
 
-<!-- =====================================================================
-     MODAL: SOLICITUDES DE OBRA
-     ===================================================================== -->
-<div id="modal-obra-requests" class="modal-overlay" style="display:none;" onclick="closeModal('modal-obra-requests',event)">
-  <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
+<!-- Detalle Pedido / Obra -->
+<div class="modal-overlay" id="modal-order-detail">
+  <div class="modal" style="max-width:620px;">
     <div class="modal-header">
-      <h3 id="obra-requests-title">Solicitudes de la obra</h3>
-      <button class="modal-close" onclick="closeModal('modal-obra-requests')">✕</button>
+      <div class="modal-title" id="modal-order-title">Solicitud</div>
+      <button class="modal-close" onclick="closeModal('modal-order-detail')">&#10005;</button>
     </div>
-    <div class="modal-body" id="obra-requests-body">
-      <div class="loading-center"><div class="spinner"></div></div>
-    </div>
+    <div id="modal-order-body"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-obra-requests')">Cerrar</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-order-detail')">Cerrar</button>
     </div>
   </div>
 </div>
 
-<!-- =====================================================================
-     JAVASCRIPT — LÓGICA PRINCIPAL
-     ===================================================================== -->
 <script>
-/* =========================================================================
-   ESTADO GLOBAL DE LA APLICACIÓN
-   ========================================================================= */
-const App = {
-  user: null,           // datos del usuario autenticado
-  obras: [],            // listado de obras cargadas
-  products: [],         // caché de productos para el catálogo
-  requestLines: [],     // líneas de la solicitud en curso
-  calcTipo: 'banyo',    // tipo de obra seleccionado en calculadora
-  searchTimeout: null,  // timeout para debounce de búsquedas
+'use strict';
+
+/* ==============================
+   ESTADO GLOBAL
+   ============================== */
+var App = {
+  user: null,
+  cart: [],
+  obras: [],
+  calcData: null,
+  calcType: null,
+  currentSection: 'dashboard',
 };
 
-/* =========================================================================
-   UTILIDADES — TOAST NOTIFICATIONS
-   ========================================================================= */
-function toast(msg, type = 'info', duration = 4000) {
-  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = `<span class="toast-icon">${icons[type] || 'ℹ️'}</span><span>${msg}</span>`;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => {
-    el.classList.add('hiding');
-    setTimeout(() => el.remove(), 320);
-  }, duration);
-}
+var _catalogSearchTimer = null;
+var _reqSearchTimer = null;
 
-/* =========================================================================
-   NAVEGACIÓN — SECCIONES Y SIDEBAR
-   ========================================================================= */
-function showSection(id) {
-  // Ocultar todas las secciones
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+/* ==============================
+   API HELPERS
+   ============================== */
 
-  // Activar la sección pedida
-  const sec = document.getElementById('section-' + id);
-  if (sec) sec.classList.add('active');
-
-  // Marcar el nav-item activo usando su onclick como referencia
-  document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${id}'`)) {
-      n.classList.add('active');
-    }
-  });
-
-  // Actualizar topbar
-  const titles = {
-    'dashboard': 'Dashboard', 'catalog': 'Catálogo de productos',
-    'calculator': 'Calculadora de materiales', 'obras': 'Mis Obras',
-    'nueva-solicitud': 'Nueva Solicitud', 'pedidos': 'Mis Pedidos'
-  };
-  document.getElementById('topbar-title').textContent = titles[id] || id;
-
-  // Cargar datos según la sección
-  if (id === 'catalog')          loadCatalog();
-  if (id === 'obras')            loadObras();
-  if (id === 'pedidos')          loadPedidos();
-  if (id === 'nueva-solicitud')  loadObrasForSelect();
-
-  closeSidebar();
-}
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('show');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('show');
-}
-
-/* =========================================================================
-   AUTENTICACIÓN — LOGIN / REGISTRO / LOGOUT
-   ========================================================================= */
-
-/** Cambiar entre pestaña login y registro */
-function switchAuthTab(tab) {
-  const isLogin = tab === 'login';
-  document.getElementById('form-login').style.display    = isLogin ? '' : 'none';
-  document.getElementById('form-register').style.display = isLogin ? 'none' : '';
-  document.getElementById('tab-login').style.background    = isLogin ? 'var(--primary)' : 'var(--white)';
-  document.getElementById('tab-login').style.color         = isLogin ? '#fff' : 'var(--mid)';
-  document.getElementById('tab-register').style.background = isLogin ? 'var(--white)' : 'var(--primary)';
-  document.getElementById('tab-register').style.color      = isLogin ? 'var(--mid)' : '#fff';
-}
-
-/** Manejar el envío del formulario de login */
-async function handleLogin(e) {
-  e.preventDefault();
-  const btn = document.getElementById('btn-login-submit');
-  const spinner = document.getElementById('login-spinner');
-  const login = document.getElementById('login-user').value.trim();
-  const password = document.getElementById('login-pass').value;
-
-  btn.disabled = true;
-  spinner.style.display = 'inline-block';
-
-  try {
-    // Llamada a la API de autenticación de Odoo (JSON-RPC estándar)
-    const res = await fetch('/web/session/authenticate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        jsonrpc: '2.0', method: 'call', id: 1,
-        params: { db: 'construction_marketplace', login, password }
-      })
-    });
-    const data = await res.json();
-
-    if (data.result && data.result.uid) {
-      // Guardar datos del usuario en sessionStorage
-      App.user = data.result;
-      sessionStorage.setItem('user', JSON.stringify(data.result));
-      enterApp();
-    } else {
-      const msg = data.error?.data?.message || 'Credenciales incorrectas';
-      toast('Error de acceso: ' + msg, 'error');
-    }
-  } catch (err) {
-    toast('No se pudo conectar con el servidor', 'error');
-  } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
-  }
-}
-
-/** Manejar el envío del formulario de registro */
-async function handleRegister(e) {
-  e.preventDefault();
-  const spinner = document.getElementById('reg-spinner');
-  spinner.style.display = 'inline-block';
-
-  const payload = {
-    name:         document.getElementById('reg-name').value.trim(),
-    login:        document.getElementById('reg-login').value.trim(),
-    password:     document.getElementById('reg-pass').value,
-    partner_type: document.getElementById('reg-type').value,
-    phone:        document.getElementById('reg-phone').value.trim(),
-  };
-
-  try {
-    const res = await fetch('/api/construction/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ jsonrpc:'2.0', method:'call', id:1, params: payload })
-    });
-    const data = await res.json();
-    const result = data.result || data;
-
-    if (result.success) {
-      App.user = result.data;
-      sessionStorage.setItem('user', JSON.stringify(result.data));
-      toast('¡Cuenta creada correctamente! Bienvenido/a.', 'success');
-      enterApp();
-    } else {
-      const msg = result.error?.message || 'Error al crear la cuenta';
-      toast(msg, 'error');
-    }
-  } catch (err) {
-    toast('Error de conexión con el servidor', 'error');
-  } finally {
-    spinner.style.display = 'none';
-  }
-}
-
-/** Cerrar sesión */
-async function handleLogout() {
-  try {
-    await fetch('/api/construction/auth/logout', {
-      method: 'POST', credentials: 'include'
-    });
-  } catch (_) { /* ignorar errores de red al logout */ }
-  sessionStorage.removeItem('user');
-  App.user = null;
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('page-login').classList.add('active');
-  toast('Sesión cerrada correctamente', 'info');
-}
-
-/** Entrar en la aplicación tras autenticación correcta */
-function enterApp() {
-  document.getElementById('page-login').classList.remove('active');
-  document.getElementById('app').classList.remove('hidden');
-
-  // Actualizar UI con nombre del usuario
-  const name = App.user.name || App.user.login || 'Usuario';
-  document.getElementById('welcome-name').textContent = name;
-  document.getElementById('user-info-sidebar').textContent = '👤 ' + name;
-  document.getElementById('topbar-avatar').textContent = name.charAt(0).toUpperCase();
-
-  showSection('dashboard');
-  loadDashboardStats();
-}
-
-/* =========================================================================
-   DASHBOARD — ESTADÍSTICAS
-   ========================================================================= */
-async function loadDashboardStats() {
-  try {
-    // Cargar obras
-    const obrasRes = await apiGet('/api/construction/obras');
-    if (obrasRes.success) {
-      document.getElementById('stat-obras').textContent = obrasRes.total || obrasRes.data.length;
-    }
-  } catch (_) {}
-
-  try {
-    // Cargar productos (solo para contar)
-    const prodRes = await apiGet('/api/construction/products?limit=1');
-    if (prodRes.success) {
-      // Pedimos con limit alto para contar
-      const allProds = await apiGet('/api/construction/products?limit=999');
-      document.getElementById('stat-productos').textContent = allProds.data?.length || '—';
-    }
-  } catch (_) {}
-
-  // Solicitudes — cargamos el conteo
-  try {
-    const reqs = await loadAllRequests();
-    document.getElementById('stat-pedidos').textContent = reqs.length;
-  } catch (_) {}
-}
-
-/* =========================================================================
-   HELPERS HTTP — GET / POST con manejo de sesión
-   ========================================================================= */
-
-/** GET a un endpoint REST de la API */
-async function apiGet(url) {
-  const res = await fetch(url, { credentials: 'include' });
-  if (res.status === 401 || res.status === 403) {
-    redirectToLogin('Sesión expirada, por favor vuelve a iniciar sesión.');
-    throw new Error('unauthorized');
-  }
-  return res.json();
-}
-
-/** POST a un endpoint REST de la API */
-async function apiPost(url, body) {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+// Para endpoints type="http"
+async function api(path, options) {
+  options = options || {};
+  var res = await fetch(path, Object.assign({
     credentials: 'include',
-    body: JSON.stringify(body)
-  });
+    headers: Object.assign({ 'Content-Type': 'application/json' }, options.headers || {}),
+  }, options));
+
   if (res.status === 401 || res.status === 403) {
-    redirectToLogin('Sesión expirada, por favor vuelve a iniciar sesión.');
-    throw new Error('unauthorized');
+    sessionStorage.removeItem('user');
+    showLogin();
+    throw new Error('Sesion expirada');
   }
   return res.json();
 }
 
-/** Redirigir a login mostrando un mensaje */
-function redirectToLogin(msg) {
-  sessionStorage.removeItem('user');
-  App.user = null;
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('page-login').classList.add('active');
-  if (msg) toast(msg, 'warning', 5000);
-}
-
-/* =========================================================================
-   CATÁLOGO DE PRODUCTOS
-   ========================================================================= */
-
-/** Debounce para no lanzar búsqueda en cada tecla */
-function debouncedCatalogSearch() {
-  clearTimeout(App.searchTimeout);
-  App.searchTimeout = setTimeout(loadCatalog, 420);
-}
-
-/** Cargar / filtrar productos del catálogo */
-async function loadCatalog() {
-  const query = document.getElementById('catalog-search').value.trim();
-  const grid = document.getElementById('products-grid');
-  const loading = document.getElementById('catalog-loading');
-
-  grid.innerHTML = '';
-  loading.style.display = 'flex';
-  document.getElementById('catalog-count').textContent = '';
-
-  try {
-    const url = '/api/construction/products?limit=60' + (query ? '&search=' + encodeURIComponent(query) : '');
-    const data = await apiGet(url);
-
-    loading.style.display = 'none';
-
-    if (!data.success || !data.data.length) {
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
-        <div class="empty-icon">📦</div>
-        <p>No se encontraron productos${query ? ' para "' + escapeHtml(query) + '"' : ''}.</p>
-      </div>`;
-      return;
-    }
-
-    App.products = data.data;
-    document.getElementById('catalog-count').textContent =
-      data.data.length + ' producto' + (data.data.length !== 1 ? 's' : '') + ' encontrado' + (data.data.length !== 1 ? 's' : '');
-
-    grid.innerHTML = data.data.map(p => `
-      <div class="product-card">
-        ${p.image
-          ? `<img class="product-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}"
-               onerror="this.replaceWith(makePlaceholder('${escapeHtml(p.name)}')); ">`
-          : `<div class="product-img-placeholder">🧱</div>`}
-        <div class="product-body">
-          <div class="product-name">${escapeHtml(p.name)}</div>
-          <div class="product-uom">Por ${escapeHtml(p.uom || 'ud.')}</div>
-          <div class="product-price">${formatCurrency(p.price)}</div>
-        </div>
-        <div class="product-footer">
-          <button class="btn btn-secondary" onclick="addProductToRequest(${p.id}, '${escapeJs(p.name)}', ${p.price}, '${escapeJs(p.uom || 'ud.')}')">
-            + Solicitar
-          </button>
-        </div>
-      </div>
-    `).join('');
-
-  } catch (err) {
-    loading.style.display = 'none';
-    if (err.message !== 'unauthorized') toast('Error al cargar el catálogo', 'error');
-  }
-}
-
-/** Crear elemento placeholder de imagen */
-function makePlaceholder(name) {
-  const div = document.createElement('div');
-  div.className = 'product-img-placeholder';
-  div.textContent = '🧱';
-  return div;
-}
-
-/* =========================================================================
-   CALCULADORA DE MATERIALES
-   ========================================================================= */
-
-/** Seleccionar tipo de obra en la calculadora */
-function selectTipoObra(el) {
-  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-  App.calcTipo = el.dataset.tipo;
-}
-
-/** Calcular materiales llamando a la API */
-async function calcularMateriales() {
-  const m2Input = document.getElementById('calc-m2');
-  const m2 = parseFloat(m2Input.value);
-
-  if (!m2 || m2 <= 0) {
-    toast('Introduce una superficie válida (m²)', 'warning');
-    m2Input.focus();
-    return;
-  }
-
-  try {
-    const url = `/api/construction/catalog/calculator?type=${App.calcTipo}&m2=${m2}`;
-    const data = await apiGet(url);
-
-    if (!data.success) {
-      toast(data.error?.message || 'Error en la calculadora', 'error');
-      return;
-    }
-
-    const result = data.data;
-    const tipoLabels = {
-      banyo: 'Baño', solera: 'Solera',
-      tabique_ladrillo: 'Tabique de ladrillo', pintura: 'Pintura'
-    };
-
-    document.getElementById('calc-result-title').textContent =
-      `📊 Materiales para ${tipoLabels[result.obra_type] || result.obra_type} — ${result.m2} m²`;
-
-    document.getElementById('calc-result-body').innerHTML =
-      result.materials.map(m => `
-        <tr>
-          <td class="fw-bold">${escapeHtml(m.material)}</td>
-          <td>${m.quantity}</td>
-          <td class="text-muted">${escapeHtml(m.unit)}</td>
-        </tr>
-      `).join('');
-
-    document.getElementById('calc-result').style.display = 'block';
-    // Guardar resultado para poder añadirlo a solicitud
-    App.lastCalcResult = result;
-
-  } catch (err) {
-    if (err.message !== 'unauthorized') toast('Error al calcular materiales', 'error');
-  }
-}
-
-/** Redirige a "Nueva Solicitud" e intenta precargar los materiales calculados */
-function addCalcResultToRequest() {
-  showSection('nueva-solicitud');
-  toast('Ve al buscador de productos para añadir los materiales calculados', 'info', 5000);
-}
-
-/* =========================================================================
-   OBRAS
-   ========================================================================= */
-
-/** Cargar listado de obras del usuario */
-async function loadObras() {
-  const loading = document.getElementById('obras-loading');
-  const list = document.getElementById('obras-list');
-  loading.style.display = 'flex';
-  list.innerHTML = '';
-
-  try {
-    const data = await apiGet('/api/construction/obras');
-    loading.style.display = 'none';
-
-    if (!data.success || !data.data.length) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="empty-icon">🏢</div>
-        <p>No tienes obras registradas todavía.<br>Crea tu primera obra con el botón de arriba.</p>
-      </div>`;
-      return;
-    }
-
-    App.obras = data.data;
-    list.innerHTML = data.data.map(o => `
-      <div class="obra-card">
-        <div class="obra-info">
-          <div class="obra-name">${escapeHtml(o.name)}</div>
-          <div class="obra-meta">
-            ${o.code ? `<span>📌 ${escapeHtml(o.code)}</span> &nbsp;·&nbsp; ` : ''}
-            <span class="badge badge-${o.state || 'draft'}">${stateLabel(o.state)}</span>
-            ${o.partner ? ` &nbsp;·&nbsp; 👤 ${escapeHtml(o.partner)}` : ''}
-          </div>
-        </div>
-        <div class="obra-actions">
-          <button class="btn btn-secondary btn-sm" onclick="viewObraRequests(${o.id}, '${escapeJs(o.name)}')">
-            📋 Solicitudes (${o.requests || 0})
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="newRequestForObra(${o.id})">
-            + Solicitar
-          </button>
-        </div>
-      </div>
-    `).join('');
-
-  } catch (err) {
-    loading.style.display = 'none';
-    if (err.message !== 'unauthorized') toast('Error al cargar las obras', 'error');
-  }
-}
-
-/** Abrir modal para crear una nueva obra */
-function openNuevaObraModal() {
-  document.getElementById('obra-name').value = '';
-  document.getElementById('obra-address').value = '';
-  document.getElementById('obra-desc').value = '';
-  document.getElementById('modal-nueva-obra').style.display = 'flex';
-}
-
-/** Crear una obra usando el JSON-RPC estándar de Odoo */
-async function createObra() {
-  const name = document.getElementById('obra-name').value.trim();
-  const address = document.getElementById('obra-address').value.trim();
-  const desc = document.getElementById('obra-desc').value.trim();
-  const spinner = document.getElementById('obra-spinner');
-
-  if (!name) { toast('El nombre de la obra es obligatorio', 'warning'); return; }
-
-  spinner.style.display = 'inline-block';
-
-  try {
-    // Usamos el JSON-RPC estándar de Odoo para crear un registro
-    const res = await fetch('/web/dataset/call_kw', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        jsonrpc: '2.0', method: 'call', id: Date.now(),
-        params: {
-          model: 'construction.obra',
-          method: 'create',
-          args: [{ name, address, description: desc }],
-          kwargs: {}
-        }
-      })
-    });
-    const data = await res.json();
-
-    if (data.result) {
-      toast('✅ Obra "' + name + '" creada correctamente', 'success');
-      closeModal('modal-nueva-obra');
-      // Si estamos en la sección obras, recargar
-      if (document.getElementById('section-obras').classList.contains('active')) loadObras();
-      loadDashboardStats();
-    } else {
-      const msg = data.error?.data?.message || 'Error al crear la obra';
-      toast(msg, 'error');
-    }
-  } catch (err) {
-    toast('Error de conexión al crear la obra', 'error');
-  } finally {
-    spinner.style.display = 'none';
-  }
-}
-
-/** Ver solicitudes de una obra específica */
-async function viewObraRequests(obraId, obraName) {
-  document.getElementById('obra-requests-title').textContent = '📋 Solicitudes de: ' + obraName;
-  document.getElementById('obra-requests-body').innerHTML =
-    '<div class="loading-center"><div class="spinner"></div></div>';
-  document.getElementById('modal-obra-requests').style.display = 'flex';
-
-  try {
-    // Cargamos todas las solicitudes y filtramos por obra
-    const all = await loadAllRequests();
-    // Nota: la API no filtra por obra, así que cargamos todas y filtramos
-    // En producción real habría ?obra_id=X
-    const filtered = all.filter(r => r.obra_id === obraId || true); // mostramos todas por ahora
-
-    if (!filtered.length) {
-      document.getElementById('obra-requests-body').innerHTML =
-        '<div class="empty-state"><div class="empty-icon">📋</div><p>No hay solicitudes para esta obra.</p></div>';
-      return;
-    }
-
-    document.getElementById('obra-requests-body').innerHTML = `
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Referencia</th><th>Estado</th><th>Total</th><th></th></tr></thead>
-          <tbody>
-            ${filtered.map(r => `
-              <tr>
-                <td class="fw-bold">${escapeHtml(r.name || '#' + r.id)}</td>
-                <td><span class="badge badge-${r.state}">${stateLabel(r.state)}</span></td>
-                <td>${formatCurrency(r.total || 0)}</td>
-                <td><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-obra-requests');viewPedido(${r.id})">Ver</button></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>`;
-
-  } catch (err) {
-    document.getElementById('obra-requests-body').innerHTML =
-      '<p style="color:var(--danger);padding:20px;">Error al cargar las solicitudes.</p>';
-  }
-}
-
-/** Ir a nueva solicitud preseleccionando la obra */
-function newRequestForObra(obraId) {
-  showSection('nueva-solicitud');
-  // Esperar a que cargue el select y luego preseleccionar
-  setTimeout(() => {
-    const sel = document.getElementById('req-obra-select');
-    if (sel) sel.value = obraId;
-  }, 600);
-}
-
-/* =========================================================================
-   NUEVA SOLICITUD
-   ========================================================================= */
-
-/** Cargar obras en el select de la solicitud */
-async function loadObrasForSelect() {
-  const sel = document.getElementById('req-obra-select');
-  try {
-    const data = await apiGet('/api/construction/obras');
-    if (data.success && data.data.length) {
-      App.obras = data.data;
-      sel.innerHTML = '<option value="">— Selecciona una obra —</option>' +
-        data.data.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
-    }
-  } catch (_) {}
-}
-
-/** Buscar productos para el buscador de la solicitud */
-async function searchProductsForRequest() {
-  const query = document.getElementById('req-prod-search').value.trim();
-  const suggestions = document.getElementById('req-prod-suggestions');
-
-  if (query.length < 2) { suggestions.style.display = 'none'; return; }
-
-  clearTimeout(App.searchTimeout);
-  App.searchTimeout = setTimeout(async () => {
-    try {
-      const url = '/api/construction/products?limit=8&search=' + encodeURIComponent(query);
-      const data = await apiGet(url);
-      if (!data.success || !data.data.length) {
-        suggestions.style.display = 'none'; return;
-      }
-      suggestions.innerHTML = data.data.map(p => `
-        <div class="suggestion-item"
-          onclick="addProductToRequest(${p.id}, '${escapeJs(p.name)}', ${p.price}, '${escapeJs(p.uom || 'ud.')}');
-                   document.getElementById('req-prod-search').value='';
-                   document.getElementById('req-prod-suggestions').style.display='none';">
-          <span>📦 ${escapeHtml(p.name)}</span>
-          <span class="s-price">${formatCurrency(p.price)}</span>
-        </div>
-      `).join('');
-      suggestions.style.display = 'block';
-    } catch (_) { suggestions.style.display = 'none'; }
-  }, 320);
-}
-
-// Cerrar sugerencias al hacer click fuera
-document.addEventListener('click', e => {
-  if (!document.getElementById('req-prod-search').contains(e.target)) {
-    document.getElementById('req-prod-suggestions').style.display = 'none';
-  }
-});
-
-/** Añadir producto a la solicitud (también usado desde el catálogo) */
-function addProductToRequest(id, name, price, uom) {
-  // Comprobamos si ya está en la lista
-  const existing = App.requestLines.find(l => l.id === id);
-  if (existing) {
-    existing.qty += 1;
-    toast(`Aumentada cantidad de "${name}" a ${existing.qty}`, 'info', 2500);
-    renderRequestLines();
-    return;
-  }
-
-  App.requestLines.push({ id, name, price, uom, qty: 1 });
-  renderRequestLines();
-  toast(`"${name}" añadido a la solicitud`, 'success', 2500);
-
-  // Redirigir a solicitud si estamos en el catálogo
-  const catalogActive = document.getElementById('section-catalog').classList.contains('active');
-  if (catalogActive) {
-    setTimeout(() => {
-      if (confirm('Producto añadido. ¿Ir a la solicitud?')) showSection('nueva-solicitud');
-    }, 200);
-  }
-}
-
-/** Renderizar las líneas de la solicitud */
-function renderRequestLines() {
-  const container = document.getElementById('request-lines');
-  if (!App.requestLines.length) {
-    container.innerHTML = '<p class="text-muted" style="padding:12px 0;text-align:center;">No hay productos añadidos todavía.</p>';
-    document.getElementById('req-total').textContent = '0,00 €';
-    return;
-  }
-
-  container.innerHTML = App.requestLines.map((l, i) => `
-    <div class="request-line">
-      <div>
-        <div class="line-name">${escapeHtml(l.name)}</div>
-        <div style="font-size:.75rem;color:var(--mid);">${formatCurrency(l.price)} / ${escapeHtml(l.uom)}</div>
-      </div>
-      <input type="number" min="0.01" step="0.01" value="${l.qty}"
-        onchange="updateLineQty(${i}, this.value)" title="Cantidad" />
-      <input type="number" min="0" step="0.01" value="${l.price.toFixed(2)}"
-        onchange="updateLinePrice(${i}, this.value)" title="Precio unitario" />
-      <button class="line-remove" onclick="removeLine(${i})" title="Eliminar">✕</button>
-    </div>
-  `).join('');
-
-  // Calcular total
-  const total = App.requestLines.reduce((sum, l) => sum + l.qty * l.price, 0);
-  document.getElementById('req-total').textContent = formatCurrency(total);
-}
-
-function updateLineQty(i, val)   { App.requestLines[i].qty   = Math.max(0.01, parseFloat(val) || 1); renderRequestLines(); }
-function updateLinePrice(i, val) { App.requestLines[i].price = Math.max(0, parseFloat(val) || 0);   renderRequestLines(); }
-function removeLine(i)           { App.requestLines.splice(i, 1); renderRequestLines(); }
-
-function clearRequest() {
-  App.requestLines = [];
-  renderRequestLines();
-  document.getElementById('req-obra-select').value = '';
-  document.getElementById('req-notes').value = '';
-  document.getElementById('req-prod-search').value = '';
-}
-
-/** Enviar solicitud a la API */
-async function submitRequest() {
-  const obraId = document.getElementById('req-obra-select').value;
-  const notes  = document.getElementById('req-notes').value.trim();
-  const spinner = document.getElementById('req-spinner');
-
-  if (!obraId) { toast('Selecciona una obra de destino', 'warning'); return; }
-  if (!App.requestLines.length) { toast('Añade al menos un producto', 'warning'); return; }
-
-  spinner.style.display = 'inline-block';
-
-  const body = {
-    obra_id: parseInt(obraId),
-    notes,
-    lines: App.requestLines.map(l => ({
-      product_id: l.id,
-      product_qty: l.qty,
-      price_unit: l.price
-    }))
-  };
-
-  try {
-    const data = await apiPost('/api/construction/material_request', body);
-    if (data.success) {
-      toast(`✅ Solicitud ${data.data.name} creada correctamente`, 'success', 5000);
-      clearRequest();
-      showSection('pedidos');
-    } else {
-      toast(data.error?.message || 'Error al crear la solicitud', 'error');
-    }
-  } catch (err) {
-    if (err.message !== 'unauthorized') toast('Error al enviar la solicitud', 'error');
-  } finally {
-    spinner.style.display = 'none';
-  }
-}
-
-/* =========================================================================
-   MIS PEDIDOS
-   ========================================================================= */
-
-/** Cargar todas las solicitudes — helper interno */
-async function loadAllRequests() {
-  // La API no tiene un endpoint de listado de solicitudes,
-  // así que aprovechamos las obras para obtener sus solicitudes
-  const obrasData = await apiGet('/api/construction/obras');
-  if (!obrasData.success) return [];
-
-  const allRequests = [];
-  for (const obra of obrasData.data) {
-    if (obra.requests > 0) {
-      // Intentamos cargar por ID incremental (enfoque pragmático)
-      // En un caso real habría GET /api/construction/material_requests
-    }
-  }
-  return allRequests;
-}
-
-/** Cargar y mostrar los pedidos en la sección */
-async function loadPedidos() {
-  const loading = document.getElementById('pedidos-loading');
-  const list    = document.getElementById('pedidos-list');
-  loading.style.display = 'flex';
-  list.innerHTML = '';
-
-  try {
-    // Usamos JSON-RPC de Odoo para buscar solicitudes del usuario actual
-    const res = await fetch('/web/dataset/call_kw', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        jsonrpc: '2.0', method: 'call', id: Date.now(),
-        params: {
-          model: 'construction.material.request',
-          method: 'search_read',
-          args: [[]],
-          kwargs: {
-            fields: ['id', 'name', 'state', 'obra_id', 'total_amount', 'create_date'],
-            limit: 50,
-            order: 'id desc'
-          }
-        }
-      })
-    });
-    const data = await res.json();
-    loading.style.display = 'none';
-
-    if (data.error) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="empty-icon">🚚</div>
-        <p>No se pudieron cargar los pedidos.<br><small>${escapeHtml(data.error.data?.message || data.error.message || '')}</small></p>
-      </div>`;
-      return;
-    }
-
-    const records = data.result || [];
-    if (!records.length) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="empty-icon">🚚</div>
-        <p>No tienes solicitudes todavía.<br>Crea tu primera solicitud desde "Nueva Solicitud".</p>
-      </div>`;
-      return;
-    }
-
-    // Actualizar contador del dashboard
-    document.getElementById('stat-pedidos').textContent = records.length;
-
-    list.innerHTML = `<div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Referencia</th>
-              <th>Obra</th>
-              <th>Estado</th>
-              <th>Total</th>
-              <th>Fecha</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${records.map(r => `
-              <tr style="cursor:pointer;" onclick="viewPedido(${r.id})">
-                <td class="fw-bold">${escapeHtml(r.name || '#' + r.id)}</td>
-                <td>${escapeHtml(Array.isArray(r.obra_id) ? r.obra_id[1] : (r.obra_id || '—'))}</td>
-                <td><span class="badge badge-${r.state}">${stateLabel(r.state)}</span></td>
-                <td>${formatCurrency(r.total_amount || 0)}</td>
-                <td class="text-muted">${formatDate(r.create_date)}</td>
-                <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();viewPedido(${r.id})">Ver →</button></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>`;
-
-  } catch (err) {
-    loading.style.display = 'none';
-    if (err.message !== 'unauthorized') toast('Error al cargar los pedidos', 'error');
-  }
-}
-
-/** Ver detalle de un pedido */
-async function viewPedido(id) {
-  document.getElementById('pedido-modal-title').textContent = 'Cargando pedido...';
-  document.getElementById('pedido-modal-body').innerHTML =
-    '<div class="loading-center"><div class="spinner"></div></div>';
-  document.getElementById('modal-pedido').style.display = 'flex';
-
-  try {
-    const data = await apiGet(`/api/construction/material_request/${id}/status`);
-
-    if (!data.success) {
-      document.getElementById('pedido-modal-body').innerHTML =
-        `<p style="color:var(--danger);padding:20px;">${escapeHtml(data.error?.message || 'Error al cargar el pedido')}</p>`;
-      return;
-    }
-
-    const r = data.data;
-    document.getElementById('pedido-modal-title').textContent = `📦 ${r.name || '#' + r.id}`;
-
-    document.getElementById('pedido-modal-body').innerHTML = `
-      <div class="detail-grid">
-        <div class="detail-field">
-          <label>Estado</label>
-          <div class="dval"><span class="badge badge-${r.state}">${stateLabel(r.state)}</span></div>
-        </div>
-        <div class="detail-field">
-          <label>Total</label>
-          <div class="dval text-primary">${formatCurrency(r.total || 0)}</div>
-        </div>
-        ${r.tracking ? `
-        <div class="detail-field">
-          <label>Seguimiento</label>
-          <div class="dval">${escapeHtml(r.tracking)}</div>
-        </div>` : ''}
-      </div>
-
-      ${r.lines && r.lines.length ? `
-        <div class="card-title" style="margin-bottom:12px;">Líneas del pedido</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Producto</th><th>Cantidad</th><th>Subtotal</th></tr>
-            </thead>
-            <tbody>
-              ${r.lines.map(l => `
-                <tr>
-                  <td>${escapeHtml(l.product || l.product_id || '—')}</td>
-                  <td>${l.qty || 0}</td>
-                  <td>${formatCurrency(l.subtotal || 0)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      ` : '<p class="text-muted">No hay líneas en este pedido.</p>'}
-    `;
-
-  } catch (err) {
-    if (err.message !== 'unauthorized') {
-      document.getElementById('pedido-modal-body').innerHTML =
-        '<p style="color:var(--danger);padding:20px;">Error al cargar el detalle del pedido.</p>';
-    }
-  }
-}
-
-/* =========================================================================
-   MODALES — ABRIR Y CERRAR
-   ========================================================================= */
-function closeModal(id, e) {
-  if (e && e.target !== document.getElementById(id)) return;
-  document.getElementById(id).style.display = 'none';
-}
-
-/* =========================================================================
-   FORMATEO Y UTILIDADES
-   ========================================================================= */
-
-/** Formatear número como moneda */
-function formatCurrency(n) {
-  return (parseFloat(n) || 0).toLocaleString('es-ES', {
-    style: 'currency', currency: 'EUR', minimumFractionDigits: 2
+// Para endpoints type="json" (JSON-RPC)
+async function rpc(path, params) {
+  var res = await api(path, {
+    method: 'POST',
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', id: Date.now(), params: params }),
   });
+  if (res.error) {
+    var msg = (res.error.data && res.error.data.message) || res.error.message || 'Error en la operacion';
+    throw new Error(msg);
+  }
+  return res.result;
 }
 
-/** Formatear fecha legible */
-function formatDate(s) {
-  if (!s) return '—';
-  try {
-    return new Date(s).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-  } catch (_) { return s; }
+/* ==============================
+   FORMATO
+   ============================== */
+function formatMoney(n) {
+  return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0) + ' €';
 }
 
-/** Label legible para estados */
-function stateLabel(state) {
-  const map = {
-    draft:      'Borrador',
-    confirmed:  'Confirmado',
-    sent:       'Enviado',
-    cancel:     'Cancelado',
-    done:       'Completado',
-    planning:   'En planificación',
-    execution:  'En ejecución',
-    paused:     'Pausado',
-  };
-  return map[state] || (state || 'Desconocido');
+function formatDate() {
+  return new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-/** Escapar HTML para evitar XSS */
-function escapeHtml(str) {
+function getInitials(name) {
+  if (!name) return '?';
+  return name.trim().split(/\s+/).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
+}
+
+function escHtml(str) {
   if (str === null || str === undefined) return '';
   return String(str)
     .replace(/&/g, '&amp;')
@@ -1937,30 +1800,909 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-/** Escapar para usar en atributos JS inline */
-function escapeJs(str) {
-  if (str === null || str === undefined) return '';
-  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+/* ==============================
+   TOAST
+   ============================== */
+function showToast(message, type, duration) {
+  type = type || 'info';
+  duration = duration || 4000;
+  var icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  var container = document.getElementById('toast-container');
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.innerHTML = '<span class="toast-icon">' + (icons[type] || 'ℹ️') + '</span><span class="toast-message">' + escHtml(message) + '</span>';
+  container.appendChild(el);
+  setTimeout(function() {
+    el.classList.add('hide');
+    setTimeout(function() { el.remove(); }, 400);
+  }, duration);
 }
 
-/* =========================================================================
-   INICIALIZACIÓN — Comprobar sesión al cargar
-   ========================================================================= */
-(function init() {
-  // Recuperar sesión guardada en sessionStorage
-  const saved = sessionStorage.getItem('user');
-  if (saved) {
-    try {
-      App.user = JSON.parse(saved);
-      enterApp();
-    } catch (_) {
-      sessionStorage.removeItem('user');
-    }
+/* ==============================
+   ESTADO BOTONES
+   ============================== */
+function setLoading(btnId, loading) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.classList.toggle('loading', loading);
+}
+
+/* ==============================
+   MODALES
+   ============================== */
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Cerrar al hacer click fuera
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+/* ==============================
+   AUTH TABS
+   ============================== */
+function switchAuthTab(tab) {
+  var tabs = document.querySelectorAll('.auth-tab');
+  tabs[0].classList.toggle('active', tab === 'login');
+  tabs[1].classList.toggle('active', tab === 'register');
+  document.getElementById('login-form').classList.toggle('active', tab === 'login');
+  document.getElementById('register-form').classList.toggle('active', tab === 'register');
+  clearAuthErrors();
+}
+
+function clearAuthErrors() {
+  document.querySelectorAll('.field-error').forEach(function(el) { el.classList.remove('visible'); });
+  document.querySelectorAll('.server-error').forEach(function(el) { el.classList.remove('visible'); el.textContent = ''; });
+  document.querySelectorAll('.form-group input').forEach(function(el) { el.classList.remove('error'); });
+}
+
+function showServerError(containerId, message) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('visible');
+}
+
+function fieldError(inputId, errId, show) {
+  var input = document.getElementById(inputId);
+  var err = document.getElementById(errId);
+  if (input) input.classList.toggle('error', show);
+  if (err) err.classList.toggle('visible', show);
+  return show;
+}
+
+/* ==============================
+   INIT — PUNTO DE ENTRADA
+   ============================== */
+async function initApp() {
+  var saved = sessionStorage.getItem('user');
+
+  if (!saved) {
+    showLogin();
+    return;
   }
 
-  // Inicializar la líneas vacías en la solicitud
-  renderRequestLines();
-})();
+  // Verificar sesion activa en el servidor
+  try {
+    var res = await fetch('/api/construction/auth/session', { credentials: 'include' });
+    if (!res.ok && res.status !== 200) {
+      throw new Error('HTTP ' + res.status);
+    }
+    var data = await res.json();
+    if (data.success && data.data) {
+      App.user = Object.assign({}, JSON.parse(saved), data.data);
+      sessionStorage.setItem('user', JSON.stringify(App.user));
+      enterApp();
+    } else {
+      sessionStorage.removeItem('user');
+      showLogin();
+    }
+  } catch (e) {
+    // Si el endpoint de sesion falla por red, limpiar y mostrar login
+    sessionStorage.removeItem('user');
+    showLogin();
+  }
+}
+
+function showLogin() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+function enterApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+
+  var name = (App.user && App.user.name) || 'Usuario';
+  var email = (App.user && (App.user.login || App.user.email)) || '';
+
+  document.getElementById('greeting-name').textContent = name.split(' ')[0];
+  document.getElementById('greeting-date').textContent = formatDate();
+  document.getElementById('sidebar-username').textContent = name;
+  document.getElementById('sidebar-email').textContent = email;
+  document.getElementById('user-avatar').textContent = getInitials(name);
+
+  goTo('dashboard');
+}
+
+/* ==============================
+   LOGIN
+   ============================== */
+async function doLogin() {
+  clearAuthErrors();
+  var email = document.getElementById('login-email').value.trim();
+  var password = document.getElementById('login-password').value;
+  var hasError = false;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    hasError = fieldError('login-email', 'login-email-err', true) || hasError;
+  }
+  if (!password) {
+    hasError = fieldError('login-password', 'login-pass-err', true) || hasError;
+  }
+  if (hasError) return;
+
+  setLoading('login-btn', true);
+  try {
+    var result = await rpc('/web/session/authenticate', {
+      db: 'construction_marketplace',
+      login: email,
+      password: password,
+    });
+
+    if (!result || !result.uid) {
+      showServerError('login-error', 'Credenciales incorrectas. Comprueba tu email y contraseña.');
+      return;
+    }
+
+    App.user = { uid: result.uid, name: result.name, login: result.login || email };
+    sessionStorage.setItem('user', JSON.stringify(App.user));
+    showToast('Bienvenido/a, ' + (result.name || email) + '!', 'success');
+    enterApp();
+  } catch (e) {
+    showServerError('login-error', e.message || 'Error al iniciar sesión. Inténtalo de nuevo.');
+  } finally {
+    setLoading('login-btn', false);
+  }
+}
+
+document.getElementById('login-password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('login-email').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+
+/* ==============================
+   REGISTRO
+   ============================== */
+async function doRegister() {
+  clearAuthErrors();
+  var name = document.getElementById('reg-name').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var password = document.getElementById('reg-password').value;
+  var type = document.getElementById('reg-type').value;
+  var phone = document.getElementById('reg-phone').value.trim();
+  var hasError = false;
+
+  if (!name) hasError = fieldError('reg-name', 'reg-name-err', true) || hasError;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) hasError = fieldError('reg-email', 'reg-email-err', true) || hasError;
+  if (!password || password.length < 6) hasError = fieldError('reg-password', 'reg-pass-err', true) || hasError;
+  if (!type) hasError = fieldError('reg-type', 'reg-type-err', true) || hasError;
+  if (hasError) return;
+
+  setLoading('register-btn', true);
+  try {
+    var result = await rpc('/api/construction/auth/register', {
+      name: name,
+      login: email,
+      password: password,
+      phone: phone || false,
+      customer_type: type,
+    });
+
+    if (!result || !result.success) {
+      var errMsg = (result && result.error) || 'No se pudo crear la cuenta. Inténtalo de nuevo.';
+      showServerError('register-error', errMsg);
+      return;
+    }
+
+    var userData = result.data || {};
+    App.user = {
+      uid: userData.uid,
+      name: userData.name || name,
+      login: userData.login || email,
+    };
+    sessionStorage.setItem('user', JSON.stringify(App.user));
+    showToast('Cuenta creada correctamente. Bienvenido/a!', 'success');
+    enterApp();
+  } catch (e) {
+    showServerError('register-error', e.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
+  } finally {
+    setLoading('register-btn', false);
+  }
+}
+
+/* ==============================
+   LOGOUT
+   ============================== */
+async function doLogout() {
+  try {
+    await api('/api/construction/auth/logout', { method: 'POST' });
+  } catch (_) {}
+  sessionStorage.removeItem('user');
+  App.user = null;
+  App.cart = [];
+  App.obras = [];
+  showToast('Sesión cerrada.', 'info');
+  showLogin();
+}
+
+/* ==============================
+   NAVEGACION
+   ============================== */
+var SECTION_TITLES = {
+  dashboard: 'Dashboard',
+  catalog: 'Catálogo de productos',
+  calculator: 'Calculadora de materiales',
+  obras: 'Mis Obras',
+  'new-request': 'Nueva Solicitud',
+  orders: 'Mis Pedidos',
+};
+
+function goTo(section) {
+  document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+
+  App.currentSection = section;
+
+  var sectionEl = document.getElementById('section-' + section);
+  if (sectionEl) sectionEl.classList.add('active');
+
+  var navItem = document.querySelector('[data-section="' + section + '"]');
+  if (navItem) navItem.classList.add('active');
+
+  document.getElementById('page-title').textContent = SECTION_TITLES[section] || section;
+  closeSidebar();
+
+  switch (section) {
+    case 'dashboard':    loadDashboard();    break;
+    case 'catalog':      loadCatalog('');    break;
+    case 'obras':        loadObras();        break;
+    case 'new-request':  loadNewRequest();   break;
+    case 'orders':       loadOrders();       break;
+  }
+}
+
+/* ==============================
+   SIDEBAR MOVIL
+   ============================== */
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
+
+/* ==============================
+   DASHBOARD
+   ============================== */
+async function loadDashboard() {
+  try {
+    var obrasPromise = api('/api/construction/obras');
+    var productsPromise = api('/api/construction/products?limit=1');
+
+    var results = await Promise.allSettled([obrasPromise, productsPromise]);
+
+    var obrasRes = results[0];
+    var productsRes = results[1];
+
+    if (obrasRes.status === 'fulfilled' && obrasRes.value.success) {
+      var obras = obrasRes.value.data || [];
+      App.obras = obras;
+      var activas = obras.filter(function(o) {
+        return o.state === 'active' || o.state === 'confirmed';
+      }).length;
+      var totalSolicitudes = obras.reduce(function(sum, o) { return sum + (o.requests || 0); }, 0);
+      document.getElementById('stat-obras').textContent = activas;
+      document.getElementById('stat-pending').textContent = totalSolicitudes;
+      document.getElementById('stat-orders').textContent = obras.length;
+    }
+
+    if (productsRes.status === 'fulfilled' && productsRes.value.success) {
+      var total = productsRes.value.total;
+      document.getElementById('stat-products').textContent = total !== undefined ? total : '—';
+    }
+  } catch (e) {
+    // Dashboard: no mostrar toast por errores de carga inicial
+    console.warn('Dashboard error:', e.message);
+  }
+}
+
+/* ==============================
+   CATALOG
+   ============================== */
+async function loadCatalog(search) {
+  var grid = document.getElementById('products-grid');
+  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#8987;</div><p>Cargando productos...</p></div>';
+
+  try {
+    var url = '/api/construction/products?limit=40';
+    if (search) url += '&search=' + encodeURIComponent(search);
+
+    var res = await api(url);
+    if (!res.success) throw new Error(res.error || 'Error al cargar productos');
+
+    var products = res.data || [];
+
+    if (products.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128461;</div><p>No se encontraron productos.</p></div>';
+      return;
+    }
+
+    grid.innerHTML = products.map(function(p) { return renderProductCard(p); }).join('');
+  } catch (e) {
+    if (e.message !== 'Sesion expirada') {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#9888;</div><p>Error al cargar productos. <button class="btn btn-secondary btn-sm" onclick="loadCatalog(\'\')">Reintentar</button></p></div>';
+    }
+  }
+}
+
+function renderProductCard(p) {
+  var imgHtml;
+  if (p.image) {
+    imgHtml = '<div class="product-image"><img src="' + escHtml(p.image) + '" alt="' + escHtml(p.name) + '" onerror="this.parentElement.innerHTML=\'&#128230;\'"></div>';
+  } else {
+    imgHtml = '<div class="product-image">&#128230;</div>';
+  }
+
+  var productJson = escHtml(JSON.stringify(p));
+
+  return '<div class="product-card" onclick="openProductDetail(\'' + productJson + '\')">' +
+    imgHtml +
+    '<div class="product-body">' +
+    '<div class="product-name">' + escHtml(p.name) + '</div>' +
+    '<div class="product-price">' + formatMoney(p.price) + ' <span class="product-uom">/ ' + escHtml(p.uom || 'ud') + '</span></div>' +
+    '<div class="product-action">' +
+    '<button class="btn-add" onclick="event.stopPropagation(); addToCart(' + p.id + ', \'' + escHtml(p.name).replace(/'/g, '\\\'') + '\', ' + (p.price || 0) + ', \'' + escHtml(p.uom || 'ud').replace(/'/g, '\\\'') + '\')">' +
+    '&#10133; A&ntilde;adir a solicitud</button>' +
+    '</div>' +
+    '</div>' +
+    '</div>';
+}
+
+function openProductDetail(productJsonEncoded) {
+  var p;
+  try {
+    // productJsonEncoded puede venir como string HTML-encoded
+    var decoded = productJsonEncoded
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+    p = JSON.parse(decoded);
+  } catch (e) {
+    showToast('Error al abrir el producto.', 'error');
+    return;
+  }
+
+  document.getElementById('modal-product-title').textContent = p.name;
+
+  var imgEl = document.getElementById('product-detail-img');
+  if (p.image) {
+    imgEl.innerHTML = '<img src="' + escHtml(p.image) + '" alt="' + escHtml(p.name) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'&#128230;\'">';
+  } else {
+    imgEl.textContent = '📦';
+  }
+
+  document.getElementById('product-detail-price').textContent = formatMoney(p.price);
+  document.getElementById('product-detail-uom').textContent = 'por ' + (p.uom || 'unidad');
+
+  var addBtn = document.getElementById('modal-add-product-btn');
+  // Remover listener anterior
+  var newBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newBtn, addBtn);
+  newBtn.addEventListener('click', function() {
+    addToCart(p.id, p.name, p.price || 0, p.uom || 'ud');
+    closeModal('modal-product-detail');
+  });
+
+  openModal('modal-product-detail');
+}
+
+function debouncedCatalogSearch(value) {
+  clearTimeout(_catalogSearchTimer);
+  _catalogSearchTimer = setTimeout(function() { loadCatalog(value); }, 400);
+}
+
+/* ==============================
+   CALCULADORA
+   ============================== */
+var _calcType = null;
+
+function selectCalcType(btn, type) {
+  document.querySelectorAll('.calc-type-btn').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  _calcType = type;
+}
+
+async function doCalculate() {
+  if (!_calcType) {
+    showToast('Selecciona un tipo de obra primero.', 'warning');
+    return;
+  }
+  var m2 = parseFloat(document.getElementById('calc-m2').value);
+  if (!m2 || m2 <= 0) {
+    showToast('Introduce los metros cuadrados.', 'warning');
+    return;
+  }
+
+  setLoading('calc-btn', true);
+  try {
+    var res = await api('/api/construction/catalog/calculator?type=' + _calcType + '&m2=' + m2);
+    if (!res.success) throw new Error(res.error || 'Error al calcular');
+    App.calcData = res.data;
+    App.calcType = _calcType;
+    renderCalcResults(res.data);
+  } catch (e) {
+    if (e.message !== 'Sesion expirada') showToast(e.message, 'error');
+  } finally {
+    setLoading('calc-btn', false);
+  }
+}
+
+function renderCalcResults(data) {
+  var typeNames = { banyo: 'Baño', solera: 'Solera', tabique_ladrillo: 'Tabique', pintura: 'Pintura' };
+  document.getElementById('calc-result-type').textContent = typeNames[data.obra_type] || data.obra_type;
+  document.getElementById('calc-result-m2').textContent = data.m2;
+
+  var materials = data.materials || [];
+  var tbody = document.getElementById('calc-result-body');
+  tbody.innerHTML = materials.map(function(m) {
+    return '<tr><td>' + escHtml(m.material) + '</td><td>' + escHtml(m.unit) + '</td><td><strong>' + m.quantity + '</strong></td></tr>';
+  }).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">Sin resultados</td></tr>';
+
+  document.getElementById('calc-results').classList.add('visible');
+}
+
+function calcToRequest() {
+  if (!App.calcData) return;
+  var materials = App.calcData.materials || [];
+  goTo('new-request');
+  setTimeout(function() {
+    materials.forEach(function(m) {
+      if (!App.cart.find(function(c) { return c.name === m.material && c.fromCalc; })) {
+        App.cart.push({
+          product_id: null,
+          name: m.material,
+          price_unit: 0,
+          product_qty: parseFloat(m.quantity) || 1,
+          uom: m.unit,
+          fromCalc: true,
+        });
+      }
+    });
+    renderCart();
+    showToast('Materiales añadidos a la solicitud.', 'success');
+  }, 250);
+}
+
+/* ==============================
+   OBRAS
+   ============================== */
+async function loadObras() {
+  var list = document.getElementById('obras-list');
+  list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#8987;</div><p>Cargando obras...</p></div>';
+
+  try {
+    var res = await api('/api/construction/obras');
+    if (!res.success) throw new Error(res.error || 'Error al cargar obras');
+
+    App.obras = res.data || [];
+
+    if (App.obras.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#127968;</div><p>No tienes obras registradas.</p><br><button class="btn btn-primary btn-sm" onclick="openNewObraModal()">Crear primera obra</button></div>';
+      return;
+    }
+
+    list.innerHTML = App.obras.map(function(o) { return renderObraCard(o); }).join('');
+  } catch (e) {
+    if (e.message !== 'Sesion expirada') {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9888;</div><p>Error al cargar obras. <button class="btn btn-secondary btn-sm" onclick="loadObras()">Reintentar</button></p></div>';
+    }
+  }
+}
+
+function stateCardClass(state) {
+  var map = { active: 'state-active', confirmed: 'state-active', draft: 'state-draft', cancel: 'state-cancel', done: 'state-active' };
+  return map[state] || 'state-draft';
+}
+
+function stateBadge(state) {
+  var map = {
+    active: ['badge-green', 'Activa'],
+    confirmed: ['badge-green', 'Confirmada'],
+    draft: ['badge-gray', 'Borrador'],
+    cancel: ['badge-red', 'Cancelada'],
+    done: ['badge-blue', 'Completada'],
+  };
+  var entry = map[state] || ['badge-gray', state || '?'];
+  return '<span class="badge ' + entry[0] + '">' + entry[1] + '</span>';
+}
+
+function renderObraCard(o) {
+  return '<div class="obra-card ' + stateCardClass(o.state) + '">' +
+    '<div class="obra-icon">&#127968;</div>' +
+    '<div class="obra-info">' +
+    '<div class="obra-name">' + escHtml(o.name) + '</div>' +
+    (o.code ? '<div class="obra-code">' + escHtml(o.code) + '</div>' : '') +
+    '<div class="obra-stats">' +
+    '<span>&#128100; ' + escHtml(o.partner || '—') + '</span>' +
+    '<span>&#128203; ' + (o.requests || 0) + ' solicitud' + ((o.requests !== 1) ? 'es' : '') + '</span>' +
+    stateBadge(o.state) +
+    '</div>' +
+    '</div>' +
+    '<div class="obra-actions">' +
+    '<button class="btn btn-primary btn-sm" onclick="startRequestForObra(' + o.id + ')">&#10133; Solicitud</button>' +
+    '</div>' +
+    '</div>';
+}
+
+function startRequestForObra(obraId) {
+  goTo('new-request');
+  setTimeout(function() {
+    var sel = document.getElementById('req-obra');
+    if (sel) {
+      for (var i = 0; i < sel.options.length; i++) {
+        if (parseInt(sel.options[i].value) === obraId) {
+          sel.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }, 300);
+}
+
+function openNewObraModal() {
+  document.getElementById('obra-name').value = '';
+  document.getElementById('obra-address').value = '';
+  document.getElementById('obra-name').classList.remove('error');
+  document.getElementById('obra-name-err').classList.remove('visible');
+  var errEl = document.getElementById('modal-obra-error');
+  errEl.classList.remove('visible');
+  errEl.textContent = '';
+  openModal('modal-new-obra');
+}
+
+async function saveObra() {
+  var name = document.getElementById('obra-name').value.trim();
+  var address = document.getElementById('obra-address').value.trim();
+
+  if (!name) {
+    fieldError('obra-name', 'obra-name-err', true);
+    return;
+  }
+
+  setLoading('save-obra-btn', true);
+  try {
+    var result = await rpc('/web/dataset/call_kw', {
+      model: 'construction.obra',
+      method: 'create',
+      args: [{ name: name, address: address || false }],
+      kwargs: {},
+    });
+
+    if (!result) throw new Error('No se pudo crear la obra');
+
+    showToast('Obra "' + name + '" creada correctamente!', 'success');
+    closeModal('modal-new-obra');
+    loadObras();
+  } catch (e) {
+    var errEl = document.getElementById('modal-obra-error');
+    errEl.textContent = e.message || 'Error al crear la obra';
+    errEl.classList.add('visible');
+  } finally {
+    setLoading('save-obra-btn', false);
+  }
+}
+
+/* ==============================
+   NUEVA SOLICITUD
+   ============================== */
+async function loadNewRequest() {
+  var sel = document.getElementById('req-obra');
+  var currentVal = sel.value;
+  sel.innerHTML = '<option value="">Seleccionar obra...</option>';
+
+  try {
+    if (App.obras.length === 0) {
+      var res = await api('/api/construction/obras');
+      if (res.success) App.obras = res.data || [];
+    }
+    App.obras.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o.id;
+      opt.textContent = o.name;
+      if (parseInt(currentVal) === o.id) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  } catch (_) {}
+
+  renderCart();
+}
+
+function onObraChange() {
+  var sel = document.getElementById('req-obra');
+  if (sel.value) {
+    document.getElementById('req-obra-err').classList.remove('visible');
+    sel.classList.remove('error');
+  }
+}
+
+function debouncedReqSearch(value) {
+  clearTimeout(_reqSearchTimer);
+  if (!value.trim()) {
+    document.getElementById('product-suggestions').classList.remove('visible');
+    return;
+  }
+  _reqSearchTimer = setTimeout(function() { searchProductsForRequest(value); }, 350);
+}
+
+async function searchProductsForRequest(query) {
+  try {
+    var res = await api('/api/construction/products?search=' + encodeURIComponent(query) + '&limit=8');
+    if (!res.success) return;
+    renderSuggestions(res.data || []);
+  } catch (_) {}
+}
+
+function renderSuggestions(products) {
+  var container = document.getElementById('product-suggestions');
+  if (products.length === 0) {
+    container.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--gray-400)">Sin resultados</div>';
+    container.classList.add('visible');
+    return;
+  }
+  container.innerHTML = products.map(function(p) {
+    return '<div class="suggestion-item" onclick="addToCartFromSuggestion(' + p.id + ', \'' + escHtml(p.name).replace(/'/g,'\\\'') + '\', ' + (p.price || 0) + ', \'' + escHtml(p.uom || 'ud').replace(/'/g,'\\\'') + '\')">' +
+      '<img class="suggestion-img" src="' + escHtml(p.image || '') + '" alt="' + escHtml(p.name) + '" onerror="this.style.display=\'none\'">' +
+      '<div><div class="suggestion-name">' + escHtml(p.name) + '</div>' +
+      '<div class="suggestion-price">' + formatMoney(p.price) + ' / ' + escHtml(p.uom || 'ud') + '</div></div>' +
+      '</div>';
+  }).join('');
+  container.classList.add('visible');
+}
+
+function addToCartFromSuggestion(id, name, price, uom) {
+  document.getElementById('product-suggestions').classList.remove('visible');
+  document.getElementById('req-product-search').value = '';
+  addToCart(id, name, price, uom);
+}
+
+// Cerrar sugerencias al hacer click fuera
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('product-suggestions');
+  if (wrap && !e.target.closest('.product-search-wrap')) {
+    wrap.classList.remove('visible');
+  }
+});
+
+function addToCart(productId, name, priceUnit, uom) {
+  var existing = App.cart.find(function(c) { return c.product_id === productId && !c.fromCalc; });
+  if (existing) {
+    existing.product_qty += 1;
+    showToast('Cantidad aumentada: ' + name, 'info', 2000);
+  } else {
+    App.cart.push({
+      product_id: productId,
+      name: name,
+      price_unit: priceUnit || 0,
+      product_qty: 1,
+      uom: uom || 'ud',
+      fromCalc: false,
+    });
+    showToast('Añadido: ' + name, 'success', 2000);
+  }
+
+  if (App.currentSection === 'new-request') renderCart();
+}
+
+function renderCart() {
+  var tbody = document.getElementById('cart-body');
+  var emptyEl = document.getElementById('cart-empty');
+  var totalRow = document.getElementById('cart-total-row');
+
+  if (!tbody) return;
+
+  if (App.cart.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    totalRow.style.display = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  totalRow.style.display = 'block';
+
+  tbody.innerHTML = App.cart.map(function(item, idx) {
+    return '<tr>' +
+      '<td><strong>' + escHtml(item.name) + '</strong><br><span style="font-size:11px;color:var(--gray-400)">' + escHtml(item.uom) + (item.fromCalc ? ' (calculado)' : '') + '</span></td>' +
+      '<td>' + formatMoney(item.price_unit) + '</td>' +
+      '<td><input class="qty-input" type="number" min="0.01" step="0.01" value="' + item.product_qty + '" onchange="updateCartQty(' + idx + ', this.value)"></td>' +
+      '<td><strong>' + formatMoney(item.price_unit * item.product_qty) + '</strong></td>' +
+      '<td><button class="btn btn-icon" style="background:var(--red-bg);color:var(--red);border:none;cursor:pointer;" onclick="removeFromCart(' + idx + ')" title="Eliminar">&#128465;</button></td>' +
+      '</tr>';
+  }).join('');
+
+  updateCartTotal();
+}
+
+function updateCartTotal() {
+  var total = App.cart.reduce(function(s, i) { return s + i.price_unit * i.product_qty; }, 0);
+  var el = document.getElementById('cart-total');
+  if (el) el.textContent = formatMoney(total);
+}
+
+function updateCartQty(idx, val) {
+  var qty = parseFloat(val);
+  if (isNaN(qty) || qty <= 0) return;
+  App.cart[idx].product_qty = qty;
+  updateCartTotal();
+}
+
+function removeFromCart(idx) {
+  App.cart.splice(idx, 1);
+  renderCart();
+}
+
+function clearCart() {
+  App.cart = [];
+  var notesEl = document.getElementById('req-notes');
+  var obraEl = document.getElementById('req-obra');
+  if (notesEl) notesEl.value = '';
+  if (obraEl) obraEl.selectedIndex = 0;
+  renderCart();
+  showToast('Solicitud limpiada.', 'info', 2000);
+}
+
+async function confirmRequest() {
+  var obraId = parseInt(document.getElementById('req-obra').value);
+  if (!obraId) {
+    fieldError('req-obra', 'req-obra-err', true);
+    showToast('Selecciona una obra primero.', 'warning');
+    return;
+  }
+
+  var realLines = App.cart.filter(function(item) { return item.product_id && !item.fromCalc; });
+
+  if (App.cart.length === 0) {
+    showToast('Añade al menos un producto a la solicitud.', 'warning');
+    return;
+  }
+
+  if (realLines.length === 0) {
+    showToast('La solicitud debe incluir al menos un producto del catálogo.', 'warning');
+    return;
+  }
+
+  var lines = realLines.map(function(item) {
+    return {
+      product_id: item.product_id,
+      product_qty: item.product_qty,
+      price_unit: item.price_unit,
+    };
+  });
+
+  var notes = document.getElementById('req-notes').value.trim();
+
+  setLoading('confirm-request-btn', true);
+  try {
+    var res = await api('/api/construction/material_request', {
+      method: 'POST',
+      body: JSON.stringify({ obra_id: obraId, notes: notes || false, lines: lines }),
+    });
+
+    if (!res.success) throw new Error(res.error || 'Error al confirmar la solicitud');
+
+    var reqName = (res.data && res.data.name) ? ' "' + res.data.name + '"' : '';
+    showToast('Solicitud' + reqName + ' creada correctamente!', 'success');
+    clearCart();
+    goTo('orders');
+  } catch (e) {
+    if (e.message !== 'Sesion expirada') showToast(e.message, 'error');
+  } finally {
+    setLoading('confirm-request-btn', false);
+  }
+}
+
+/* ==============================
+   PEDIDOS
+   ============================== */
+async function loadOrders() {
+  var list = document.getElementById('orders-list');
+  list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#8987;</div><p>Cargando pedidos...</p></div>';
+
+  try {
+    var res = await api('/api/construction/obras');
+    if (!res.success) throw new Error(res.error || 'Error al cargar pedidos');
+
+    var obras = res.data || [];
+    var obrasConSolicitudes = obras.filter(function(o) { return (o.requests || 0) > 0; });
+
+    if (obras.length === 0 || obrasConSolicitudes.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128461;</div><p>No tienes solicitudes aún.<br><button class="btn btn-primary btn-sm" onclick="goTo(\'new-request\')" style="margin-top:12px">Crear solicitud</button></p></div>';
+      return;
+    }
+
+    list.innerHTML = obrasConSolicitudes.map(function(o) { return renderOrderCard(o); }).join('');
+  } catch (e) {
+    if (e.message !== 'Sesion expirada') {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9888;</div><p>Error al cargar pedidos. <button class="btn btn-secondary btn-sm" onclick="loadOrders()">Reintentar</button></p></div>';
+    }
+  }
+}
+
+function renderOrderCard(o) {
+  return '<div class="request-card" onclick="openObraDetail(' + o.id + ')">' +
+    '<div class="request-icon">&#128203;</div>' +
+    '<div class="request-info">' +
+    '<div class="request-name">' + escHtml(o.name) + '</div>' +
+    '<div class="request-meta">&#128230; ' + (o.requests || 0) + ' solicitud' + ((o.requests !== 1) ? 'es' : '') + ' &middot; ' + escHtml(o.partner || '—') + '</div>' +
+    '</div>' +
+    stateBadge(o.state) +
+    '</div>';
+}
+
+function openObraDetail(obraId) {
+  document.getElementById('modal-order-title').textContent = 'Detalle de obra';
+  document.getElementById('modal-order-body').innerHTML =
+    '<div style="text-align:center;padding:32px">' +
+    '<div class="loading-spinner" style="margin:0 auto"></div>' +
+    '<p style="margin-top:12px;color:var(--gray-500)">Cargando...</p>' +
+    '</div>';
+  openModal('modal-order-detail');
+
+  var obra = App.obras.find(function(o) { return o.id === obraId; });
+  if (!obra) {
+    // intentar buscarlo de nuevo
+    api('/api/construction/obras').then(function(res) {
+      if (res.success) {
+        obra = (res.data || []).find(function(o) { return o.id === obraId; });
+        if (obra) renderObraDetail(obra);
+      }
+    }).catch(function() {});
+    return;
+  }
+  renderObraDetail(obra);
+}
+
+function renderObraDetail(o) {
+  document.getElementById('modal-order-title').textContent = '🏗️ ' + o.name;
+  document.getElementById('modal-order-body').innerHTML =
+    '<div class="detail-row"><span class="detail-label">Obra</span><span class="detail-value">' + escHtml(o.name) + '</span></div>' +
+    (o.code ? '<div class="detail-row"><span class="detail-label">Código</span><span class="detail-value">' + escHtml(o.code) + '</span></div>' : '') +
+    '<div class="detail-row"><span class="detail-label">Cliente</span><span class="detail-value">' + escHtml(o.partner || '—') + '</span></div>' +
+    '<div class="detail-row"><span class="detail-label">Estado</span><span class="detail-value">' + stateBadge(o.state) + '</span></div>' +
+    '<div class="detail-row"><span class="detail-label">Total solicitudes</span><span class="detail-value">' + (o.requests || 0) + '</span></div>' +
+    '<div class="info-card" style="margin-top:16px;">ℹ️ Para ver el detalle de cada solicitud, accede al panel de administración de Odoo.</div>';
+}
+
+/* ==============================
+   START
+   ============================== */
+document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>

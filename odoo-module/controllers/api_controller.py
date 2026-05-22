@@ -392,56 +392,97 @@ class ConstructionAPI(http.Controller):
 
     @http.route("/api/construction/auth/register", type="json", auth="public", methods=["POST"], csrf=False)
     def auth_register(self):
-        p = request.get_json_data() or {}
+        p = request.params if hasattr(request, 'params') else (request.get_json_data() or {})
         try:
-            name = p.get("name", "").strip()
-            login = p.get("login", "").strip()
-            password = p.get("password", "")
-            partner_type = p.get("partner_type", "particular")
-            phone = p.get("phone", "")
-            company_name = p.get("company_name", "")
+            name     = (p.get("name") or "").strip()
+            email    = (p.get("login") or p.get("email") or "").strip().lower()
+            password = p.get("password") or ""
+            phone    = (p.get("phone") or "").strip()
+            customer_type = p.get("customer_type", "particular")  # particular | autonomo | empresa
 
-            if not name or not login or not password:
+            if not name or not email or not password:
                 return dict(success=False, error=dict(code=400, message="name, login y password son obligatorios"))
             if len(password) < 6:
                 return dict(success=False, error=dict(code=400, message="La contraseña debe tener al menos 6 caracteres"))
 
-            env = request.env(su=True)
-            existing = env["res.users"].search([("login", "=", login)], limit=1)
+            # Comprobar si ya existe un usuario con ese email
+            existing = request.env["res.users"].sudo().search([("login", "=", email)], limit=1)
             if existing:
-                return dict(success=False, error=dict(code=409, message="Ya existe una cuenta con ese correo"))
+                return dict(success=False, error=dict(code=409, message="Ya existe una cuenta con ese correo electrónico"))
 
-            user = env["res.users"].create({
+            # Obtener el grupo portal de Odoo
+            portal_group = request.env.ref("base.group_portal")
+
+            # Determinar si es empresa
+            is_company = (customer_type == "empresa")
+
+            # Crear el usuario (Odoo crea automáticamente el res.partner asociado)
+            new_user = request.env["res.users"].sudo().create({
                 "name": name,
-                "login": login,
+                "login": email,
+                "email": email,
                 "password": password,
-                "groups_id": [(6, 0, [env.ref("base.group_portal").id])],
-            })
-            partner = user.partner_id
-            partner.write({
-                "phone": phone,
-                "partner_type": partner_type,
-                "company_name": company_name if partner_type == "empresa" else "",
+                "groups_id": [(6, 0, [portal_group.id])],
             })
 
-            uid = request.session.authenticate(request.db, login, password)
-            if not uid:
-                return dict(success=False, error=dict(code=500, message="Usuario creado pero error al autenticar"))
+            # Actualizar el partner con datos adicionales
+            partner = new_user.partner_id
+            partner.sudo().write({
+                "phone": phone,
+                "is_company": is_company,
+                "customer_rank": 1,
+                "comment": "Registrado vía portal web Construction Marketplace. Tipo: %s" % customer_type,
+            })
+
+            # Auto-login tras registro (puede fallar para usuarios portal; no es crítico)
+            auto_login_ok = False
+            uid = None
+            try:
+                uid = request.session.authenticate(request.db or "construction_marketplace", email, password)
+                auto_login_ok = bool(uid)
+            except Exception:
+                pass
 
             return dict(success=True, data=dict(
-                uid=uid, name=user.name, login=user.login,
-                session_id=request.session.sid, partner_type=partner_type
+                uid=uid or 0,
+                name=new_user.name,
+                login=new_user.login,
+                partner_id=partner.id,
+                session_id=request.session.sid if auto_login_ok else None,
+                customer_type=customer_type,
+                auto_login=auto_login_ok,
+                message="Cuenta creada. Por favor inicia sesión." if not auto_login_ok else "Bienvenido/a, %s." % new_user.name,
             ))
-        except Exception as e:
-            return dict(success=False, error=dict(code=500, message=str(e)))
 
-    @http.route("/api/construction/auth/logout", type="http", auth="user", methods=["POST"], csrf=False)
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            _logger.error("Error en registro: %s\n%s", str(e), tb)
+            return dict(success=False, error=dict(code=500, message="Error al crear la cuenta: " + str(e), traceback=tb))
+
+    @http.route("/api/construction/auth/logout", type="http", auth="public", methods=["POST"], csrf=False)
     def auth_logout(self, **kw):
         try:
-            request.session.logout()
-            return self._ok(data={"message": "Sesión cerrada correctamente"})
+            request.session.logout(keep_db=True)
+        except Exception:
+            pass
+        return request.make_json_response({"success": True})
+
+    @http.route("/api/construction/auth/session", type="http", auth="public", methods=["GET"], csrf=False)
+    def auth_session(self, **kw):
+        uid = request.session.uid
+        if not uid:
+            return request.make_json_response({"success": False, "error": {"code": 401, "message": "No autenticado"}}, status=401)
+        try:
+            user = request.env["res.users"].sudo().browse(uid)
+            return request.make_json_response({"success": True, "data": {
+                "uid": uid,
+                "name": user.name,
+                "login": user.login,
+                "partner_id": user.partner_id.id,
+            }})
         except Exception as e:
-            return self._err(str(e), 500)
+            return request.make_json_response({"success": False, "error": {"code": 500, "message": str(e)}}, status=500)
 
     # =========================================================================
     # Portal web estático
