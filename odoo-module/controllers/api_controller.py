@@ -12,26 +12,94 @@ class ConstructionAPI(http.Controller):
     def _err(self, msg, code=400):
         return request.make_json_response(dict(success=False, error=dict(code=code, message=msg)), status=code)
 
-    @http.route("/api/construction/auth/login", type="json", auth="public", methods=["POST"], csrf=False)
-    def auth_login(self):
-        p = request.get_json_data() or {}
+    def _get_partner_type(self, partner):
+        if partner.is_company:
+            return "empresa"
+        return "particular"
+
+    def _format_user(self, user, partner=None):
+        if partner is None:
+            partner = user.partner_id
+        return dict(
+            id=user.id,
+            name=user.name,
+            login=user.login,
+            session_id=request.session.sid or "",
+            partner_type=self._get_partner_type(partner),
+            points_balance=int(getattr(partner, 'points_balance', 0) or 0),
+            loyalty_level=getattr(partner, 'loyalty_level', 'bronce') or 'bronce',
+            phone=partner.phone or None,
+            email=partner.email or None,
+            partner_id=partner.id,
+        )
+
+    def _format_request(self, r):
+        tracking = None
+        tracking_raw = getattr(r, 'tracking_info', None)
+        if tracking_raw and isinstance(tracking_raw, str) and tracking_raw.strip():
+            tracking = {"status": tracking_raw, "carrier": None, "tracking_number": None,
+                        "estimated_delivery": None, "last_update": None, "location": None}
+        return {
+            "id": r.id, "name": r.name, "state": r.state,
+            "obra_id": r.obra_id.id if r.obra_id else 0,
+            "obra_name": r.obra_id.name if r.obra_id else "",
+            "total_amount": float(getattr(r, 'total_amount', 0) or 0),
+            "transport_cost": 0.0,
+            "total_with_transport": float(getattr(r, 'total_amount', 0) or 0),
+            "tracking_info": tracking,
+            "notes": r.notes or "",
+            "delivery_address": "",
+            "create_date": str(r.date_request) if getattr(r, 'date_request', None) else str(r.create_date)[:19] if r.create_date else None,
+            "scheduled_date": None,
+            "loyalty_discount": 0.0,
+            "points_used": 0,
+            "lines": [{"id": l.id, "product_id": l.product_id.id,
+                        "product_name": l.product_id.name,
+                        "qty": float(l.product_qty),
+                        "uom": l.product_id.uom_id.name if l.product_id.uom_id else "",
+                        "price_unit": float(l.price_unit),
+                        "subtotal": float(getattr(l, 'subtotal', l.product_qty * l.price_unit)),
+                        "image_url": "/web/image/product.product/%d/image_128" % l.product_id.id}
+                       for l in r.line_ids],
+        }
+
+    @http.route("/api/construction/auth/login", type="http", auth="public", methods=["POST"], csrf=False)
+    def auth_login(self, **kw):
         try:
-            uid = request.session.authenticate(p.get("db", request.db), p["login"], p["password"])
+            p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
+            _login = (p.get("login") or p.get("email") or "").strip()
+            _password = p.get("password") or ""
+            if not _login or not _password:
+                return self._err("Login y password requeridos", 400)
+            _db = p.get("db") or request.db or "construction_marketplace"
+            uid = request.session.authenticate(_db, _login, _password)
             if not uid:
-                return dict(success=False, error=dict(code=401, message="Credenciales incorrectas"))
+                return self._err("Credenciales incorrectas", 401)
             u = request.env["res.users"].sudo().browse(uid)
-            return dict(success=True, data=dict(uid=uid, name=u.name, login=u.login, session_id=request.session.sid))
+            return self._ok(data=dict(user=self._format_user(u)))
         except AccessDenied:
-            return dict(success=False, error=dict(code=401, message="Acceso denegado"))
+            return self._err("Acceso denegado", 401)
+        except Exception as e:
+            _logger.error("Error en login: %s", str(e))
+            return self._err(str(e), 500)
 
     @http.route("/api/construction/obras", type="http", auth="user", methods=["GET"], csrf=False)
-    def get_obras(self, state=None, limit="100", offset="0", **kw):
+    def get_obras(self, state=None, limit=None, offset="0", page="0", page_size="20", **kw):
         try:
             orm = request.env
-            d = [("state", "=", state)] if state else []
-            items = orm["construction.obra"].search(d, limit=int(limit), offset=int(offset))
+            _limit = int(limit) if limit else int(page_size)
+            _offset = int(offset) if int(offset) > 0 else int(page) * _limit
+            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            d = [("partner_id", "=", partner.id)]
+            if state:
+                d.append(("state", "=", state))
+            items = orm["construction.obra"].search(d, limit=_limit, offset=_offset)
             data = [{"id": o.id, "name": o.name, "code": o.code, "state": o.state,
-                     "partner": o.partner_id.name, "requests": o.material_request_count} for o in items]
+                     "partner": o.partner_id.name if o.partner_id else "",
+                     "partner_id": o.partner_id.id if o.partner_id else 0,
+                     "address": getattr(o, 'address', "") or "",
+                     "description": getattr(o, 'description', "") or "",
+                     "requests": o.material_request_count} for o in items]
             return self._ok(data=data, total=orm["construction.obra"].search_count(d))
         except Exception as e:
             return self._err(str(e), 500)
@@ -58,6 +126,22 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
+    @http.route("/api/construction/material_request", type="http", auth="user", methods=["GET"], csrf=False)
+    def get_material_requests(self, state=None, page="0", page_size="20", **kw):
+        try:
+            orm = request.env
+            _limit = int(page_size)
+            _offset = int(page) * _limit
+            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            domain = [("partner_id", "=", partner.id)]
+            if state:
+                domain.append(("state", "=", state))
+            reqs = orm["construction.material.request"].search(domain, limit=_limit, offset=_offset, order="id desc")
+            total = orm["construction.material.request"].search_count(domain)
+            return self._ok(data=[self._format_request(r) for r in reqs], total=total)
+        except Exception as e:
+            return self._err(str(e), 500)
+
     @http.route("/api/construction/material_request/<int:rid>/status", type="http", auth="user", methods=["GET"], csrf=False)
     def request_status(self, rid, **kw):
         try:
@@ -65,24 +149,30 @@ class ConstructionAPI(http.Controller):
             r = orm["construction.material.request"].browse(rid)
             if not r.exists():
                 return self._err("No encontrado", 404)
-            return self._ok(data={"id": r.id, "name": r.name, "state": r.state,
-                                  "tracking": r.tracking_info or "", "total": r.total_amount,
-                                  "lines": [{"product": l.product_id.name, "qty": l.product_qty,
-                                              "subtotal": l.subtotal} for l in r.line_ids]})
+            return self._ok(data=self._format_request(r))
         except Exception as e:
             return self._err(str(e), 500)
 
     @http.route("/api/construction/products", type="http", auth="user", methods=["GET"], csrf=False)
-    def get_products(self, search="", limit="50", **kw):
+    def get_products(self, search="", limit=None, page="0", page_size="20", category_id=None, **kw):
         try:
             orm = request.env
+            _limit = int(limit) if limit else int(page_size)
+            _offset = int(page) * _limit
             d = [("sale_ok", "=", True), ("active", "=", True)]
             if search:
                 d.append(("name", "ilike", search))
-            prods = orm["product.product"].search(d, limit=int(limit))
+            if category_id:
+                d.append(("categ_id", "=", int(category_id)))
+            prods = orm["product.product"].search(d, limit=_limit, offset=_offset)
+            total = orm["product.product"].search_count(d)
             return self._ok(data=[{"id": p.id, "name": p.name, "price": p.lst_price,
-                                    "uom": p.uom_id.name, "image": "/web/image/product.product/%d/image_128" % p.id}
-                                   for p in prods])
+                                    "uom": p.uom_id.name,
+                                    "category": p.categ_id.name if p.categ_id else "",
+                                    "description": p.description_sale or "",
+                                    "default_code": p.default_code or "",
+                                    "image": "/web/image/product.product/%d/image_128" % p.id}
+                                   for p in prods], total=total)
         except Exception as e:
             return self._err(str(e), 500)
 
@@ -390,75 +480,69 @@ class ConstructionAPI(http.Controller):
     # Registro y cierre de sesión
     # =========================================================================
 
-    @http.route("/api/construction/auth/register", type="json", auth="public", methods=["POST"], csrf=False)
-    def auth_register(self):
-        p = request.params if hasattr(request, 'params') else (request.get_json_data() or {})
+    @http.route("/api/construction/auth/register", type="http", auth="public", methods=["POST"], csrf=False)
+    def auth_register(self, **kw):
         try:
-            name     = (p.get("name") or "").strip()
-            email    = (p.get("login") or p.get("email") or "").strip().lower()
-            password = p.get("password") or ""
-            phone    = (p.get("phone") or "").strip()
-            customer_type = p.get("customer_type", "particular")  # particular | autonomo | empresa
+            p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
+            name          = (p.get("name") or "").strip()
+            email         = (p.get("login") or p.get("email") or "").strip().lower()
+            password      = p.get("password") or ""
+            phone         = (p.get("phone") or "").strip()
+            partner_type  = p.get("partner_type") or p.get("customer_type") or "particular"
+            company_name  = (p.get("company_name") or "").strip()
+            vat           = (p.get("vat") or "").strip()
 
             if not name or not email or not password:
-                return dict(success=False, error=dict(code=400, message="name, login y password son obligatorios"))
+                return self._err("name, login y password son obligatorios", 400)
             if len(password) < 6:
-                return dict(success=False, error=dict(code=400, message="La contraseña debe tener al menos 6 caracteres"))
+                return self._err("La contraseña debe tener al menos 6 caracteres", 400)
 
-            # Comprobar si ya existe un usuario con ese email
             existing = request.env["res.users"].sudo().search([("login", "=", email)], limit=1)
             if existing:
-                return dict(success=False, error=dict(code=409, message="Ya existe una cuenta con ese correo electrónico"))
+                return request.make_json_response(
+                    dict(success=False, error=dict(code=409, message="Ya existe una cuenta con ese correo electrónico")),
+                    status=409
+                )
 
-            # Obtener el grupo portal de Odoo
             portal_group = request.env.ref("base.group_portal")
+            is_company = (partner_type == "empresa")
 
-            # Determinar si es empresa
-            is_company = (customer_type == "empresa")
-
-            # Crear el usuario (Odoo crea automáticamente el res.partner asociado)
             new_user = request.env["res.users"].sudo().create({
-                "name": name,
-                "login": email,
-                "email": email,
-                "password": password,
+                "name": name, "login": email, "email": email, "password": password,
                 "groups_id": [(6, 0, [portal_group.id])],
             })
-
-            # Actualizar el partner con datos adicionales
             partner = new_user.partner_id
-            partner.sudo().write({
-                "phone": phone,
+            write_vals = {
+                "phone": phone or False,
                 "is_company": is_company,
                 "customer_rank": 1,
-                "comment": "Registrado vía portal web Construction Marketplace. Tipo: %s" % customer_type,
-            })
+                "comment": "Registrado vía Construction Marketplace. Tipo: %s" % partner_type,
+            }
+            if company_name and is_company:
+                write_vals["name"] = company_name
+            if vat:
+                write_vals["vat"] = vat
+            partner.sudo().write(write_vals)
 
-            # Auto-login tras registro (puede fallar para usuarios portal; no es crítico)
+            # Auto-login (puede fallar para usuarios portal — no es crítico)
             auto_login_ok = False
-            uid = None
             try:
                 uid = request.session.authenticate(request.db or "construction_marketplace", email, password)
                 auto_login_ok = bool(uid)
             except Exception:
-                pass
+                uid = None
 
-            return dict(success=True, data=dict(
-                uid=uid or 0,
-                name=new_user.name,
-                login=new_user.login,
-                partner_id=partner.id,
-                session_id=request.session.sid if auto_login_ok else None,
-                customer_type=customer_type,
-                auto_login=auto_login_ok,
-                message="Cuenta creada. Por favor inicia sesión." if not auto_login_ok else "Bienvenido/a, %s." % new_user.name,
-            ))
+            user_data = self._format_user(new_user, partner)
+            if not auto_login_ok:
+                user_data["session_id"] = ""
+            return self._ok(data=dict(user=user_data, auto_login=auto_login_ok,
+                                      message="Cuenta creada. Por favor inicia sesión." if not auto_login_ok
+                                      else "Bienvenido/a, %s." % new_user.name))
 
         except Exception as e:
             import traceback
-            tb = traceback.format_exc()
-            _logger.error("Error en registro: %s\n%s", str(e), tb)
-            return dict(success=False, error=dict(code=500, message="Error al crear la cuenta: " + str(e), traceback=tb))
+            _logger.error("Error en registro: %s\n%s", str(e), traceback.format_exc())
+            return self._err("Error al crear la cuenta: " + str(e), 500)
 
     @http.route("/api/construction/auth/logout", type="http", auth="public", methods=["POST"], csrf=False)
     def auth_logout(self, **kw):
@@ -483,6 +567,69 @@ class ConstructionAPI(http.Controller):
             }})
         except Exception as e:
             return request.make_json_response({"success": False, "error": {"code": 500, "message": str(e)}}, status=500)
+
+    # =========================================================================
+    # Listar solicitudes de material del usuario
+    # =========================================================================
+
+    @http.route("/api/construction/user_requests", type="http", auth="user", methods=["GET"], csrf=False)
+    def list_requests(self, state=None, limit="50", offset="0", **kw):
+        try:
+            orm = request.env
+            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            domain = [("partner_id", "=", partner.id)]
+            if state:
+                domain.append(("state", "=", state))
+            reqs = orm["construction.material.request"].search(
+                domain, limit=int(limit), offset=int(offset), order="id desc"
+            )
+            data = []
+            for r in reqs:
+                data.append({
+                    "id": r.id,
+                    "name": r.name,
+                    "state": r.state,
+                    "obra": r.obra_id.name if r.obra_id else "",
+                    "obra_id": r.obra_id.id if r.obra_id else False,
+                    "total": r.total_amount,
+                    "lines_count": len(r.line_ids),
+                    "notes": r.notes or "",
+                    "create_date": str(r.date_request) if r.date_request else "",
+                })
+            total = orm["construction.material.request"].search_count(domain)
+            return self._ok(data=data, total=total)
+        except Exception as e:
+            return self._err(str(e), 500)
+
+    # =========================================================================
+    # Crear obra desde el portal (REST — no ORM directo)
+    # =========================================================================
+
+    @http.route("/api/construction/obras", type="http", auth="user", methods=["POST"], csrf=False)
+    def create_obra(self, **kw):
+        try:
+            p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
+            name = (p.get("name") or "").strip()
+            if not name:
+                return self._err("El nombre es obligatorio", 400)
+            address = p.get("address", "")
+            partner = request.env["res.users"].sudo().browse(request.uid).partner_id
+            obra = request.env["construction.obra"].create({
+                "name": name,
+                "partner_id": partner.id,
+            })
+            if address and hasattr(obra, 'address'):
+                obra.sudo().write({"address": address})
+            return self._ok(data={
+                "id": obra.id,
+                "name": obra.name,
+                "code": obra.code if hasattr(obra, 'code') else "",
+                "state": obra.state,
+            })
+        except (ValidationError, UserError) as e:
+            return self._err(str(e), 422)
+        except Exception as e:
+            return self._err(str(e), 500)
 
     # =========================================================================
     # Portal web estático

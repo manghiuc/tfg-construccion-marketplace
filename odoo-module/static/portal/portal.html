@@ -1750,7 +1750,10 @@ async function api(path, options) {
   options = options || {};
   var res = await fetch(path, Object.assign({
     credentials: 'include',
-    headers: Object.assign({ 'Content-Type': 'application/json' }, options.headers || {}),
+    headers: Object.assign({
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    }, options.headers || {}),
   }, options));
 
   if (res.status === 401 || res.status === 403) {
@@ -1758,7 +1761,17 @@ async function api(path, options) {
     showLogin();
     throw new Error('Sesion expirada');
   }
-  return res.json();
+
+  var text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('[API] Respuesta no-JSON desde ' + path + ' (HTTP ' + res.status + '):', text.substring(0, 500));
+    if (!res.ok) {
+      throw new Error('Error del servidor (' + res.status + '). Recarga la página e inténtalo de nuevo.');
+    }
+    throw new Error('Respuesta inesperada del servidor. Recarga la página e inténtalo de nuevo.');
+  }
 }
 
 // Para endpoints type="json" (JSON-RPC)
@@ -1799,6 +1812,17 @@ function escHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+// Extrae un mensaje de error de objetos { code, message } o strings
+function extractError(err, fallback) {
+  if (!err) return fallback || 'Error desconocido';
+  if (typeof err === 'string') return err;
+  if (err.message) return String(err.message);
+  return fallback || 'Error en la operación';
+}
+
+// Store de productos para evitar JSON en atributos onclick
+var _productStore = {};
 
 /* ==============================
    TOAST
@@ -1896,7 +1920,9 @@ async function initApp() {
     if (!res.ok && res.status !== 200) {
       throw new Error('HTTP ' + res.status);
     }
-    var data = await res.json();
+    var _sessionText = await res.text();
+    var data;
+    try { data = JSON.parse(_sessionText); } catch (_je) { throw new Error('parse_error'); }
     if (data.success && data.data) {
       App.user = Object.assign({}, JSON.parse(saved), data.data);
       sessionStorage.setItem('user', JSON.stringify(App.user));
@@ -2001,29 +2027,47 @@ async function doRegister() {
 
   setLoading('register-btn', true);
   try {
-    var result = await rpc('/api/construction/auth/register', {
-      name: name,
-      login: email,
-      password: password,
-      phone: phone || false,
-      customer_type: type,
+    var result = await api('/api/construction/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: name,
+        login: email,
+        password: password,
+        phone: phone || null,
+        partner_type: type,
+      }),
     });
 
     if (!result || !result.success) {
-      var errMsg = (result && result.error) || 'No se pudo crear la cuenta. Inténtalo de nuevo.';
-      showServerError('register-error', errMsg);
+      var errMsg = (result && result.error && (result.error.message || result.error)) || 'No se pudo crear la cuenta. Inténtalo de nuevo.';
+      showServerError('register-error', typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg);
       return;
     }
 
-    var userData = result.data || {};
-    App.user = {
-      uid: userData.uid,
-      name: userData.name || name,
-      login: userData.login || email,
-    };
-    sessionStorage.setItem('user', JSON.stringify(App.user));
-    showToast('Cuenta creada correctamente. Bienvenido/a!', 'success');
-    enterApp();
+    var resultData   = result.data || {};
+    var userData     = resultData.user || resultData;
+    var autoLogin    = resultData.auto_login || false;
+    var regMsg       = resultData.message || '';
+    var registeredName  = userData.name  || name;
+    var registeredLogin = userData.login || email;
+
+    if (autoLogin && userData.id) {
+      // El usuario ya quedó autenticado directamente
+      App.user = { uid: userData.id, name: registeredName, login: registeredLogin };
+      sessionStorage.setItem('user', JSON.stringify(App.user));
+      showToast('Cuenta creada. ¡Bienvenido/a, ' + registeredName + '!', 'success');
+      enterApp();
+    } else {
+      // Registro OK pero sin auto-login (normal para usuarios portal)
+      var loginEmailEl = document.getElementById('login-email');
+      var loginPassEl  = document.getElementById('login-password');
+      if (loginEmailEl) loginEmailEl.value = registeredLogin;
+      if (loginPassEl)  loginPassEl.value  = password;
+      showToast(regMsg || '¡Cuenta creada! Ahora inicia sesión.', 'success');
+      setTimeout(function() {
+        switchAuthTab('login');
+      }, 800);
+    }
   } catch (e) {
     showServerError('register-error', e.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
   } finally {
@@ -2142,7 +2186,7 @@ async function loadCatalog(search) {
     if (search) url += '&search=' + encodeURIComponent(search);
 
     var res = await api(url);
-    if (!res.success) throw new Error(res.error || 'Error al cargar productos');
+    if (!res.success) throw new Error(extractError(res.error, 'Error al cargar productos'));
 
     var products = res.data || [];
 
@@ -2160,43 +2204,51 @@ async function loadCatalog(search) {
 }
 
 function renderProductCard(p) {
+  _productStore[p.id] = p; // guardar para acceso por ID en onclick
   var imgHtml;
   if (p.image) {
     imgHtml = '<div class="product-image"><img src="' + escHtml(p.image) + '" alt="' + escHtml(p.name) + '" onerror="this.parentElement.innerHTML=\'&#128230;\'"></div>';
   } else {
     imgHtml = '<div class="product-image">&#128230;</div>';
   }
-
-  var productJson = escHtml(JSON.stringify(p));
-
-  return '<div class="product-card" onclick="openProductDetail(\'' + productJson + '\')">' +
+  return '<div class="product-card" onclick="openProductDetailById(' + p.id + ')">' +
     imgHtml +
     '<div class="product-body">' +
     '<div class="product-name">' + escHtml(p.name) + '</div>' +
     '<div class="product-price">' + formatMoney(p.price) + ' <span class="product-uom">/ ' + escHtml(p.uom || 'ud') + '</span></div>' +
     '<div class="product-action">' +
-    '<button class="btn-add" onclick="event.stopPropagation(); addToCart(' + p.id + ', \'' + escHtml(p.name).replace(/'/g, '\\\'') + '\', ' + (p.price || 0) + ', \'' + escHtml(p.uom || 'ud').replace(/'/g, '\\\'') + '\')">' +
+    '<button class="btn-add" onclick="event.stopPropagation(); addToCartById(' + p.id + ')">' +
     '&#10133; A&ntilde;adir a solicitud</button>' +
     '</div>' +
     '</div>' +
     '</div>';
 }
 
-function openProductDetail(productJsonEncoded) {
+function openProductDetailById(id) {
+  var p = _productStore[id];
+  if (!p) { showToast('Producto no disponible.', 'error'); return; }
+  openProductDetail(p);
+}
+
+function addToCartById(id) {
+  var p = _productStore[id];
+  if (!p) { showToast('Producto no disponible.', 'error'); return; }
+  addToCart(p.id, p.name, p.price || 0, p.uom || 'ud');
+}
+
+function openProductDetail(productOrId) {
   var p;
-  try {
-    // productJsonEncoded puede venir como string HTML-encoded
-    var decoded = productJsonEncoded
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'");
-    p = JSON.parse(decoded);
-  } catch (e) {
-    showToast('Error al abrir el producto.', 'error');
-    return;
+  if (typeof productOrId === 'number' || typeof productOrId === 'string' && !productOrId.startsWith('{')) {
+    p = _productStore[parseInt(productOrId)];
+  } else if (typeof productOrId === 'object') {
+    p = productOrId;
+  } else {
+    try {
+      var decoded = String(productOrId).replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+      p = JSON.parse(decoded);
+    } catch (e) { showToast('Error al abrir el producto.', 'error'); return; }
   }
+  if (!p) { showToast('Producto no disponible.', 'error'); return; }
 
   document.getElementById('modal-product-title').textContent = p.name;
 
@@ -2252,7 +2304,7 @@ async function doCalculate() {
   setLoading('calc-btn', true);
   try {
     var res = await api('/api/construction/catalog/calculator?type=' + _calcType + '&m2=' + m2);
-    if (!res.success) throw new Error(res.error || 'Error al calcular');
+    if (!res.success) throw new Error(extractError(res.error, 'Error al calcular'));
     App.calcData = res.data;
     App.calcType = _calcType;
     renderCalcResults(res.data);
@@ -2308,7 +2360,7 @@ async function loadObras() {
 
   try {
     var res = await api('/api/construction/obras');
-    if (!res.success) throw new Error(res.error || 'Error al cargar obras');
+    if (!res.success) throw new Error(extractError(res.error, 'Error al cargar obras'));
 
     App.obras = res.data || [];
 
@@ -2397,17 +2449,16 @@ async function saveObra() {
 
   setLoading('save-obra-btn', true);
   try {
-    var result = await rpc('/web/dataset/call_kw', {
-      model: 'construction.obra',
-      method: 'create',
-      args: [{ name: name, address: address || false }],
-      kwargs: {},
+    var result = await api('/api/construction/obras', {
+      method: 'POST',
+      body: JSON.stringify({ name: name, address: address || '' }),
     });
 
-    if (!result) throw new Error('No se pudo crear la obra');
+    if (!result || !result.success) throw new Error(extractError(result && result.error, 'No se pudo crear la obra'));
 
     showToast('Obra "' + name + '" creada correctamente!', 'success');
     closeModal('modal-new-obra');
+    App.obras = []; // forzar recarga
     loadObras();
   } catch (e) {
     var errEl = document.getElementById('modal-obra-error');
@@ -2614,7 +2665,7 @@ async function confirmRequest() {
       body: JSON.stringify({ obra_id: obraId, notes: notes || false, lines: lines }),
     });
 
-    if (!res.success) throw new Error(res.error || 'Error al confirmar la solicitud');
+    if (!res.success) throw new Error(extractError(res.error, 'Error al confirmar la solicitud'));
 
     var reqName = (res.data && res.data.name) ? ' "' + res.data.name + '"' : '';
     showToast('Solicitud' + reqName + ' creada correctamente!', 'success');
@@ -2635,18 +2686,17 @@ async function loadOrders() {
   list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#8987;</div><p>Cargando pedidos...</p></div>';
 
   try {
-    var res = await api('/api/construction/obras');
-    if (!res.success) throw new Error(res.error || 'Error al cargar pedidos');
+    var res = await api('/api/construction/user_requests?limit=50');
+    if (!res.success) throw new Error(extractError(res.error, 'Error al cargar pedidos'));
 
-    var obras = res.data || [];
-    var obrasConSolicitudes = obras.filter(function(o) { return (o.requests || 0) > 0; });
+    var requests = res.data || [];
 
-    if (obras.length === 0 || obrasConSolicitudes.length === 0) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128461;</div><p>No tienes solicitudes aún.<br><button class="btn btn-primary btn-sm" onclick="goTo(\'new-request\')" style="margin-top:12px">Crear solicitud</button></p></div>';
+    if (requests.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128461;</div><p>No tienes solicitudes a&uacute;n.<br><button class="btn btn-primary btn-sm" onclick="goTo(\'new-request\')" style="margin-top:12px">Crear solicitud</button></p></div>';
       return;
     }
 
-    list.innerHTML = obrasConSolicitudes.map(function(o) { return renderOrderCard(o); }).join('');
+    list.innerHTML = requests.map(function(r) { return renderOrderCard(r); }).join('');
   } catch (e) {
     if (e.message !== 'Sesion expirada') {
       list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9888;</div><p>Error al cargar pedidos. <button class="btn btn-secondary btn-sm" onclick="loadOrders()">Reintentar</button></p></div>';
@@ -2654,19 +2704,40 @@ async function loadOrders() {
   }
 }
 
-function renderOrderCard(o) {
-  return '<div class="request-card" onclick="openObraDetail(' + o.id + ')">' +
+var _requestStateMap = {
+  draft:       ['badge-gray',   'Borrador'],
+  confirmed:   ['badge-blue',   'Confirmado'],
+  in_progress: ['badge-yellow', 'En proceso'],
+  delivered:   ['badge-green',  'Entregado'],
+  cancelled:   ['badge-red',    'Cancelado'],
+  done:        ['badge-green',  'Completado'],
+};
+
+function requestStateBadge(state) {
+  var entry = _requestStateMap[state] || ['badge-gray', state || '?'];
+  return '<span class="badge ' + entry[0] + '">' + entry[1] + '</span>';
+}
+
+function renderOrderCard(r) {
+  var dateStr = '';
+  if (r.create_date) {
+    try { dateStr = ' &middot; ' + new Date(r.create_date).toLocaleDateString('es-ES'); } catch(_) {}
+  }
+  return '<div class="request-card" onclick="openOrderDetail(' + r.id + ')">' +
     '<div class="request-icon">&#128203;</div>' +
     '<div class="request-info">' +
-    '<div class="request-name">' + escHtml(o.name) + '</div>' +
-    '<div class="request-meta">&#128230; ' + (o.requests || 0) + ' solicitud' + ((o.requests !== 1) ? 'es' : '') + ' &middot; ' + escHtml(o.partner || '—') + '</div>' +
+    '<div class="request-name">' + escHtml(r.name) + '</div>' +
+    '<div class="request-meta">&#127959; ' + escHtml(r.obra || '&mdash;') +
+    (r.lines_count ? ' &middot; ' + r.lines_count + ' l&iacute;nea' + (r.lines_count !== 1 ? 's' : '') : '') +
+    (r.total ? ' &middot; ' + formatMoney(r.total) : '') +
+    dateStr + '</div>' +
     '</div>' +
-    stateBadge(o.state) +
+    requestStateBadge(r.state) +
     '</div>';
 }
 
-function openObraDetail(obraId) {
-  document.getElementById('modal-order-title').textContent = 'Detalle de obra';
+function openOrderDetail(requestId) {
+  document.getElementById('modal-order-title').textContent = 'Detalle de solicitud';
   document.getElementById('modal-order-body').innerHTML =
     '<div style="text-align:center;padding:32px">' +
     '<div class="loading-spinner" style="margin:0 auto"></div>' +
@@ -2674,29 +2745,41 @@ function openObraDetail(obraId) {
     '</div>';
   openModal('modal-order-detail');
 
-  var obra = App.obras.find(function(o) { return o.id === obraId; });
-  if (!obra) {
-    // intentar buscarlo de nuevo
-    api('/api/construction/obras').then(function(res) {
-      if (res.success) {
-        obra = (res.data || []).find(function(o) { return o.id === obraId; });
-        if (obra) renderObraDetail(obra);
+  api('/api/construction/material_request/' + requestId + '/status')
+    .then(function(res) {
+      if (res && res.success && res.data) {
+        renderOrderDetail(res.data);
+      } else {
+        document.getElementById('modal-order-body').innerHTML =
+          '<div class="empty-state"><div class="empty-icon">&#9888;</div><p>No se pudo cargar el detalle.</p></div>';
       }
-    }).catch(function() {});
-    return;
-  }
-  renderObraDetail(obra);
+    }).catch(function(e) {
+      document.getElementById('modal-order-body').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">&#9888;</div><p>' + escHtml(e.message || 'Error al cargar el detalle.') + '</p></div>';
+    });
 }
 
-function renderObraDetail(o) {
-  document.getElementById('modal-order-title').textContent = '🏗️ ' + o.name;
+function renderOrderDetail(r) {
+  document.getElementById('modal-order-title').textContent = '&#128203; ' + (r.name || 'Solicitud');
+
+  var linesHtml = '';
+  if (r.lines && r.lines.length > 0) {
+    linesHtml = '<div style="margin-top:16px"><strong style="font-size:13px;color:var(--gray-600)">L&iacute;NEAS DE SOLICITUD</strong>' +
+      '<table class="results-table" style="margin-top:8px"><thead><tr><th>Producto</th><th>Cant.</th><th>Subtotal</th></tr></thead><tbody>' +
+      r.lines.map(function(l) {
+        return '<tr><td>' + escHtml(l.product) + '</td><td>' + (l.qty || 0) + '</td><td>' + formatMoney(l.subtotal) + '</td></tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+
+  var trackingHtml = r.tracking ? '<div class="detail-row"><span class="detail-label">Seguimiento</span><span class="detail-value">' + escHtml(r.tracking) + '</span></div>' : '';
+
   document.getElementById('modal-order-body').innerHTML =
-    '<div class="detail-row"><span class="detail-label">Obra</span><span class="detail-value">' + escHtml(o.name) + '</span></div>' +
-    (o.code ? '<div class="detail-row"><span class="detail-label">Código</span><span class="detail-value">' + escHtml(o.code) + '</span></div>' : '') +
-    '<div class="detail-row"><span class="detail-label">Cliente</span><span class="detail-value">' + escHtml(o.partner || '—') + '</span></div>' +
-    '<div class="detail-row"><span class="detail-label">Estado</span><span class="detail-value">' + stateBadge(o.state) + '</span></div>' +
-    '<div class="detail-row"><span class="detail-label">Total solicitudes</span><span class="detail-value">' + (o.requests || 0) + '</span></div>' +
-    '<div class="info-card" style="margin-top:16px;">ℹ️ Para ver el detalle de cada solicitud, accede al panel de administración de Odoo.</div>';
+    '<div class="detail-row"><span class="detail-label">Referencia</span><span class="detail-value">' + escHtml(r.name) + '</span></div>' +
+    '<div class="detail-row"><span class="detail-label">Estado</span><span class="detail-value">' + requestStateBadge(r.state) + '</span></div>' +
+    trackingHtml +
+    '<div class="detail-row"><span class="detail-label">Total</span><span class="detail-value" style="color:var(--primary-dark);font-size:16px;font-weight:800">' + formatMoney(r.total) + '</span></div>' +
+    linesHtml;
 }
 
 /* ==============================
