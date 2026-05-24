@@ -6,15 +6,15 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-2024.12-4285F4?logo=jetpackcompose&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase_FCM-notificaciones-FFCA28?logo=firebase&logoColor=black)
+![Groq](https://img.shields.io/badge/Groq_API-LLaMA_3-F55036?logo=meta&logoColor=white)
 
-Plataforma integral de aprovisionamiento de materiales de construcción. Conecta a jefes de obra y autónomos con un distribuidor local mediante una app Android nativa que se integra directamente con un backend Odoo 17 a través de una REST API JSON.
+Plataforma integral de aprovisionamiento de materiales de construcción. Conecta a jefes de obra y autónomos con un distribuidor local mediante tres capas: una **app Android nativa**, un **portal web**, y un **backend Odoo 17** con API REST JSON.
 
 ---
 
-## Descripcion del negocio
+## Descripción del negocio
 
-Un distribuidor de materiales de construccion ofrece a sus clientes (particulares, autónomos y empresas) la posibilidad de realizar pedidos desde obra directamente desde el móvil. El distribuidor gestiona todo el flujo desde el ERP Odoo 17: aprobación de pedidos, picking, transporte y facturación.
+Un distribuidor de materiales de construcción ofrece a sus clientes (particulares, autónomos y empresas) la posibilidad de realizar pedidos desde obra directamente desde el móvil o desde el portal web. El distribuidor gestiona todo el flujo desde el ERP Odoo 17: aprobación de pedidos, picking, transporte y facturación.
 
 El coste de transporte se calcula en tiempo real usando la distancia Haversine entre el almacén y la obra. El **mínimo de transporte es 15 €** y existe un **recargo del +50 % para entregas urgentes**.
 
@@ -32,14 +32,18 @@ El coste de transporte se calcula en tiempo real usando la distancia Haversine e
 |  Retrofit2 + OkHttp       |                                  |  Controllers HTTP         |
 |  EncryptedSharedPrefs     |                                  |  Modelos ORM              |
 |  Room (caché offline)     |                                  |  Lógica de negocio        |
-|  Google Maps SDK          |                                  |  Cálculo transporte       |
-|  Firebase FCM             |                                  |  Programa fidelización    |
-+---------------------------+                                  +---------------------------+
-                                                                          |
-                                                               +----------+-----------+
-                                                               |  PostgreSQL 15        |
-                                                               |  (Base de datos ERP)  |
-                                                               +----------------------+
+|  Google Maps Compose      |                                  |  Cálculo transporte       |
+|  Coil (imágenes)          |                                  |  Programa fidelización    |
++---------------------------+                                  |  Chatbot (Groq API)       |
+                                                               +---------------------------+
++---------------------------+          REST API JSON                      |
+|   PORTAL WEB (HTML/JS)    | <----------------------------------------->|
+|                           |                                  +----------+-----------+
+|  Catálogo de productos    |                                  |  PostgreSQL 15        |
+|  Carrito de compra        |                                  |  (Base de datos ERP)  |
+|  Checkout / pedidos       |                                  +----------------------+
+|  Seguimiento de pedidos   |
++---------------------------+
 ```
 
 ### Capas de la aplicación Android
@@ -58,57 +62,50 @@ UI Layer (Compose)
 
 ## Funcionalidades principales
 
-**Catalogo de materiales con busqueda**
+**Catálogo de materiales con búsqueda**
 Catálogo completo con búsqueda full-text, filtros por categoría y ordenación. Imágenes cargadas desde Odoo con caché local mediante Coil.
 
-**Calculadora de obra (m2 a lista de materiales)**
-Introduce el tipo de construcción (tabique, solera, cubierta, fachada...) y la superficie en m². La app devuelve la lista exacta de materiales con cantidades y precio estimado, listo para añadir al carrito en un tap.
+**Calculadora de obra (m² a lista de materiales)**
+Introduce el tipo de construcción (baño, solera, tabique ladrillo, pintura...) y la superficie en m². La app devuelve la lista exacta de materiales con cantidades y precio estimado, listo para añadir al carrito en un tap.
 
-**Carrito con transporte dinamico por GPS**
+**Carrito con transporte dinámico por GPS**
 El coste de transporte se calcula en tiempo real usando la ubicación GPS de la obra. Fórmula Haversine entre el almacén y el punto de entrega. Tarifa mínima: 15 €. Recargo urgente: +50 %.
 
-**Pedido por foto con IA**
-Toma una foto de una lista manuscrita o de una pila de materiales y la IA analiza la imagen para generar automáticamente las líneas del pedido.
+**Portal web**
+Acceso desde navegador al catálogo completo, carrito, proceso de checkout, historial y seguimiento de pedidos. Construido en HTML/CSS/JS nativo, consume la misma API REST del módulo Odoo.
 
-**Obras compartidas entre equipo**
-Crea obras y compártelas con los miembros de tu equipo. Todos pueden ver el historial de pedidos y hacer nuevas solicitudes para la misma obra.
-
-**Pedidos recurrentes programados**
-Programa pedidos automáticos con frecuencia semanal, quincenal o mensual. El sistema crea el pedido en Odoo en la fecha indicada y envía una notificación push.
-
-**Modo urgente (+50 % transporte)**
-Activa el modo urgente en el carrito para garantizar salida del pedido el mismo día. El recargo se calcula y se muestra antes de confirmar.
+**Chatbot IA con Groq API**
+Asistente conversacional integrado en la app que responde preguntas sobre materiales y normas de construcción. Arquitectura híbrida: motor de reglas propio (siempre disponible) + Groq API (LLaMA 3) para enriquecer respuestas cuando hay conexión.
 
 **Programa de puntos Bronce / Plata / Oro**
 Cada pedido acumula puntos canjeables como descuento en futuras compras. Niveles: Bronce (0 pts), Plata (500 pts), Oro (2 000 pts), Platino (5 000 pts).
 
-**Panel de administracion completo**
+**Panel de administración completo**
 El distribuidor gestiona en Odoo: aprobación de pedidos, gestión de stock, tarifas de transporte, programa de fidelización, usuarios y obras.
-
-**Chatbot IA de materiales**
-Asistente conversacional integrado en la app que responde preguntas sobre materiales, normas de construcción y sugiere productos del catálogo.
 
 ---
 
-## Stack tecnologico
+## Stack tecnológico
 
 | Componente | Tecnología |
 |---|---|
 | Backend ERP | Odoo 17 Community (Python 3.11) |
 | Base de datos | PostgreSQL 15 |
-| API | REST JSON sobre HTTPS con Bearer Token |
+| API | REST JSON, auth=none (13 endpoints) |
 | App móvil | Android (Kotlin 2.1 + Jetpack Compose) |
 | Inyección de dependencias | Hilt (Dagger) |
 | Red | Retrofit2 + OkHttp |
 | Imágenes | Coil 3 |
 | Mapas / GPS | Google Maps Compose + Play Services Location |
-| Notificaciones push | Firebase Cloud Messaging (FCM) |
-| Almacenamiento local | Room (SQLite) + EncryptedSharedPreferences |
+| Almacenamiento seguro | EncryptedSharedPreferences |
+| Caché offline | Room Database (SQLite) |
 | Navegación | Navigation Compose |
+| Chatbot IA | Groq API (LLaMA 3 8B) + motor de reglas propio |
+| Portal web | HTML5 / CSS3 / JavaScript nativo |
 
 ---
 
-## Instalacion del modulo Odoo
+## Instalación del módulo Odoo
 
 **Requisitos previos**
 
@@ -120,36 +117,28 @@ Asistente conversacional integrado en la app que responde preguntas sobre materi
 
 ```bash
 # 1. Clona el repositorio
-git clone https://github.com/tu-usuario/tfg-construccion-marketplace.git
+git clone https://github.com/manghiuc/tfg-construccion-marketplace.git
 cd tfg-construccion-marketplace
 
 # 2. Copia el módulo al directorio de addons de Odoo
-cp -r odoo-module/construccion_marketplace /ruta/a/odoo/addons/
+cp -r odoo-module/ /ruta/a/odoo/custom_addons/construction_marketplace
 
-# 3. Instala las dependencias Python del módulo (si las hay)
-pip install -r odoo-module/requirements.txt
+# 3. Actualiza la lista de módulos e instala
+./odoo-bin -d construction_marketplace -u construction_marketplace --stop-after-init
 
-# 4. Actualiza la lista de módulos e instala
-./odoo-bin -d nombre_base_datos -u construccion_marketplace --stop-after-init
-
-# 5. Arranca Odoo normalmente
-./odoo-bin -d nombre_base_datos
+# 4. Arranca Odoo
+./odoo-bin -d construction_marketplace
 ```
 
-**Variables de entorno recomendadas**
+**Configuración del chatbot (Groq API)**
 
-```ini
-# .env (no incluir en el repositorio)
-ODOO_DB=construccion_db
-ODOO_HOST=0.0.0.0
-ODOO_PORT=8069
-GOOGLE_MAPS_API_KEY=tu_clave_aqui
-FIREBASE_SERVER_KEY=tu_clave_fcm_aqui
-```
+En Odoo → Ajustes → Parámetros técnicos → Parámetros del sistema:
+- Clave: `construction.groq_api_key`
+- Valor: tu API key de https://console.groq.com
 
 ---
 
-## Ejecucion de la app Android
+## Ejecución de la app Android
 
 **Requisitos**
 
@@ -161,21 +150,32 @@ FIREBASE_SERVER_KEY=tu_clave_fcm_aqui
 
 ```bash
 # 1. Abre el proyecto en Android Studio
-# Archivo -> Abrir -> selecciona la carpeta ConstruApp/
+# Archivo -> Abrir -> selecciona la carpeta android-app/
 
-# 2. Configura la URL del backend
-# Edita: app/src/main/java/com/construccion/marketplace/data/api/AppConfig.kt
-const val BASE_URL = "https://tu-odoo-17.tudominio.com"
+# 2. Configura la URL del backend en AppConfig.kt
+const val BASE_URL = "http://tu-odoo.tudominio.com:8069"
 
 # 3. Añade tu Google Maps API Key en el AndroidManifest.xml
-# Sustituye YOUR_MAPS_API_KEY por tu clave real
 
-# 4. Añade google-services.json (Firebase) en ConstruApp/app/
-
-# 5. Compila y ejecuta
+# 4. Compila y ejecuta
 ./gradlew assembleDebug
 # o usa el botón Run en Android Studio
 ```
+
+---
+
+## Portal web
+
+El portal web consume directamente la API REST de Odoo y no requiere servidor adicional: se puede servir como archivos estáticos.
+
+```bash
+# Servir localmente
+cd web/
+python -m http.server 8080
+# Abre http://localhost:8080/portal.html
+```
+
+O desplegarlo en cualquier hosting estático (Netlify, GitHub Pages, Nginx...).
 
 ---
 
@@ -183,105 +183,65 @@ const val BASE_URL = "https://tu-odoo-17.tudominio.com"
 
 ```
 tfg-construccion-marketplace/
-├── odoo-module/
-│   └── construccion_marketplace/
-│       ├── __manifest__.py          # Metadatos del módulo
-│       ├── models/
-│       │   ├── obra.py              # Modelo de obra
-│       │   ├── material_request.py  # Solicitud de material / pedido
-│       │   ├── transport.py         # Cálculo de transporte (Haversine)
-│       │   └── loyalty.py           # Programa de fidelización
-│       ├── controllers/
-│       │   └── api.py               # Endpoints REST JSON
-│       ├── views/                   # Vistas XML para el panel Odoo
-│       └── security/
-│           └── ir.model.access.csv  # Permisos de acceso
+├── odoo-module/                         # Módulo Odoo 17
+│   ├── __manifest__.py                  # Metadatos y versión
+│   ├── models/
+│   │   ├── construction_material.py     # Modelo producto marketplace
+│   │   ├── material_request.py          # Solicitud / pedido
+│   │   ├── chatbot_engine.py            # Chatbot con Groq API
+│   │   └── loyalty.py                   # Programa de fidelización
+│   ├── controllers/
+│   │   └── api_controller.py            # 13 endpoints REST JSON
+│   ├── views/                           # Vistas XML Odoo
+│   ├── static/portal/                   # Fuente del portal web
+│   └── security/
+│       └── ir.model.access.csv
 │
-├── ConstruApp/                      # Proyecto Android
-│   ├── app/
-│   │   └── src/main/
-│   │       ├── java/com/construccion/marketplace/
-│   │       │   ├── data/
-│   │       │   │   ├── api/         # OdooApiService (Retrofit)
-│   │       │   │   ├── model/       # Data classes (User, Product, etc.)
-│   │       │   │   └── repository/  # AuthRepository, ProductRepository, OrderRepository
-│   │       │   ├── di/              # Módulos Hilt
-│   │       │   ├── session/         # SessionManager (EncryptedSharedPrefs)
-│   │       │   ├── ui/              # Pantallas Compose
-│   │       │   └── viewmodel/       # AuthViewModel, ProductViewModel, CartViewModel
-│   │       ├── res/
-│   │       │   ├── values/strings.xml
-│   │       │   └── xml/file_provider_paths.xml
-│   │       └── AndroidManifest.xml
-│   ├── build.gradle.kts             # Proyecto (plugins)
-│   ├── settings.gradle.kts          # Módulos incluidos
-│   └── gradle/libs.versions.toml    # Version catalog
+├── android-app/                         # App Android (Kotlin)
+│   ├── app/src/main/java/com/construccion/marketplace/
+│   │   ├── data/api/                    # OdooApiService (Retrofit)
+│   │   ├── data/model/                  # Data classes
+│   │   ├── data/repository/             # Repositorios
+│   │   ├── di/                          # Módulos Hilt
+│   │   ├── session/                     # SessionManager
+│   │   └── ui/screens/                  # Pantallas Compose
+│   ├── build.gradle.kts
+│   └── settings.gradle.kts
+│
+├── web/                                 # Portal web estático
+│   ├── portal.html                      # Página principal
+│   └── img/                             # Recursos gráficos
 │
 └── docs/
-    └── api-spec.md                  # Especificación de la API REST
+    └── api-spec.md                      # Especificación API REST
 ```
 
 ---
 
-## Endpoints de la API (resumen)
+## Endpoints de la API
 
-Todos los endpoints tienen el prefijo `/api/v1` y requieren el header `Authorization: Bearer <token>` excepto `/auth/login` y `/auth/register`.
+Todos los endpoints tienen el prefijo `/api/construction` y no requieren autenticación (`auth="none"`).
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | POST | `/auth/login` | Iniciar sesión |
 | POST | `/auth/register` | Registrar usuario |
 | POST | `/auth/logout` | Cerrar sesión |
-| GET | `/products` | Listar catálogo (`?search=&category_id=&page=&page_size=`) |
+| GET | `/products` | Listar catálogo (`?search=&category_id=&page=`) |
 | GET | `/products/{id}` | Detalle de producto |
-| GET | `/catalog/calculator` | Calcular materiales (`?type=tabique&m2=25.5`) |
+| GET | `/catalog/calculator` | Calcular materiales (`?type=banyo&m2=20`) |
 | GET | `/recommendations` | Productos recomendados |
 | GET | `/obras` | Mis obras |
-| GET | `/obras/{id}` | Detalle de obra |
 | POST | `/material_request` | Crear pedido |
-| GET | `/material_request` | Historial de pedidos (`?state=&page=`) |
-| GET | `/material_request/{id}/status` | Estado y tracking de un pedido |
+| GET | `/material_request` | Historial de pedidos |
+| GET | `/material_request/{id}/status` | Estado y tracking |
 | POST | `/calculate_transport` | Calcular coste de transporte |
 | GET | `/loyalty/status` | Estado del programa de puntos |
 | POST | `/loyalty/redeem` | Canjear puntos |
 | POST | `/chatbot` | Enviar mensaje al chatbot IA |
 
-**Ejemplo de respuesta exitosa:**
-
-```json
-{
-  "success": true,
-  "data": { ... },
-  "message": null,
-  "total": 42,
-  "page": 0,
-  "page_size": 20
-}
-```
-
-**Ejemplo de respuesta de error:**
-
-```json
-{
-  "success": false,
-  "data": null,
-  "message": "Credenciales incorrectas",
-  "error_code": "INVALID_CREDENTIALS"
-}
-```
-
----
-
-## Capturas de pantalla
-
-*Próximamente. Las capturas se añadirán tras completar el desarrollo de la capa de UI.*
-
-| Login | Catálogo | Calculadora | Carrito | Pedidos |
-|-------|----------|-------------|---------|---------|
-| *pendiente* | *pendiente* | *pendiente* | *pendiente* | *pendiente* |
-
 ---
 
 ## Licencia
 
-Proyecto académico de Fin de Grado. Todos los derechos reservados.
+Proyecto académico de Fin de Grado — IES El Cañaveral. Todos los derechos reservados.
