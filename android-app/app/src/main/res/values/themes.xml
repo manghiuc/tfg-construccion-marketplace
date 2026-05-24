@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base para ConstruApp -->
+    <style name="Theme.ConstruApp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!-- Tema para el Splash Screen (API 31+) -->
+    <style name="Theme.ConstruApp.SplashScreen" parent="Theme.ConstruApp">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>

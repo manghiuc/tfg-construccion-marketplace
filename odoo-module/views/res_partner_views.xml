@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Extensión del formulario de contacto/cliente para mostrar pedidos y obras -->
+    <record id="view_partner_form_construction_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form.construction</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_construction_requests"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-truck">
+                    <field name="construction_request_count"
+                           string="Pedidos"
+                           widget="statinfo"/>
+                </button>
+                <button name="action_view_construction_obras"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-building">
+                    <field name="construction_obra_count"
+                           string="Obras"
+                           widget="statinfo"/>
+                </button>
+            </xpath>
+            <!-- Tipo de cliente visible en el formulario -->
+            <xpath expr="//field[@name='company_type']" position="after">
+                <field name="partner_type" widget="badge"
+                       decoration-success="partner_type == 'empresa'"
+                       decoration-warning="partner_type == 'autonomo'"
+                       decoration-info="partner_type == 'particular'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista lista de clientes con columna Tipo -->
+    <record id="view_partner_list_construction_inherit" model="ir.ui.view">
+        <field name="name">res.partner.list.construction</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="before">
+                <field name="partner_type" widget="badge"
+                       decoration-success="partner_type == 'empresa'"
+                       decoration-warning="partner_type == 'autonomo'"
+                       decoration-info="partner_type == 'particular'"
+                       string="Tipo"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Construction Marketplace',
-    'version': '17.0.1.3.0',
+    'version': '17.0.1.23.1',
     'category': 'Construction',
     'summary': 'Marketplace de materiales de construcción para gestión de obras y solicitudes',
     'description': """
@@ -30,9 +30,11 @@
         'security/ir.model.access.csv',
         'data/sequences.xml',
         'data/cron_jobs.xml',
+        'data/construction_products.xml',
         'views/construction_obra_views.xml',
         'views/construction_material_request_views.xml',
         'views/construction_menu_views.xml',
+        'views/res_partner_views.xml',
     ],
     'demo': [
         'data/demo_data.xml',

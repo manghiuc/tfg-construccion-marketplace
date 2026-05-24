@@ -33,26 +33,34 @@ class ConstructionAPI(http.Controller):
             partner_id=partner.id,
         )
 
+    _STATE_LABELS = {
+        'draft':          'Borrador',
+        'confirmed':      'Tramitando',
+        'en_preparacion': 'En Preparación',
+        'en_reparto':     'En Reparto',
+        'in_progress':    'En Camino',
+        'delivered':      'Entregado',
+        'cancelled':      'Cancelado',
+    }
+
     def _format_request(self, r):
-        tracking = None
-        tracking_raw = getattr(r, 'tracking_info', None)
-        if tracking_raw and isinstance(tracking_raw, str) and tracking_raw.strip():
-            tracking = {"status": tracking_raw, "carrier": None, "tracking_number": None,
-                        "estimated_delivery": None, "last_update": None, "location": None}
+        delivery_address = getattr(r, 'delivery_address', '') or ''
+        if not delivery_address:
+            notes = r.notes or ''
+            if '📍 Dirección de entrega:' in notes:
+                delivery_address = notes.split('\n')[0].replace('📍 Dirección de entrega:', '').strip()
         return {
             "id": r.id, "name": r.name, "state": r.state,
+            "state_label": self._STATE_LABELS.get(r.state, r.state),
             "obra_id": r.obra_id.id if r.obra_id else 0,
             "obra_name": r.obra_id.name if r.obra_id else "",
             "total_amount": float(getattr(r, 'total_amount', 0) or 0),
-            "transport_cost": 0.0,
-            "total_with_transport": float(getattr(r, 'total_amount', 0) or 0),
-            "tracking_info": tracking,
+            "transport_cost": float(getattr(r, 'transport_cost', 0) or 0),
+            "total_with_transport": float(getattr(r, 'total_with_transport', 0) or getattr(r, 'total_amount', 0) or 0),
+            "is_urgent": bool(r.is_urgent),
             "notes": r.notes or "",
-            "delivery_address": "",
-            "create_date": str(r.date_request) if getattr(r, 'date_request', None) else str(r.create_date)[:19] if r.create_date else None,
-            "scheduled_date": None,
-            "loyalty_discount": 0.0,
-            "points_used": 0,
+            "delivery_address": delivery_address,
+            "create_date": str(r.date_request)[:19] if getattr(r, 'date_request', None) else str(r.create_date)[:19] if r.create_date else None,
             "lines": [{"id": l.id, "product_id": l.product_id.id,
                         "product_name": l.product_id.name,
                         "qty": float(l.product_qty),
@@ -93,15 +101,52 @@ class ConstructionAPI(http.Controller):
             d = [("partner_id", "=", partner.id)]
             if state:
                 d.append(("state", "=", state))
-            items = orm["construction.obra"].search(d, limit=_limit, offset=_offset)
+            items = orm["construction.obra"].sudo().search(d, limit=_limit, offset=_offset)
             data = [{"id": o.id, "name": o.name, "code": o.code, "state": o.state,
-                     "partner": o.partner_id.name if o.partner_id else "",
+                     "partner_name": o.partner_id.name if o.partner_id else "",
                      "partner_id": o.partner_id.id if o.partner_id else 0,
                      "address": getattr(o, 'address', "") or "",
                      "description": getattr(o, 'description', "") or "",
-                     "requests": o.material_request_count} for o in items]
-            return self._ok(data=data, total=orm["construction.obra"].search_count(d))
+                     "material_request_count": o.material_request_count} for o in items]
+            return self._ok(data=data, total=orm["construction.obra"].sudo().search_count(d))
         except Exception as e:
+            return self._err(str(e), 500)
+
+    @http.route("/api/construction/obras", type="http", auth="user", methods=["POST"], csrf=False)
+    def create_obra(self, **kw):
+        try:
+            orm = request.env
+            p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
+            name = (p.get("name") or "").strip()
+            if not name:
+                return self._err("El nombre de la obra es obligatorio", 400)
+            address = (p.get("address") or "").strip()
+            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            code = orm["ir.sequence"].sudo().next_by_code("construction.obra") or ("OBR-%d" % request.uid)
+            vals = {
+                "name": name,
+                "code": code,
+                "partner_id": partner.id,
+                "state": "active",
+            }
+            if address:
+                vals["address"] = address
+            obra = orm["construction.obra"].sudo().create(vals)
+            return self._ok(data={
+                "id": obra.id,
+                "name": obra.name,
+                "code": obra.code,
+                "state": obra.state,
+                "address": getattr(obra, 'address', "") or "",
+                "partner_name": obra.partner_id.name if obra.partner_id else "",
+                "partner_id": obra.partner_id.id if obra.partner_id else 0,
+                "material_request_count": 0,
+                "description": "",
+            })
+        except (ValidationError, UserError) as e:
+            return self._err(str(e), 422)
+        except Exception as e:
+            _logger.error("Error en create_obra: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
     @http.route("/api/construction/material_request", type="http", auth="user", methods=["POST"], csrf=False)
@@ -109,21 +154,56 @@ class ConstructionAPI(http.Controller):
         try:
             orm = request.env
             p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
-            obra = orm["construction.obra"].browse(int(p["obra_id"]))
-            if not obra.exists():
-                return self._err("Obra no encontrada", 404)
-            lines = [(0, 0, {"product_id": int(l["product_id"]),
-                              "product_qty": float(l.get("product_qty", 1)),
-                              "price_unit": float(l.get("price_unit", 0)),
-                              "notes": l.get("notes", "")}) for l in p.get("lines", [])]
-            req = orm["construction.material.request"].create({
-                "obra_id": int(p["obra_id"]), "user_id": request.uid,
-                "partner_id": obra.partner_id.id or False,
-                "notes": p.get("notes", ""), "line_ids": lines})
-            return self._ok(data={"id": req.id, "name": req.name, "state": req.state}, message="Solicitud creada")
+            # obra_id es opcional — si viene vacío/false se crea sin obra
+            obra_id_raw = p.get("obra_id")
+            obra_id = int(obra_id_raw) if obra_id_raw else False
+            partner_id = False
+            if obra_id:
+                obra = orm["construction.obra"].sudo().browse(obra_id)
+                if not obra.exists():
+                    return self._err("Obra no encontrada", 404)
+                partner_id = obra.partner_id.id or False
+            else:
+                partner_id = orm["res.users"].sudo().browse(request.uid).partner_id.id
+            raw_lines = p.get("lines", [])
+            if not raw_lines:
+                return self._err("El pedido no tiene productos", 400)
+            lines = []
+            for l in raw_lines:
+                pid = int(l["product_id"])
+                prod = orm["product.product"].sudo().browse(pid)
+                if not prod.exists():
+                    return self._err("Producto con ID %d no encontrado. Por favor recarga la página e inicia sesión para ver productos reales." % pid, 400)
+                lines.append((0, 0, {
+                    "product_id": pid,
+                    "product_qty": float(l.get("qty") or l.get("product_qty") or 1),
+                    "price_unit": float(l.get("price_unit", prod.lst_price or 0)),
+                    "notes": l.get("notes", ""),
+                }))
+            # Extraer dirección de entrega de las notas si se envía por separado
+            raw_notes = p.get("notes", "") or ""
+            delivery_address = p.get("delivery_address", "")
+            if not delivery_address and "📍 Dirección de entrega:" in raw_notes:
+                delivery_address = raw_notes.split("\n")[0].replace("📍 Dirección de entrega:", "").strip()
+            is_urgent = bool(p.get("is_urgent", False))
+            vals = {
+                "user_id": request.uid,
+                "partner_id": partner_id,
+                "notes": raw_notes,
+                "delivery_address": delivery_address,
+                "is_urgent": is_urgent,
+                "line_ids": lines,
+            }
+            if obra_id:
+                vals["obra_id"] = obra_id
+            req = orm["construction.material.request"].sudo().create(vals)
+            # Confirmar automáticamente el pedido del portal
+            req.sudo().action_confirm()
+            return self._ok(data=self._format_request(req), message="Solicitud creada")
         except (ValidationError, UserError) as e:
             return self._err(str(e), 422)
         except Exception as e:
+            _logger.error("Error en create_request: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
     @http.route("/api/construction/material_request", type="http", auth="user", methods=["GET"], csrf=False)
@@ -136,8 +216,8 @@ class ConstructionAPI(http.Controller):
             domain = [("partner_id", "=", partner.id)]
             if state:
                 domain.append(("state", "=", state))
-            reqs = orm["construction.material.request"].search(domain, limit=_limit, offset=_offset, order="id desc")
-            total = orm["construction.material.request"].search_count(domain)
+            reqs = orm["construction.material.request"].sudo().search(domain, limit=_limit, offset=_offset, order="id desc")
+            total = orm["construction.material.request"].sudo().search_count(domain)
             return self._ok(data=[self._format_request(r) for r in reqs], total=total)
         except Exception as e:
             return self._err(str(e), 500)
@@ -146,14 +226,41 @@ class ConstructionAPI(http.Controller):
     def request_status(self, rid, **kw):
         try:
             orm = request.env
-            r = orm["construction.material.request"].browse(rid)
+            r = orm["construction.material.request"].sudo().browse(rid)
             if not r.exists():
                 return self._err("No encontrado", 404)
             return self._ok(data=self._format_request(r))
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/products", type="http", auth="user", methods=["GET"], csrf=False)
+    # Códigos internos de productos de construcción (prefijos)
+    _CONSTRUCTION_CODES = ('CEM-', 'ARE-', 'LAD-', 'VAR-', 'AZU-', 'MOR-', 'LEC-',
+                            'YES-', 'PIN-', 'IMP-', 'SIL-', 'CAB-', 'TUC-', 'TUP-')
+    # Palabras clave para detectar categorías de construcción por nombre
+    _CATEG_KW = ['construcci', 'materiales', 'herramienta', 'obra', 'reforma',
+                 'ferralla', 'cemento', 'fontaner', 'electricidad', 'aislamiento']
+
+    def _get_construction_categ_ids(self, orm):
+        """Devuelve IDs de product.category relacionadas con construcción."""
+        try:
+            all_categs = orm["product.category"].sudo().search([])
+            result = []
+            for c in all_categs:
+                # Comparar contra nombre completo en minúsculas (sin tildes)
+                cname = (c.complete_name or c.name or '').lower()
+                import unicodedata
+                cname_norm = ''.join(
+                    ch for ch in unicodedata.normalize('NFD', cname)
+                    if unicodedata.category(ch) != 'Mn'
+                )
+                if any(kw in cname_norm for kw in self._CATEG_KW):
+                    result.append(c.id)
+            return result
+        except Exception as e:
+            _logger.warning("Error buscando categorías de construcción: %s", e)
+            return []
+
+    @http.route("/api/construction/products", type="http", auth="none", methods=["GET"], csrf=False)
     def get_products(self, search="", limit=None, page="0", page_size="20", category_id=None, **kw):
         try:
             orm = request.env
@@ -164,16 +271,136 @@ class ConstructionAPI(http.Controller):
                 d.append(("name", "ilike", search))
             if category_id:
                 d.append(("categ_id", "=", int(category_id)))
-            prods = orm["product.product"].search(d, limit=_limit, offset=_offset)
-            total = orm["product.product"].search_count(d)
-            return self._ok(data=[{"id": p.id, "name": p.name, "price": p.lst_price,
-                                    "uom": p.uom_id.name,
-                                    "category": p.categ_id.name if p.categ_id else "",
-                                    "description": p.description_sale or "",
-                                    "default_code": p.default_code or "",
-                                    "image": "/web/image/product.product/%d/image_128" % p.id}
-                                   for p in prods], total=total)
+            else:
+                # 1. Intentar filtrar por categorías de construcción
+                categ_ids = self._get_construction_categ_ids(orm)
+                if categ_ids:
+                    d.append(("categ_id", "in", categ_ids))
+                else:
+                    # 2. Fallback: filtrar por default_code que empiece con prefijos de construcción
+                    _logger.warning("No se encontraron categorías de construcción, usando filtro por código")
+                    code_domain = ['|'] * (len(self._CONSTRUCTION_CODES) - 1)
+                    for code in self._CONSTRUCTION_CODES:
+                        code_domain.append(('default_code', 'like', code + '%'))
+                    d.extend(code_domain)
+
+            prods = orm["product.product"].sudo().search(d, limit=_limit, offset=_offset)
+            total = orm["product.product"].sudo().search_count(d)
+
+            _logger.info("API products: %d encontrados con categ_ids=%s", len(prods), categ_ids if not category_id else [category_id])
+
+            data = []
+            for p in prods:
+                pname_lower = p.name.lower()
+                import unicodedata
+                pname_norm = ''.join(
+                    ch for ch in unicodedata.normalize('NFD', pname_lower)
+                    if unicodedata.category(ch) != 'Mn'
+                )
+                # Asignar categoría visual para que el portal muestre la imagen correcta
+                cat_portal = p.categ_id.name if p.categ_id else ""
+                for kw, label in [
+                    ('cemento', 'Cemento'), ('arena', 'Cemento'), ('mortero', 'Cemento'),
+                    ('yeso', 'Cemento'), ('ladrillo', 'Cemento'), ('hormigon', 'Cemento'),
+                    ('varilla', 'Hierro'), ('ferralla', 'Hierro'), ('acero', 'Hierro'), ('corrugad', 'Hierro'),
+                    ('madera', 'Madera'), ('tablero', 'Madera'), ('tarima', 'Madera'),
+                    ('azulejo', 'Madera'), ('ceramica', 'Madera'), ('porcelan', 'Madera'), ('lechada', 'Madera'),
+                    ('pintura', 'Pintura'), ('imprimacion', 'Pintura'), ('barniz', 'Pintura'), ('selladora', 'Pintura'),
+                    ('tubo pvc', 'Fontanería'), ('evacuacion', 'Fontanería'), ('grifo', 'Fontanería'),
+                    ('silicona', 'Fontanería'),
+                    ('cable', 'Electricidad'), ('lszh', 'Electricidad'), ('corrugado', 'Electricidad'),
+                    ('taladro', 'Herramientas'), ('herramienta', 'Herramientas'), ('sierra', 'Herramientas'),
+                    ('aislamiento', 'Aislamiento'), ('lana', 'Aislamiento'),
+                ]:
+                    if kw in pname_norm:
+                        cat_portal = label
+                        break
+                # Stock: qty_marketplace si está definido y > 0, si no qty_available real
+                qty_mp = getattr(p.product_tmpl_id, 'qty_marketplace', None)
+                if qty_mp is not None and qty_mp > 0:
+                    stock = float(qty_mp)
+                else:
+                    qty_avail = p.qty_available
+                    stock = 0.0 if (qty_avail is None or qty_avail is False) else float(qty_avail)
+                data.append({
+                    "id": p.id,
+                    "name": p.name,
+                    "price": p.lst_price,
+                    "uom": p.uom_id.name,
+                    "categ_name": cat_portal,
+                    "category": {"name": cat_portal},
+                    "description": p.description_sale or "",
+                    "default_code": p.default_code or "",
+                    "stock_qty": stock,
+                    "image": None,  # El portal elige imagen por keyword (fotos reales locales)
+                })
+            return self._ok(data=data, total=total)
         except Exception as e:
+            _logger.error("Error en get_products: %s", str(e), exc_info=True)
+            return self._err(str(e), 500)
+
+    # ── Calculadora de materiales ────────────────────────────────────────────────
+    # Recetas por tipo de obra (ratio por m²) enlazadas con productos reales del catálogo
+    _CALC_RECIPES = {
+        'banyo': [
+            {'ref': 'MOR-001', 'fallback': 'Mortero Cola', 'ratio': 4.0,  'unit': 'kg'},
+            {'ref': 'LEC-001', 'fallback': 'Lechada',      'ratio': 0.7,  'unit': 'kg'},
+            {'ref': 'SIL-001', 'fallback': 'Silicona',     'ratio': 0.1,  'unit': 'ud'},
+        ],
+        'solera': [
+            {'ref': 'CEM-001', 'fallback': 'Cemento',      'ratio': 7.0,  'unit': 'kg'},
+            {'ref': 'VAR-012', 'fallback': 'Varilla',      'ratio': 0.04, 'unit': 'ud'},
+        ],
+        'tabique_ladrillo': [
+            {'ref': 'LAD-001', 'fallback': 'Ladrillo',     'ratio': 55.0, 'unit': 'ud'},
+            {'ref': 'MOR-001', 'fallback': 'Mortero',      'ratio': 3.0,  'unit': 'kg'},
+            {'ref': 'YES-001', 'fallback': 'Yeso',         'ratio': 2.0,  'unit': 'kg'},
+        ],
+        'pintura': [
+            {'ref': 'IMP-001', 'fallback': 'Imprimación',  'ratio': 0.15, 'unit': 'L'},
+            {'ref': 'PIN-001', 'fallback': 'Pintura',      'ratio': 0.4,  'unit': 'L'},
+        ],
+    }
+
+    @http.route("/api/construction/catalog/calculator", type="http", auth="none", methods=["GET"], csrf=False)
+    def catalog_calculator(self, type="banyo", m2="10", **kw):
+        """Calcula los materiales necesarios para una obra y los vincula con productos del catálogo."""
+        try:
+            m2_val = float(m2)
+            if m2_val <= 0:
+                return self._err("m2 debe ser mayor que 0", 400)
+
+            recipe = self._CALC_RECIPES.get(type, self._CALC_RECIPES['banyo'])
+            env = request.env
+            materials = []
+            refs = [item['ref'] for item in recipe]
+
+            # Cargar todos los productos necesarios en una sola consulta
+            products_by_ref = {}
+            prods = env['product.product'].sudo().search([('default_code', 'in', refs)])
+            for prod in prods:
+                products_by_ref[prod.default_code] = prod
+
+            for item in recipe:
+                qty = round(m2_val * item['ratio'], 2)
+                prod = products_by_ref.get(item['ref'])
+                materials.append({
+                    'material':      prod.name if prod else item['fallback'],
+                    'unit':          prod.uom_id.name if prod else item['unit'],
+                    'quantity':      qty,
+                    'product_id':    prod.id if prod else None,
+                    'product_name':  prod.name if prod else None,
+                    'price_unit':    prod.lst_price if prod else 0.0,
+                    'product_uom':   prod.uom_id.name if prod else item['unit'],
+                })
+
+            return self._ok(data={
+                'obra_type':  type,
+                'm2':         m2_val,
+                'materials':  materials,
+            })
+        except Exception as e:
+            _logger.error("Error en catalog_calculator: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
     @http.route("/api/construction/recommendations", type="http", auth="user", methods=["GET"], csrf=False)
@@ -343,101 +570,13 @@ class ConstructionAPI(http.Controller):
             return self._err(str(e), 500)
 
     # =========================================================================
-    # Calculador de materiales por tipo de obra
-    # =========================================================================
-
-    # Fórmulas de materiales por tipo de obra (unidades por m²)
-    _MATERIAL_FORMULAS = {
-        'banyo': [
-            {'material': 'Azulejo',      'unit': 'm²',   'formula': lambda m2: round(m2 * 1.1, 3)},
-            {'material': 'Mortero cola', 'unit': 'kg',   'formula': lambda m2: round(m2 * 5, 3)},
-            {'material': 'Lechada',      'unit': 'kg',   'formula': lambda m2: round(m2 * 0.3, 3)},
-        ],
-        'solera': [
-            {'material': 'Cemento',      'unit': 'sacos', 'formula': lambda m2: round(m2 * 0.3, 3)},
-            {'material': 'Arena',        'unit': 'm³',    'formula': lambda m2: round(m2 * 0.02, 3)},
-            {'material': 'Agua',         'unit': 'L',     'formula': lambda m2: round(m2 * 15, 3)},
-        ],
-        'tabique_ladrillo': [
-            {'material': 'Ladrillo',     'unit': 'ud',    'formula': lambda m2: round(m2 * 50, 0)},
-            {'material': 'Cemento',      'unit': 'sacos', 'formula': lambda m2: round(m2 * 0.1, 3)},
-            {'material': 'Arena',        'unit': 'm³',    'formula': lambda m2: round(m2 * 0.01, 3)},
-        ],
-        'pintura': [
-            {'material': 'Pintura',      'unit': 'L',     'formula': lambda m2: round(m2 * 0.3, 3)},
-            {'material': 'Imprimación',  'unit': 'L',     'formula': lambda m2: round(m2 * 0.1, 3)},
-        ],
-    }
-
-    @http.route("/api/construction/catalog/calculator", type="http", auth="user", methods=["GET"], csrf=False)
-    def catalog_calculator(self, type=None, m2=None, **kw):
-        """
-        Calcula la lista de materiales necesarios para un tipo de obra y superficie.
-
-        Query params:
-          type  — tipo de obra: banyo | solera | tabique_ladrillo | pintura
-          m2    — superficie en metros cuadrados (float)
-
-        Respuesta:
-          {
-            "success": true,
-            "data": {
-              "obra_type": <str>,
-              "m2":        <float>,
-              "materials": [
-                {"material": <str>, "unit": <str>, "quantity": <float>},
-                ...
-              ]
-            }
-          }
-        """
-        try:
-            if not type:
-                return self._err("Parámetro 'type' obligatorio", 400)
-            if not m2:
-                return self._err("Parámetro 'm2' obligatorio", 400)
-
-            obra_type = type.lower().strip()
-            superficie = float(m2)
-
-            if superficie <= 0:
-                return self._err("El valor de m2 debe ser mayor que 0", 400)
-
-            formulas = self._MATERIAL_FORMULAS.get(obra_type)
-            if formulas is None:
-                tipos_validos = ', '.join(self._MATERIAL_FORMULAS.keys())
-                return self._err(
-                    "Tipo de obra '%s' no reconocido. Tipos válidos: %s" % (obra_type, tipos_validos),
-                    400
-                )
-
-            materials = [
-                {
-                    'material': item['material'],
-                    'unit': item['unit'],
-                    'quantity': item['formula'](superficie),
-                }
-                for item in formulas
-            ]
-
-            return self._ok(data={
-                'obra_type': obra_type,
-                'm2': superficie,
-                'materials': materials,
-            })
-        except ValueError:
-            return self._err("El valor de m2 debe ser numérico", 400)
-        except Exception as e:
-            return self._err(str(e), 500)
-
-    # =========================================================================
     # Detalle de obra y producto
     # =========================================================================
 
     @http.route("/api/construction/obras/<int:obra_id>", type="http", auth="user", methods=["GET"], csrf=False)
     def get_obra_detail(self, obra_id, **kw):
         try:
-            obra = request.env["construction.obra"].browse(obra_id)
+            obra = request.env["construction.obra"].sudo().browse(obra_id)
             if not obra.exists():
                 return self._err("Obra no encontrada", 404)
             return self._ok(data={
@@ -459,7 +598,7 @@ class ConstructionAPI(http.Controller):
     @http.route("/api/construction/products/<int:product_id>", type="http", auth="user", methods=["GET"], csrf=False)
     def get_product_detail(self, product_id, **kw):
         try:
-            prod = request.env["product.product"].browse(product_id)
+            prod = request.env["product.product"].sudo().browse(product_id)
             if not prod.exists() or not prod.active:
                 return self._err("Producto no encontrado", 404)
             return self._ok(data={
@@ -580,7 +719,7 @@ class ConstructionAPI(http.Controller):
             domain = [("partner_id", "=", partner.id)]
             if state:
                 domain.append(("state", "=", state))
-            reqs = orm["construction.material.request"].search(
+            reqs = orm["construction.material.request"].sudo().search(
                 domain, limit=int(limit), offset=int(offset), order="id desc"
             )
             data = []
@@ -596,7 +735,7 @@ class ConstructionAPI(http.Controller):
                     "notes": r.notes or "",
                     "create_date": str(r.date_request) if r.date_request else "",
                 })
-            total = orm["construction.material.request"].search_count(domain)
+            total = orm["construction.material.request"].sudo().search_count(domain)
             return self._ok(data=data, total=total)
         except Exception as e:
             return self._err(str(e), 500)
@@ -614,9 +753,10 @@ class ConstructionAPI(http.Controller):
                 return self._err("El nombre es obligatorio", 400)
             address = p.get("address", "")
             partner = request.env["res.users"].sudo().browse(request.uid).partner_id
-            obra = request.env["construction.obra"].create({
+            obra = request.env["construction.obra"].sudo().create({
                 "name": name,
                 "partner_id": partner.id,
+                "state": "active",  # Activar directamente — visible en Odoo sin filtros extra
             })
             if address and hasattr(obra, 'address'):
                 obra.sudo().write({"address": address})

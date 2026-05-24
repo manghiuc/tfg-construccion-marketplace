@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Reglas de backup para Android 12+.
+    Excluimos las preferencias cifradas de sesión del backup automático
+    para evitar filtrar tokens de sesión o datos sensibles del usuario.
+-->
+<full-backup-content>
+    <!-- Excluir preferencias de sesión cifradas -->
+    <exclude
+        domain="sharedpref"
+        path="construapp_secure_prefs.xml" />
+</full-backup-content>

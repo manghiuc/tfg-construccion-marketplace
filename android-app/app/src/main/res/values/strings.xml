@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- =====================================================================
+         General
+         ===================================================================== -->
+    <string name="app_name">ConstruApp</string>
+    <string name="app_tagline">Tu marketplace de materiales de construcción</string>
+    <string name="ok">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Guardar</string>
+    <string name="close">Cerrar</string>
+    <string name="back">Volver</string>
+    <string name="retry">Reintentar</string>
+    <string name="loading">Cargando…</string>
+    <string name="error_generic">Ha ocurrido un error inesperado</string>
+    <string name="error_no_connection">Sin conexión a internet</string>
+    <string name="error_timeout">La solicitud ha tardado demasiado</string>
+    <string name="error_server">Error del servidor. Inténtalo más tarde</string>
+    <string name="empty_state">No hay resultados</string>
+    <string name="search_hint">Buscar materiales…</string>
+    <string name="confirm">Confirmar</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+
+    <!-- =====================================================================
+         Pantalla de bienvenida / splash
+         ===================================================================== -->
+    <string name="splash_slogan">Materiales de calidad, entrega rápida</string>
+
+    <!-- =====================================================================
+         Login
+         ===================================================================== -->
+    <string name="login_title">Iniciar sesión</string>
+    <string name="login_subtitle">Accede a tu cuenta ConstruApp</string>
+    <string name="login_email_label">Correo electrónico</string>
+    <string name="login_email_hint">tu@email.com</string>
+    <string name="login_password_label">Contraseña</string>
+    <string name="login_password_hint">Mínimo 6 caracteres</string>
+    <string name="login_button">Entrar</string>
+    <string name="login_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="login_no_account">¿No tienes cuenta?</string>
+    <string name="login_register_link">Regístrate aquí</string>
+    <string name="login_error_empty_email">El correo electrónico es obligatorio</string>
+    <string name="login_error_invalid_email">Introduce un correo electrónico válido</string>
+    <string name="login_error_empty_password">La contraseña es obligatoria</string>
+    <string name="login_error_invalid_credentials">Credenciales incorrectas</string>
+
+    <!-- =====================================================================
+         Registro
+         ===================================================================== -->
+    <string name="register_title">Crear cuenta</string>
+    <string name="register_subtitle">Únete a ConstruApp</string>
+    <string name="register_name_label">Nombre completo</string>
+    <string name="register_name_hint">Juan García</string>
+    <string name="register_email_label">Correo electrónico</string>
+    <string name="register_password_label">Contraseña</string>
+    <string name="register_password_confirm_label">Confirmar contraseña</string>
+    <string name="register_phone_label">Teléfono (opcional)</string>
+    <string name="register_phone_hint">+34 600 000 000</string>
+    <string name="register_partner_type_label">Tipo de cliente</string>
+    <string name="register_type_particular">Particular</string>
+    <string name="register_type_autonomo">Autónomo</string>
+    <string name="register_type_empresa">Empresa</string>
+    <string name="register_company_label">Nombre de empresa</string>
+    <string name="register_vat_label">CIF / NIF</string>
+    <string name="register_button">Crear cuenta</string>
+    <string name="register_already_account">¿Ya tienes cuenta?</string>
+    <string name="register_login_link">Inicia sesión</string>
+    <string name="register_error_name_required">El nombre es obligatorio</string>
+    <string name="register_error_passwords_mismatch">Las contraseñas no coinciden</string>
+    <string name="register_error_company_required">El nombre de empresa es obligatorio para empresas</string>
+    <string name="register_success">Cuenta creada correctamente. ¡Bienvenido!</string>
+
+    <!-- =====================================================================
+         Navegación principal (bottom bar)
+         ===================================================================== -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_catalog">Catálogo</string>
+    <string name="nav_calculator">Calculadora</string>
+    <string name="nav_cart">Carrito</string>
+    <string name="nav_orders">Pedidos</string>
+    <string name="nav_profile">Perfil</string>
+
+    <!-- =====================================================================
+         Pantalla de inicio (Home)
+         ===================================================================== -->
+    <string name="home_welcome">Bienvenido, %s</string>
+    <string name="home_greeting_morning">Buenos días</string>
+    <string name="home_greeting_afternoon">Buenas tardes</string>
+    <string name="home_greeting_evening">Buenas noches</string>
+    <string name="home_section_recommendations">Recomendados para ti</string>
+    <string name="home_section_recent_orders">Últimos pedidos</string>
+    <string name="home_section_active_obras">Obras activas</string>
+    <string name="home_loyalty_points">%d puntos</string>
+    <string name="home_loyalty_level">Nivel %s</string>
+    <string name="home_promo_urgent">Entrega urgente disponible</string>
+
+    <!-- =====================================================================
+         Catálogo de productos
+         ===================================================================== -->
+    <string name="catalog_title">Catálogo</string>
+    <string name="catalog_filter">Filtrar</string>
+    <string name="catalog_sort">Ordenar</string>
+    <string name="catalog_categories">Categorías</string>
+    <string name="catalog_all_categories">Todas las categorías</string>
+    <string name="catalog_results">%d productos encontrados</string>
+    <string name="catalog_no_results">No se encontraron productos para \"%s\"</string>
+    <string name="catalog_price_from">Desde %s €</string>
+    <string name="catalog_sort_price_asc">Precio: menor a mayor</string>
+    <string name="catalog_sort_price_desc">Precio: mayor a menor</string>
+    <string name="catalog_sort_name">Nombre A-Z</string>
+    <string name="catalog_sort_relevance">Relevancia</string>
+
+    <!-- =====================================================================
+         Detalle de producto
+         ===================================================================== -->
+    <string name="product_detail_title">Detalle de producto</string>
+    <string name="product_price">%s €/%s</string>
+    <string name="product_stock_available">En stock: %s %s</string>
+    <string name="product_stock_low">Stock limitado</string>
+    <string name="product_stock_out">Sin stock</string>
+    <string name="product_add_to_cart">Añadir al carrito</string>
+    <string name="product_quantity">Cantidad</string>
+    <string name="product_description">Descripción</string>
+    <string name="product_brand">Marca: %s</string>
+    <string name="product_code">Ref: %s</string>
+    <string name="product_weight">Peso: %s kg/ud</string>
+    <string name="product_added_to_cart">Producto añadido al carrito</string>
+
+    <!-- =====================================================================
+         Calculadora de obra
+         ===================================================================== -->
+    <string name="calculator_title">Calculadora de obra</string>
+    <string name="calculator_subtitle">Calcula los materiales que necesitas</string>
+    <string name="calculator_type_label">Tipo de construcción</string>
+    <string name="calculator_type_tabique">Tabique</string>
+    <string name="calculator_type_solera">Solera</string>
+    <string name="calculator_type_cubierta">Cubierta</string>
+    <string name="calculator_type_fachada">Fachada</string>
+    <string name="calculator_type_forjado">Forjado</string>
+    <string name="calculator_type_pavimento">Pavimento</string>
+    <string name="calculator_m2_label">Superficie (m²)</string>
+    <string name="calculator_m2_hint">Ej: 25.5</string>
+    <string name="calculator_calculate_button">Calcular materiales</string>
+    <string name="calculator_results_title">Materiales necesarios</string>
+    <string name="calculator_total_estimate">Presupuesto estimado: %s €</string>
+    <string name="calculator_add_all_to_cart">Añadir todo al carrito</string>
+    <string name="calculator_qty_needed">%s %s necesarios</string>
+    <string name="calculator_error_type">Selecciona un tipo de construcción</string>
+    <string name="calculator_error_m2">Introduce una superficie válida mayor que 0</string>
+
+    <!-- =====================================================================
+         Carrito
+         ===================================================================== -->
+    <string name="cart_title">Carrito</string>
+    <string name="cart_empty">Tu carrito está vacío</string>
+    <string name="cart_empty_action">Ver catálogo</string>
+    <string name="cart_items_count">%d artículo(s)</string>
+    <string name="cart_subtotal">Subtotal materiales</string>
+    <string name="cart_transport">Transporte</string>
+    <string name="cart_transport_minimum">Transporte mínimo: 15 €</string>
+    <string name="cart_transport_urgent">Recargo urgente (+50%%)</string>
+    <string name="cart_loyalty_discount">Descuento fidelización</string>
+    <string name="cart_total">Total</string>
+    <string name="cart_calculate_transport">Calcular transporte</string>
+    <string name="cart_delivery_address">Dirección de entrega</string>
+    <string name="cart_delivery_address_hint">Calle, número, ciudad…</string>
+    <string name="cart_use_location">Usar ubicación GPS</string>
+    <string name="cart_urgent_delivery">Entrega urgente</string>
+    <string name="cart_urgent_description">Tu pedido saldrá hoy. +50%% sobre el transporte</string>
+    <string name="cart_apply_points">Aplicar puntos de fidelización</string>
+    <string name="cart_points_available">Tienes %d puntos disponibles</string>
+    <string name="cart_remove_item">Eliminar producto</string>
+    <string name="cart_proceed_checkout">Confirmar pedido</string>
+    <string name="cart_assign_obra">Asignar a obra</string>
+    <string name="cart_select_obra">Selecciona una obra</string>
+
+    <!-- =====================================================================
+         Checkout / Confirmación de pedido
+         ===================================================================== -->
+    <string name="checkout_title">Confirmar pedido</string>
+    <string name="checkout_summary">Resumen del pedido</string>
+    <string name="checkout_delivery_details">Datos de entrega</string>
+    <string name="checkout_confirm_button">Realizar pedido</string>
+    <string name="checkout_success_title">¡Pedido confirmado!</string>
+    <string name="checkout_success_message">Tu pedido #%s ha sido registrado correctamente</string>
+    <string name="checkout_success_action">Ver mis pedidos</string>
+    <string name="checkout_error_no_obra">Debes seleccionar una obra</string>
+    <string name="checkout_error_no_address">Introduce la dirección de entrega</string>
+    <string name="checkout_photo_order">Pedir por foto</string>
+    <string name="checkout_photo_description">Toma una foto de tus materiales y la IA generará el pedido</string>
+    <string name="checkout_photo_take">Hacer foto</string>
+    <string name="checkout_photo_analyzing">Analizando imagen…</string>
+
+    <!-- =====================================================================
+         Pedidos (historial y seguimiento)
+         ===================================================================== -->
+    <string name="orders_title">Mis pedidos</string>
+    <string name="orders_empty">No tienes pedidos todavía</string>
+    <string name="orders_filter_all">Todos</string>
+    <string name="orders_filter_pending">Pendientes</string>
+    <string name="orders_filter_active">En curso</string>
+    <string name="orders_filter_delivered">Entregados</string>
+    <string name="order_detail_title">Detalle del pedido</string>
+    <string name="order_number">Pedido #%s</string>
+    <string name="order_date">Fecha: %s</string>
+    <string name="order_state_draft">Borrador</string>
+    <string name="order_state_confirmed">Confirmado</string>
+    <string name="order_state_approved">Aprobado</string>
+    <string name="order_state_in_progress">En preparación</string>
+    <string name="order_state_shipped">Enviado</string>
+    <string name="order_state_delivered">Entregado</string>
+    <string name="order_state_cancelled">Cancelado</string>
+    <string name="order_tracking_title">Seguimiento</string>
+    <string name="order_tracking_carrier">Transportista: %s</string>
+    <string name="order_tracking_number">Nº seguimiento: %s</string>
+    <string name="order_tracking_estimated">Entrega estimada: %s</string>
+    <string name="order_tracking_location">Ubicación: %s</string>
+    <string name="order_repeat">Repetir pedido</string>
+    <string name="order_recurring_title">Pedido recurrente</string>
+    <string name="order_recurring_weekly">Cada semana</string>
+    <string name="order_recurring_biweekly">Cada dos semanas</string>
+    <string name="order_recurring_monthly">Cada mes</string>
+    <string name="order_recurring_enable">Activar pedido recurrente</string>
+    <string name="order_recurring_next">Próximo envío: %s</string>
+
+    <!-- =====================================================================
+         Obras
+         ===================================================================== -->
+    <string name="obras_title">Mis obras</string>
+    <string name="obras_empty">No tienes obras registradas</string>
+    <string name="obras_new">Nueva obra</string>
+    <string name="obra_detail_title">Detalle de obra</string>
+    <string name="obra_state_draft">Borrador</string>
+    <string name="obra_state_active">En curso</string>
+    <string name="obra_state_paused">Pausada</string>
+    <string name="obra_state_done">Finalizada</string>
+    <string name="obra_state_cancelled">Cancelada</string>
+    <string name="obra_code">Código: %s</string>
+    <string name="obra_address">Dirección: %s</string>
+    <string name="obra_requests_count">%d pedido(s)</string>
+    <string name="obra_share_title">Obra compartida</string>
+    <string name="obra_share_description">Equipo con acceso a esta obra</string>
+    <string name="obra_invite_member">Invitar miembro</string>
+
+    <!-- =====================================================================
+         Programa de fidelización
+         ===================================================================== -->
+    <string name="loyalty_title">Programa de puntos</string>
+    <string name="loyalty_level_bronce">Bronce</string>
+    <string name="loyalty_level_plata">Plata</string>
+    <string name="loyalty_level_oro">Oro</string>
+    <string name="loyalty_level_platino">Platino</string>
+    <string name="loyalty_points_balance">Saldo de puntos: %d</string>
+    <string name="loyalty_discount_percent">Descuento actual: %s%%</string>
+    <string name="loyalty_points_to_next">Te faltan %d puntos para el nivel %s</string>
+    <string name="loyalty_history_title">Historial de puntos</string>
+    <string name="loyalty_points_earned">+%d puntos</string>
+    <string name="loyalty_points_used">-%d puntos</string>
+
+    <!-- =====================================================================
+         Perfil de usuario
+         ===================================================================== -->
+    <string name="profile_title">Mi perfil</string>
+    <string name="profile_edit">Editar perfil</string>
+    <string name="profile_name">Nombre</string>
+    <string name="profile_email">Correo electrónico</string>
+    <string name="profile_phone">Teléfono</string>
+    <string name="profile_company">Empresa</string>
+    <string name="profile_vat">CIF / NIF</string>
+    <string name="profile_partner_type">Tipo de cliente</string>
+    <string name="profile_logout">Cerrar sesión</string>
+    <string name="profile_logout_confirm">¿Seguro que quieres cerrar sesión?</string>
+    <string name="profile_saved">Perfil actualizado correctamente</string>
+
+    <!-- =====================================================================
+         Chatbot IA
+         ===================================================================== -->
+    <string name="chatbot_title">Asistente de materiales</string>
+    <string name="chatbot_hint">Escribe tu consulta…</string>
+    <string name="chatbot_send">Enviar</string>
+    <string name="chatbot_greeting">Hola, soy tu asistente de materiales. ¿En qué puedo ayudarte?</string>
+    <string name="chatbot_suggested_questions">Preguntas frecuentes</string>
+    <string name="chatbot_products_found">Productos relacionados</string>
+
+    <!-- =====================================================================
+         Permisos
+         ===================================================================== -->
+    <string name="permission_location_title">Permiso de ubicación</string>
+    <string name="permission_location_message">Necesitamos tu ubicación para calcular el coste de transporte exacto hasta tu obra</string>
+    <string name="permission_camera_title">Permiso de cámara</string>
+    <string name="permission_camera_message">Necesitamos acceso a la cámara para que puedas adjuntar fotos a tu pedido</string>
+    <string name="permission_denied">Permiso denegado. Actívalo en Ajustes del sistema</string>
+    <string name="permission_go_to_settings">Ir a ajustes</string>
+
+    <!-- =====================================================================
+         Transporte
+         ===================================================================== -->
+    <string name="transport_distance">Distancia: %s km</string>
+    <string name="transport_base_cost">Coste base: %s €</string>
+    <string name="transport_weight_surcharge">Recargo por peso: %s €</string>
+    <string name="transport_urgent_surcharge">Recargo urgente: %s €</string>
+    <string name="transport_total">Total transporte: %s €</string>
+    <string name="transport_estimated_days">Tiempo estimado: %d día(s)</string>
+    <string name="transport_carrier">Transportista: %s</string>
+    <string name="transport_minimum_note">El transporte mínimo es de 15 €</string>
+
+    <!-- =====================================================================
+         Panel de administración (solo rol admin)
+         ===================================================================== -->
+    <string name="admin_panel_title">Panel de administración</string>
+    <string name="admin_pending_orders">Pedidos pendientes</string>
+    <string name="admin_approve_order">Aprobar pedido</string>
+    <string name="admin_reject_order">Rechazar pedido</string>
+    <string name="admin_manage_products">Gestionar productos</string>
+    <string name="admin_manage_users">Gestionar usuarios</string>
+
+</resources>

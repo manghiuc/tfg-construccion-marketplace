@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Estructura de menus del modulo Construction Marketplace -->
-
-    <!-- Menu raiz del modulo (aparece en la barra de aplicaciones) -->
+    <!-- Menu raiz del modulo -->
     <menuitem
         id="menu_construction_marketplace_root"
         name="Construction Marketplace"
@@ -11,12 +9,36 @@
         web_icon="construction_marketplace,static/description/icon.png"
         groups="base.group_user"/>
 
+    <!-- PEDIDOS ACTIVOS -->
+    <menuitem
+        id="menu_construction_pedidos"
+        name="Pedidos"
+        parent="menu_construction_marketplace_root"
+        sequence="10"
+        groups="base.group_user"/>
+
+    <menuitem
+        id="menu_construction_pedidos_activos"
+        name="Pedidos Activos"
+        parent="menu_construction_pedidos"
+        action="action_construction_pedidos_activos"
+        sequence="10"
+        groups="base.group_user"/>
+
+    <menuitem
+        id="menu_construction_pedidos_todos"
+        name="Todos los Pedidos"
+        parent="menu_construction_pedidos"
+        action="action_construction_material_request"
+        sequence="20"
+        groups="base.group_user"/>
+
     <!-- OBRAS -->
     <menuitem
         id="menu_construction_obras"
         name="Obras"
         parent="menu_construction_marketplace_root"
-        sequence="10"
+        sequence="20"
         groups="base.group_user"/>
 
     <menuitem
@@ -27,23 +49,39 @@
         sequence="10"
         groups="base.group_user"/>
 
-    <!-- SOLICITUDES DE MATERIALES -->
+    <!-- INVENTARIO -->
     <menuitem
-        id="menu_construction_requests"
-        name="Solicitudes de Materiales"
+        id="menu_construction_inventario"
+        name="Inventario"
         parent="menu_construction_marketplace_root"
-        sequence="20"
+        sequence="30"
         groups="base.group_user"/>
 
     <menuitem
-        id="menu_construction_requests_all"
-        name="Todas las Solicitudes"
-        parent="menu_construction_requests"
-        action="action_construction_material_request"
+        id="menu_construction_inventario_materiales"
+        name="Materiales y Productos"
+        parent="menu_construction_inventario"
+        action="action_construction_inventario_materiales"
         sequence="10"
         groups="base.group_user"/>
 
-    <!-- CONFIGURACION (solo administradores) -->
+    <!-- CLIENTES -->
+    <menuitem
+        id="menu_construction_clientes"
+        name="Clientes"
+        parent="menu_construction_marketplace_root"
+        sequence="40"
+        groups="base.group_user"/>
+
+    <menuitem
+        id="menu_construction_clientes_list"
+        name="Todos los Clientes"
+        parent="menu_construction_clientes"
+        action="action_construction_clientes"
+        sequence="10"
+        groups="base.group_user"/>
+
+    <!-- CONFIGURACION -->
     <menuitem
         id="menu_construction_config"
         name="Configuración"

@@ -14,27 +14,32 @@
                 <header>
                     <!-- Botones de flujo de estado -->
                     <button name="action_confirm"
-                            string="Confirmar Solicitud"
+                            string="✔ Confirmar / Tramitar"
                             type="object"
                             class="btn-primary"
                             invisible="state != 'draft'"
                             confirm="¿Confirmar esta solicitud de materiales?"/>
-                    <button name="action_set_in_progress"
-                            string="Poner en Proceso"
+                    <button name="action_set_en_preparacion"
+                            string="📦 En Preparación"
                             type="object"
                             class="btn-primary"
                             invisible="state != 'confirmed'"/>
+                    <button name="action_set_en_reparto"
+                            string="🚚 En Reparto"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'en_preparacion'"/>
                     <button name="action_set_delivered"
-                            string="Marcar como Entregada"
+                            string="✅ Marcar como Entregado"
                             type="object"
                             class="btn-success"
-                            invisible="state != 'in_progress'"
-                            confirm="¿Confirmar la entrega de los materiales?"/>
+                            invisible="state not in ['en_reparto', 'in_progress']"
+                            confirm="¿Confirmar la entrega de los materiales al cliente?"/>
                     <button name="action_convert_to_sale"
                             string="Convertir a Pedido de Venta"
                             type="object"
                             class="btn-secondary"
-                            invisible="state not in ['confirmed', 'in_progress'] or sale_order_id != False"/>
+                            invisible="state not in ['confirmed', 'en_preparacion', 'en_reparto', 'in_progress'] or sale_order_id != False"/>
                     <button name="action_cancel"
                             string="Cancelar"
                             type="object"
@@ -43,9 +48,9 @@
                     <button name="action_reset_draft"
                             string="Volver a Borrador"
                             type="object"
-                            invisible="state not in ['confirmed', 'cancelled']"/>
+                            invisible="state not in ['confirmed', 'en_preparacion', 'cancelled']"/>
                     <field name="state" widget="statusbar"
-                           statusbar_visible="draft,confirmed,in_progress,delivered"/>
+                           statusbar_visible="draft,confirmed,en_preparacion,en_reparto,delivered"/>
                 </header>
 
                 <sheet>
@@ -75,9 +80,8 @@
                     <group>
                         <group string="Información de la Solicitud">
                             <field name="obra_id"
-                                   required="1"
-                                   options="{'no_create': True}"
-                                   readonly="state != 'draft'"/>
+                                   options="{'no_create': True, 'no_quick_create': True}"
+                                   readonly="state in ['delivered', 'cancelled']"/>
                             <field name="partner_id"
                                    options="{'no_create': True}"/>
                             <field name="user_id"
@@ -86,7 +90,16 @@
                             <field name="date_required"/>
                         </group>
                         <group string="Importes">
+                            <field name="is_urgent" string="⚡ Pedido Urgente (+50% transporte)"/>
                             <field name="total_amount"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                            <field name="transport_cost"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                            <field name="total_with_transport"
                                    widget="monetary"
                                    options="{'currency_field': 'currency_id'}"
                                    readonly="1"/>
@@ -149,22 +162,25 @@
         <field name="arch" type="xml">
             <tree string="Solicitudes de Materiales"
                   decoration-success="state == 'delivered'"
-                  decoration-info="state == 'in_progress'"
-                  decoration-warning="state == 'confirmed'"
-                  decoration-danger="state == 'cancelled'"
+                  decoration-info="state in ['en_reparto', 'in_progress'] and not is_urgent"
+                  decoration-warning="state in ['confirmed', 'en_preparacion'] and not is_urgent"
+                  decoration-danger="state == 'cancelled' or (is_urgent and state not in ['delivered', 'cancelled'])"
                   decoration-muted="state == 'draft'">
                 <field name="name"/>
+                <field name="is_urgent" widget="boolean" string="⚡ Urgente" optional="show"/>
                 <field name="obra_id"/>
+                <field name="delivery_address" optional="show"/>
                 <field name="partner_id"/>
                 <field name="user_id"/>
                 <field name="date_request"/>
                 <field name="date_required"/>
                 <field name="total_amount" sum="Total"/>
+                <field name="transport_cost" sum="Transporte" optional="show"/>
                 <field name="sale_order_id" optional="show"/>
                 <field name="state" widget="badge"
                        decoration-success="state == 'delivered'"
-                       decoration-info="state == 'in_progress'"
-                       decoration-warning="state == 'confirmed'"
+                       decoration-info="state in ['en_reparto', 'in_progress']"
+                       decoration-warning="state in ['confirmed', 'en_preparacion']"
                        decoration-danger="state == 'cancelled'"
                        decoration-muted="state == 'draft'"/>
             </tree>
@@ -184,11 +200,13 @@
                 <separator/>
                 <filter name="filter_draft" string="Borrador"
                         domain="[('state', '=', 'draft')]"/>
-                <filter name="filter_confirmed" string="Confirmadas"
+                <filter name="filter_confirmed" string="Tramitando"
                         domain="[('state', '=', 'confirmed')]"/>
-                <filter name="filter_in_progress" string="En Proceso"
-                        domain="[('state', '=', 'in_progress')]"/>
-                <filter name="filter_delivered" string="Entregadas"
+                <filter name="filter_en_preparacion" string="En Preparación"
+                        domain="[('state', '=', 'en_preparacion')]"/>
+                <filter name="filter_en_reparto" string="En Reparto"
+                        domain="[('state', 'in', ['en_reparto', 'in_progress'])]"/>
+                <filter name="filter_delivered" string="Entregados"
                         domain="[('state', '=', 'delivered')]"/>
                 <filter name="filter_cancelled" string="Canceladas"
                         domain="[('state', '=', 'cancelled')]"/>
@@ -227,6 +245,132 @@
                 Gestiona las solicitudes de materiales para tus obras
                 y conviértelas en pedidos de venta de forma automática.
             </p>
+        </field>
+    </record>
+
+    <!-- Vista Kanban de Solicitudes de Materiales -->
+    <record id="view_construction_material_request_kanban" model="ir.ui.view">
+        <field name="name">construction.material.request.kanban</field>
+        <field name="model">construction.material.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column" group_create="false" group_delete="false">
+                <field name="state"/>
+                <field name="name"/>
+                <field name="obra_id"/>
+                <field name="partner_id"/>
+                <field name="total_amount"/>
+                <field name="date_required"/>
+                <field name="delivery_address"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <t t-if="record.obra_id.value">
+                                        <div><span class="text-muted">Obra: </span><t t-esc="record.obra_id.value"/></div>
+                                    </t>
+                                    <t t-if="record.partner_id.value">
+                                        <div><span class="text-muted">Cliente: </span><t t-esc="record.partner_id.value"/></div>
+                                    </t>
+                                    <t t-if="record.delivery_address.value">
+                                        <div><span class="text-muted">Dir: </span><t t-esc="record.delivery_address.value"/></div>
+                                    </t>
+                                    <t t-if="record.date_required.value">
+                                        <div><span class="text-muted">Entrega: </span><t t-esc="record.date_required.value"/></div>
+                                    </t>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <strong><field name="total_amount"/> €</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Acción Pedidos Activos (kanban primero) -->
+    <record id="action_construction_pedidos_activos" model="ir.actions.act_window">
+        <field name="name">Pedidos Activos</field>
+        <field name="res_model">construction.material.request</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('state', 'not in', ['draft', 'cancelled', 'delivered'])]</field>
+        <field name="context">{'group_by': 'state'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No hay pedidos activos</p>
+            <p>Los pedidos activos (tramitando, en preparación, en reparto) aparecerán aquí.</p>
+        </field>
+    </record>
+
+    <!-- Vista lista especial para Inventario de Materiales -->
+    <record id="view_product_template_marketplace_list" model="ir.ui.view">
+        <field name="name">product.template.marketplace.list</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <tree string="Inventario de Materiales" decoration-danger="qty_marketplace == 0" decoration-success="qty_marketplace > 0">
+                <field name="name" string="Producto"/>
+                <field name="default_code" string="Ref."/>
+                <field name="categ_id" string="Categoría"/>
+                <field name="list_price" string="Precio venta" widget="monetary"/>
+                <field name="uom_id" string="Unidad" optional="show"/>
+                <field name="qty_marketplace" string="Stock disponible"/>
+                <field name="description_sale" string="Descripción" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista formulario de producto para el marketplace -->
+    <record id="view_product_template_marketplace_form" model="ir.ui.view">
+        <field name="name">product.template.marketplace.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-info" role="alert" style="margin:8px 16px 0 16px;">
+                    <strong>Construction Marketplace</strong> — Rellena Referencia Interna, Precio de Venta y Stock Disponible para que el producto aparezca en el catálogo.
+                </div>
+            </xpath>
+            <xpath expr="//field[@name='description_sale']" position="after">
+                <field name="qty_marketplace" string="Stock Disponible (Marketplace)"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Acción Inventario de Materiales -->
+    <record id="action_construction_inventario_materiales" model="ir.actions.act_window">
+        <field name="name">Inventario de Materiales</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'tree','view_id':ref('view_product_template_marketplace_list')})]"/>
+        <field name="domain">[('sale_ok', '=', True), ('default_code', '!=', False), ('default_code', 'not ilike', 'FURN'), ('default_code', 'not ilike', 'E-COM')]</field>
+        <field name="context">{'default_sale_ok': True, 'default_type': 'consu'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Sin productos en el catálogo</p>
+            <p>Haz clic en <b>Nuevo</b> para añadir un producto. Rellena nombre, referencia, precio y stock disponible.</p>
+        </field>
+    </record>
+
+    <!-- Acción Clientes -->
+    <record id="action_construction_clientes" model="ir.actions.act_window">
+        <field name="name">Clientes</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="domain">[('customer_rank', '>', 0)]</field>
+        <field name="context">{'search_default_customer': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Sin clientes todavía</p>
+            <p>Los clientes registrados desde el portal aparecerán aquí.</p>
         </field>
     </record>
 

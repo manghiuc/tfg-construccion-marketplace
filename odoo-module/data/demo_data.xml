@@ -123,6 +123,105 @@
         <field name="description_sale">Azulejo porcelánico rectificado 60x60 cm. Acabado mate blanco polar.</field>
     </record>
 
+    <record id="demo_product_mortero_cola" model="product.template">
+        <field name="name">Mortero Cola C2 para Alicatado (saco 25 kg)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">9.80</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">MOR-001</field>
+        <field name="description_sale">Mortero cola cementoso mejorado C2. Para alicatado en zonas húmedas.</field>
+    </record>
+
+    <record id="demo_product_lechada" model="product.template">
+        <field name="name">Lechada de Juntas Gris (kg)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">3.20</field>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+        <field name="default_code">LEC-001</field>
+        <field name="description_sale">Lechada cementosa para rejuntado de azulejos y baldosas.</field>
+    </record>
+
+    <record id="demo_product_yeso" model="product.template">
+        <field name="name">Yeso Proyectado para Paredes (saco 25 kg)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">7.50</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">YES-001</field>
+        <field name="description_sale">Yeso de proyección para paredes y techos interiores.</field>
+    </record>
+
+    <record id="demo_product_pintura" model="product.template">
+        <field name="name">Pintura Plástica Interior Mate Blanca (litro)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">4.90</field>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="uom_po_id" ref="uom.product_uom_litre"/>
+        <field name="default_code">PIN-001</field>
+        <field name="description_sale">Pintura plástica mate lavable para paredes y techos interiores.</field>
+    </record>
+
+    <record id="demo_product_imprimacion" model="product.template">
+        <field name="name">Imprimación Selladora Universal (litro)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">5.60</field>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="uom_po_id" ref="uom.product_uom_litre"/>
+        <field name="default_code">IMP-001</field>
+        <field name="description_sale">Imprimación selladora fijadora universal para preparar superficies antes de pintar.</field>
+    </record>
+
+    <record id="demo_product_silicona" model="product.template">
+        <field name="name">Silicona Sanitaria Blanca (cartucho 300 ml)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">3.50</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">SIL-001</field>
+        <field name="description_sale">Silicona sanitaria antimoho blanca para baños y cocinas.</field>
+    </record>
+
+    <record id="demo_product_cable_lszh" model="product.template">
+        <field name="name">Cable LSZH 2,5 mm² Flexible (metro)</field>
+        <field name="categ_id" ref="demo_categ_herramientas"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">1.20</field>
+        <field name="uom_id" ref="uom.product_uom_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_meter"/>
+        <field name="default_code">CAB-001</field>
+        <field name="description_sale">Cable eléctrico flexible LSZH 2,5 mm² libre de halógenos.</field>
+    </record>
+
+    <record id="demo_product_tubo_corrugado" model="product.template">
+        <field name="name">Tubo Corrugado Ø20 mm (metro)</field>
+        <field name="categ_id" ref="demo_categ_herramientas"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">0.65</field>
+        <field name="uom_id" ref="uom.product_uom_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_meter"/>
+        <field name="default_code">TUC-001</field>
+        <field name="description_sale">Tubo corrugado flexible Ø20 mm para protección de cables en rozas.</field>
+    </record>
+
+    <record id="demo_product_tubo_pvc" model="product.template">
+        <field name="name">Tubo PVC Evacuación 110 mm (metro)</field>
+        <field name="categ_id" ref="demo_categ_materiales_base"/>
+        <field name="type">consu</field><field name="sale_ok">True</field><field name="purchase_ok">True</field>
+        <field name="list_price">8.40</field>
+        <field name="uom_id" ref="uom.product_uom_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_meter"/>
+        <field name="default_code">TUP-001</field>
+        <field name="description_sale">Tubo de PVC para evacuación sanitaria DN 110 mm. Bajantes y desagües.</field>
+    </record>
+
     <!-- ==============================================================
          OBRAS DE CONSTRUCCION (3 OBRAS)
          ============================================================== -->

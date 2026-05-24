@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- ================================================================
+         CATEGORIAS DE PRODUCTOS DE CONSTRUCCIÓN
+         noupdate=1: no se sobreescriben si ya existen
+         ================================================================ -->
+    <record id="categ_materiales_construccion" model="product.category">
+        <field name="name">Materiales de Construcción</field>
+        <field name="parent_id" ref="product.product_category_all"/>
+    </record>
+
+    <record id="categ_herramientas_equipos" model="product.category">
+        <field name="name">Herramientas y Equipos</field>
+        <field name="parent_id" ref="product.product_category_all"/>
+    </record>
+
+    <!-- ================================================================
+         PRODUCTOS DE CONSTRUCCIÓN — CEMENTO, ÁRIDOS, HORMIGÓN
+         ================================================================ -->
+    <record id="prod_cemento_portland" model="product.template">
+        <field name="name">Cemento Portland CEM II 42.5 (saco 25 kg)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">8.50</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">CEM-001</field>
+        <field name="description_sale">Saco de cemento Portland CEM II 42.5 R, 25 kg. Para morteros y hormigones estructurales.</field>
+    </record>
+
+    <record id="prod_arena_rio" model="product.template">
+        <field name="name">Arena de Río Fina 0-4 mm (m³)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">45.00</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">ARE-001</field>
+        <field name="description_sale">Arena de río lavada, granulometría fina 0-4 mm. Ideal para morteros de albañilería.</field>
+    </record>
+
+    <!-- ================================================================
+         LADRILLERÍA Y TABIQUES
+         ================================================================ -->
+    <record id="prod_ladrillo_perforado" model="product.template">
+        <field name="name">Ladrillo Perforado 24x11.5x9 cm (ud)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">0.28</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">LAD-001</field>
+        <field name="description_sale">Ladrillo perforado cerámico para muros de carga y tabicado.</field>
+    </record>
+
+    <!-- ================================================================
+         FERRALLA Y ACERO
+         ================================================================ -->
+    <record id="prod_varilla_corrugada" model="product.template">
+        <field name="name">Varilla Corrugada B500S Ø12mm 12m (ud)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">12.80</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">VAR-012</field>
+        <field name="description_sale">Varilla de acero corrugado B500S diámetro 12mm, longitud 12 metros.</field>
+    </record>
+
+    <!-- ================================================================
+         REVESTIMIENTOS — AZULEJOS, TARIMA, SUELOS
+         ================================================================ -->
+    <record id="prod_azulejo_porcelanico" model="product.template">
+        <field name="name">Azulejo Porcelánico 60x60 Blanco (m²)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">18.90</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">AZU-001</field>
+        <field name="description_sale">Azulejo porcelánico rectificado 60x60 cm. Acabado mate blanco polar.</field>
+    </record>
+
+    <record id="prod_mortero_cola" model="product.template">
+        <field name="name">Mortero Cola C2 Alicatado (saco 25 kg)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">9.80</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">MOR-001</field>
+        <field name="description_sale">Mortero cola cementoso mejorado C2. Para alicatado de suelos y paredes en zonas húmedas.</field>
+    </record>
+
+    <record id="prod_lechada_juntas" model="product.template">
+        <field name="name">Lechada de Juntas Gris (kg)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">3.20</field>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+        <field name="default_code">LEC-001</field>
+        <field name="description_sale">Lechada cementosa para rejuntado de azulejos y baldosas. Color gris estándar.</field>
+    </record>
+
+    <!-- ================================================================
+         YESO Y ACABADOS INTERIORES
+         ================================================================ -->
+    <record id="prod_yeso_proyectado" model="product.template">
+        <field name="name">Yeso Proyectado para Paredes (saco 25 kg)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">7.50</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">YES-001</field>
+        <field name="description_sale">Yeso de proyección para paredes y techos interiores. Alta resistencia al impacto.</field>
+    </record>
+
+    <record id="prod_silicona_sanitaria" model="product.template">
+        <field name="name">Silicona Sanitaria Blanca (cartucho 300 ml)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">3.50</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">SIL-001</field>
+        <field name="description_sale">Silicona sanitaria antimoho blanca. Para sellado en baños, cocinas y zonas húmedas.</field>
+    </record>
+
+    <!-- ================================================================
+         PINTURA
+         ================================================================ -->
+    <record id="prod_pintura_plastica" model="product.template">
+        <field name="name">Pintura Plástica Interior Mate Blanca (litro)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">4.90</field>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="uom_po_id" ref="uom.product_uom_litre"/>
+        <field name="default_code">PIN-001</field>
+        <field name="description_sale">Pintura plástica mate lavable para paredes y techos interiores. Alto poder cubriente.</field>
+    </record>
+
+    <record id="prod_imprimacion" model="product.template">
+        <field name="name">Imprimación Selladora Fijadora (litro)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">5.60</field>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="uom_po_id" ref="uom.product_uom_litre"/>
+        <field name="default_code">IMP-001</field>
+        <field name="description_sale">Imprimación selladora universal para preparación de superficies antes de pintar.</field>
+    </record>
+
+    <!-- ================================================================
+         ELECTRICIDAD
+         ================================================================ -->
+    <record id="prod_cable_lszh" model="product.template">
+        <field name="name">Cable LSZH 2,5 mm² Flexible (metro)</field>
+        <field name="categ_id" ref="categ_herramientas_equipos"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">1.20</field>
+        <field name="uom_id" ref="uom.product_uom_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_meter"/>
+        <field name="default_code">CAB-001</field>
+        <field name="description_sale">Cable eléctrico flexible LSZH 2,5 mm² libre de halógenos. Para instalaciones eléctricas.</field>
+    </record>
+
+    <record id="prod_tubo_corrugado" model="product.template">
+        <field name="name">Tubo Corrugado Ø20 mm (metro)</field>
+        <field name="categ_id" ref="categ_herramientas_equipos"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">0.65</field>
+        <field name="uom_id" ref="uom.product_uom_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_meter"/>
+        <field name="default_code">TUC-001</field>
+        <field name="description_sale">Tubo corrugado flexible Ø20 mm para protección de cables eléctricos en rozas.</field>
+    </record>
+
+    <!-- ================================================================
+         FONTANERÍA
+         ================================================================ -->
+    <record id="prod_tubo_pvc_evacuacion" model="product.template">
+        <field name="name">Tubo PVC Evacuación 110 mm (metro)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">8.40</field>
+        <field name="uom_id" ref="uom.product_uom_meter"/>
+        <field name="uom_po_id" ref="uom.product_uom_meter"/>
+        <field name="default_code">TUP-001</field>
+        <field name="description_sale">Tubo de PVC para evacuación sanitaria DN 110 mm. Para bajantes y desagües.</field>
+    </record>
+
+    <record id="prod_grifo_monomando" model="product.template">
+        <field name="name">Grifo Monomando Lavabo Cromado (ud)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">38.50</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">GRI-001</field>
+        <field name="description_sale">Grifo monomando para lavabo, acabado cromado. Incluye latiguillos de conexión.</field>
+    </record>
+
+    <!-- ================================================================
+         ELECTRICIDAD — CUADRO ELÉCTRICO
+         ================================================================ -->
+    <record id="prod_cuadro_electrico" model="product.template">
+        <field name="name">Cuadro Eléctrico Superficie 8 Elementos (ud)</field>
+        <field name="categ_id" ref="categ_herramientas_equipos"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">24.90</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">CUA-001</field>
+        <field name="description_sale">Cuadro eléctrico de superficie con tapa, capacidad 8 elementos DIN. Con carril y bornas.</field>
+    </record>
+
+    <!-- ================================================================
+         AISLAMIENTO
+         ================================================================ -->
+    <record id="prod_lana_roca" model="product.template">
+        <field name="name">Lana de Roca Aislante 40 mm (m²)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">6.80</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">LAN-001</field>
+        <field name="description_sale">Panel de lana de roca de 40 mm de espesor para aislamiento térmico y acústico en fachadas y cubiertas.</field>
+    </record>
+
+    <!-- ================================================================
+         MADERA Y TABLEROS
+         ================================================================ -->
+    <record id="prod_tablero_dm" model="product.template">
+        <field name="name">Tablero DM 16 mm (m²)</field>
+        <field name="categ_id" ref="categ_materiales_construccion"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">14.20</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">TAB-001</field>
+        <field name="description_sale">Tablero de fibra de densidad media (DM/MDF) de 16 mm. Para carpintería, muebles y revestimientos.</field>
+    </record>
+
+    <!-- ================================================================
+         HERRAMIENTAS
+         ================================================================ -->
+    <record id="prod_taladro_percutor" model="product.template">
+        <field name="name">Taladro Percutor 800W con Maletín (ud)</field>
+        <field name="categ_id" ref="categ_herramientas_equipos"/>
+        <field name="type">consu</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">True</field>
+        <field name="list_price">89.00</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="default_code">TAL-001</field>
+        <field name="description_sale">Taladro percutor 800W con maletín, juego de brocas y puntas. Para obra y bricolaje profesional.</field>
+    </record>
+
+</odoo>

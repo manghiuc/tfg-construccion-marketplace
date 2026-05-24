@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logo ConstruApp: mismo diseño que la web (letra C blanca sobre naranja) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M96,76 Q76,76 76,96 L76,416 Q76,436 96,436 L416,436 Q436,436 436,416 L436,352 Q436,336 420,336 L192,336 Q176,336 176,320 L176,192 Q176,176 192,176 L420,176 Q436,176 436,160 L436,96 Q436,76 416,76 Z"/>
+</vector>

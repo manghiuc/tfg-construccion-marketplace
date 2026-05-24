@@ -1,49 +1,21 @@
+﻿# Android
+*.iml
+.gradle/
+local.properties
+.idea/
+build/
+captures/
+
 # Python / Odoo
 __pycache__/
-*.py[cod]
 *.pyc
-.venv
-venv/
-dist/
-build/
-*.egg-info/
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-odoo.conf
-odoo-*.log
-*.log
-filestore/
-sessions/
+*.pyo
+.env
 
-# Android / Kotlin
-android-app/.gradle/
-android-app/local.properties
-android-app/build/
-*.jks
-*.keystore
-google-services.json
-android-app/.idea/
-android-app/*.iml
+# DB
+*.db
+ruvector.db
 
-# Secretos
-secrets/
-credentials/
-
-# macOS / Windows
+# OS
 .DS_Store
-._*
 Thumbs.db
-Desktop.ini
-
-# IDEs
-.idea/
-*.iml
-out/
-.vscode/
-
-# Misc
-*.bak
-*.tmp
-node_modules/

@@ -33,7 +33,7 @@ class ConstructionMaterialRequest(models.Model):
     obra_id = fields.Many2one(
         comodel_name='construction.obra',
         string='Obra',
-        required=True,
+        required=False,
         tracking=True,
         index=True,
         ondelete='restrict',
@@ -69,17 +69,29 @@ class ConstructionMaterialRequest(models.Model):
     state = fields.Selection(
         selection=[
             ('draft', 'Borrador'),
-            ('confirmed', 'Confirmada'),
-            ('in_progress', 'En Proceso'),
-            ('delivered', 'Entregada'),
-            ('cancelled', 'Cancelada'),
+            ('confirmed', 'Tramitando'),
+            ('en_preparacion', 'En Preparación'),
+            ('en_reparto', 'En Reparto'),
+            ('in_progress', 'En Proceso'),  # legacy
+            ('delivered', 'Entregado'),
+            ('cancelled', 'Cancelado'),
         ],
         string='Estado',
         default='draft',
         required=True,
         tracking=True,
         copy=False,
+        group_expand='_read_group_state',
         help='Estado actual de la solicitud de materiales',
+    )
+
+    @api.model
+    def _read_group_state(self, values, domain, order=None):
+        """Muestra siempre todas las columnas en la vista kanban."""
+        return ['confirmed', 'en_preparacion', 'en_reparto', 'delivered']
+    delivery_address = fields.Char(
+        string='Dirección de Entrega',
+        help='Dirección de entrega introducida por el cliente al tramitar el pedido',
     )
 
     # -------------------------------------------------------------------------
@@ -184,7 +196,7 @@ class ConstructionMaterialRequest(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get('name', _('Nuevo')) == _('Nuevo'):
-                vals['name'] = self.env['ir.sequence'].next_by_code(
+                vals['name'] = self.env['ir.sequence'].sudo().next_by_code(
                     'construction.material.request'
                 ) or _('Nuevo')
             # Heredar partner de la obra si no se especifica
@@ -252,24 +264,36 @@ class ConstructionMaterialRequest(models.Model):
             )
         return True
 
-    def action_set_in_progress(self):
-        """Marca la solicitud como en proceso de preparación/envío."""
+    def action_set_en_preparacion(self):
+        """Marca la solicitud como en preparación en almacén."""
         for record in self:
-            if record.state != 'confirmed':
-                raise UserError(_(
-                    'Solo se pueden poner en proceso solicitudes confirmadas.'
-                ))
-            record.state = 'in_progress'
+            if record.state not in ('confirmed', 'draft'):
+                raise UserError(_('Solo se pueden poner en preparación solicitudes tramitadas.'))
+            record.state = 'en_preparacion'
             record._add_tracking_entry(
-                _('Solicitud puesta en proceso por %s') % self.env.user.name
+                _('Solicitud en preparación en almacén. Acción de %s') % self.env.user.name
             )
+
+    def action_set_en_reparto(self):
+        """Marca la solicitud como en reparto (en camino a la obra)."""
+        for record in self:
+            if record.state not in ('en_preparacion', 'confirmed', 'in_progress'):
+                raise UserError(_('Solo se pueden poner en reparto solicitudes en preparación.'))
+            record.state = 'en_reparto'
+            record._add_tracking_entry(
+                _('Materiales en reparto / en camino a la obra. Acción de %s') % self.env.user.name
+            )
+
+    def action_set_in_progress(self):
+        """Alias legacy → redirecciona a En Preparación."""
+        return self.action_set_en_preparacion()
 
     def action_set_delivered(self):
         """Marca la solicitud como entregada."""
         for record in self:
             record.state = 'delivered'
             record._add_tracking_entry(
-                _('Materiales entregados. Marcado por %s') % self.env.user.name
+                _('Materiales entregados en obra. Marcado por %s') % self.env.user.name
             )
 
     def action_cancel(self):
@@ -300,7 +324,7 @@ class ConstructionMaterialRequest(models.Model):
         """
         self.ensure_one()
 
-        if self.state not in ('confirmed', 'in_progress'):
+        if self.state not in ('confirmed', 'en_preparacion', 'en_reparto', 'in_progress'):
             raise UserError(_(
                 'Solo se pueden convertir a pedido de venta las solicitudes confirmadas o en proceso.'
             ))

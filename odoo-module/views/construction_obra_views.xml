@@ -79,7 +79,8 @@
                         <page string="Solicitudes de Materiales" name="material_requests">
                             <field name="material_request_ids"
                                    context="{'default_obra_id': active_id}"
-                                   mode="tree"/>
+                                   widget="many2many_tags"
+                                   readonly="1"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -95,7 +96,10 @@
         <field name="name">construction.obra.list</field>
         <field name="model">construction.obra</field>
         <field name="arch" type="xml">
-            <tree string="Obras de Construcción">
+            <tree string="Obras de Construcción"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state == 'finished'"
+                  decoration-info="state == 'draft'">
                 <field name="code"/>
                 <field name="name"/>
                 <field name="partner_id"/>
@@ -104,7 +108,10 @@
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="material_request_count" string="Solicitudes"/>
-                <field name="state"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-muted="state == 'finished'"
+                       decoration-info="state == 'draft'"/>
             </tree>
         </field>
     </record>
