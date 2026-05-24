@@ -58,18 +58,21 @@ object NetworkModule {
             .connectTimeout(AppConfig.CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(AppConfig.READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(AppConfig.WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            // Interceptor: añade session_id de Odoo como header en todas las peticiones
+            // Interceptor: añade session_id de Odoo como header Y cookie en todas las peticiones.
+            // Odoo auth="user" solo acepta la sesión vía cookie "session_id".
+            // Sin esto, al reiniciar la app el InMemoryCookieJar está vacío y Odoo
+            // devuelve HTML en lugar de JSON → IllegalStateException en Gson.
             .addInterceptor { chain ->
                 val sessionId = sessionManager.getSessionId()
-                val req = chain.request().newBuilder()
+                val reqBuilder = chain.request().newBuilder()
                     .addHeader("X-Requested-With", "XMLHttpRequest")
-                    .apply {
-                        if (sessionId.isNotBlank()) {
-                            addHeader("X-Openerp-Session-Id", sessionId)
-                        }
-                    }
-                    .build()
-                chain.proceed(req)
+                if (sessionId.isNotBlank()) {
+                    reqBuilder
+                        .addHeader("X-Openerp-Session-Id", sessionId)
+                        // Forzar cookie de sesión para que auth="user" funcione
+                        .addHeader("Cookie", "session_id=$sessionId")
+                }
+                chain.proceed(reqBuilder.build())
             }
 
         if (AppConfig.ENABLE_HTTP_LOGS) {
