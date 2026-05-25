@@ -35,8 +35,9 @@ class ConstructionAPI(http.Controller):
             try:
                 from odoo.http import root as http_root
                 stored = http_root.session_store.get(session_id)
-                if stored and stored.uid:
-                    return stored.uid, None
+                stored_uid = stored.get('uid') if hasattr(stored, 'get') else getattr(stored, 'uid', None)
+                if stored and stored_uid:
+                    return stored_uid, None
             except Exception as e:
                 _logger.warning("_require_uid: fallo al cargar sesión '%s': %s", session_id, e)
 
@@ -121,7 +122,7 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en login: %s", str(e))
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/obras", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/obras", type="http", auth="public", methods=["GET"], csrf=False)
     def get_obras(self, state=None, limit=None, offset="0", page="0", page_size="20", **kw):
         uid, err = self._require_uid()
         if err: return err
@@ -144,7 +145,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/obras", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/api/construction/obras", type="http", auth="public", methods=["POST"], csrf=False)
     def create_obra(self, **kw):
         uid, err = self._require_uid()
         if err: return err
@@ -183,7 +184,7 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en create_obra: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/material_request", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/api/construction/material_request", type="http", auth="public", methods=["POST"], csrf=False)
     def create_request(self, **kw):
         uid, err = self._require_uid()
         if err: return err
@@ -242,7 +243,7 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en create_request: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/material_request", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/material_request", type="http", auth="public", methods=["GET"], csrf=False)
     def get_material_requests(self, state=None, page="0", page_size="20", **kw):
         uid, err = self._require_uid()
         if err: return err
@@ -260,7 +261,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/material_request/<int:rid>/status", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/material_request/<int:rid>/status", type="http", auth="public", methods=["GET"], csrf=False)
     def request_status(self, rid, **kw):
         try:
             orm = request.env
@@ -298,7 +299,7 @@ class ConstructionAPI(http.Controller):
             _logger.warning("Error buscando categorías de construcción: %s", e)
             return []
 
-    @http.route("/api/construction/products", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/products", type="http", auth="public", methods=["GET"], csrf=False)
     def get_products(self, search="", limit=None, page="0", page_size="20", category_id=None, **kw):
         try:
             orm = request.env
@@ -400,7 +401,7 @@ class ConstructionAPI(http.Controller):
         ],
     }
 
-    @http.route("/api/construction/catalog/calculator", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/catalog/calculator", type="http", auth="public", methods=["GET"], csrf=False)
     def catalog_calculator(self, type="banyo", m2="10", **kw):
         """Calcula los materiales necesarios para una obra y los vincula con productos del catálogo."""
         try:
@@ -441,7 +442,7 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en catalog_calculator: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/recommendations", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/recommendations", type="http", auth="public", methods=["GET"], csrf=False)
     def recommendations(self, obra_id=None, obra_type="reforma", category=None, limit="10", **kw):
         try:
             orm = request.env
@@ -452,7 +453,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/chatbot", type="json", auth="none", methods=["POST"], csrf=False)
+    @http.route("/api/construction/chatbot", type="json", auth="public", methods=["POST"], csrf=False)
     def chatbot(self):
         try:
             p = request.get_json_data() or {}
@@ -468,7 +469,7 @@ class ConstructionAPI(http.Controller):
     # Transporte
     # =========================================================================
 
-    @http.route("/api/construction/calculate_transport", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/api/construction/calculate_transport", type="http", auth="public", methods=["POST"], csrf=False)
     def calculate_transport(self, **kw):
         """
         Calcula el coste de transporte para unas coordenadas y peso dados.
@@ -533,7 +534,7 @@ class ConstructionAPI(http.Controller):
     # Fidelización
     # =========================================================================
 
-    @http.route("/api/construction/loyalty/status", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/loyalty/status", type="http", auth="public", methods=["GET"], csrf=False)
     def loyalty_status(self, **kw):
         uid, err = self._require_uid()
         if err: return err
@@ -553,7 +554,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/loyalty/redeem", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/api/construction/loyalty/redeem", type="http", auth="public", methods=["POST"], csrf=False)
     def loyalty_redeem(self, **kw):
         uid, err = self._require_uid()
         if err: return err
@@ -583,7 +584,7 @@ class ConstructionAPI(http.Controller):
     # Detalle de obra y producto
     # =========================================================================
 
-    @http.route("/api/construction/obras/<int:obra_id>", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/obras/<int:obra_id>", type="http", auth="public", methods=["GET"], csrf=False)
     def get_obra_detail(self, obra_id, **kw):
         try:
             obra = request.env["construction.obra"].sudo().browse(obra_id)
@@ -605,7 +606,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/products/<int:product_id>", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/products/<int:product_id>", type="http", auth="public", methods=["GET"], csrf=False)
     def get_product_detail(self, product_id, **kw):
         try:
             prod = request.env["product.product"].sudo().browse(product_id)
@@ -721,7 +722,7 @@ class ConstructionAPI(http.Controller):
     # Listar solicitudes de material del usuario
     # =========================================================================
 
-    @http.route("/api/construction/user_requests", type="http", auth="none", methods=["GET"], csrf=False)
+    @http.route("/api/construction/user_requests", type="http", auth="public", methods=["GET"], csrf=False)
     def list_requests(self, state=None, limit="50", offset="0", **kw):
         uid, err = self._require_uid()
         if err: return err
