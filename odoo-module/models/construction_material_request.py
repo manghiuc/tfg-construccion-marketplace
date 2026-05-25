@@ -252,6 +252,7 @@ class ConstructionMaterialRequest(models.Model):
         """
         Confirma la solicitud de materiales.
         Verifica que existan líneas y cambia el estado a 'confirmed'.
+        Otorga puntos de fidelización al partner (1 punto por cada 10 €).
         """
         for record in self:
             if not record.line_ids:
@@ -262,6 +263,15 @@ class ConstructionMaterialRequest(models.Model):
             record._add_tracking_entry(
                 _('Solicitud confirmada por %s') % self.env.user.name
             )
+            # Puntos de fidelización: no debe bloquear la confirmación si falla
+            if record.partner_id and record.total_amount:
+                try:
+                    record.partner_id._add_points(record.total_amount)
+                except Exception as e:
+                    _logger.warning(
+                        "Error al otorgar puntos de fidelización en solicitud %s: %s",
+                        record.name, e
+                    )
         return True
 
     def action_set_en_preparacion(self):

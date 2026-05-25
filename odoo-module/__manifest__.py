@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Construction Marketplace',
-    'version': '17.0.1.23.2',
+    'version': '17.0.1.23.3',
     'category': 'Construction',
     'summary': 'Marketplace de materiales de construcción para gestión de obras y solicitudes',
     'description': """

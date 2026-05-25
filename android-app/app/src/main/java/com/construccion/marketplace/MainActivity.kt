@@ -108,12 +108,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private val bottomNavRoutes = setOf(
-    Screen.Home.route,
-    Screen.Catalog.route,
-    Screen.Cart.route,
-    Screen.Calculator.route,
-    Screen.Profile.route
+// Pantallas donde NO se muestra el bottom bar (auth + checkout)
+private val noBottomBarRoutes = setOf(
+    Screen.Splash.route,
+    Screen.Login.route,
+    Screen.Register.route,
+    Screen.Checkout.route,
 )
 
 @Composable
@@ -211,7 +211,7 @@ fun ConstruAppNavHost(
 
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
-    val showBottomBar = currentRoute in bottomNavRoutes
+    val showBottomBar = currentRoute != null && currentRoute !in noBottomBarRoutes
     val cartState by cartViewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
