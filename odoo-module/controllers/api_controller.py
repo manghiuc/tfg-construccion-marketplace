@@ -15,13 +15,32 @@ class ConstructionAPI(http.Controller):
     def _require_uid(self):
         """
         Devuelve (uid, None) si hay sesión válida, o (None, response_401) si no.
-        Funciona con auth="none": Odoo carga la sesión aunque no la valide.
-        Así todos los endpoints protegidos siempre devuelven JSON, nunca HTML.
+        Siempre devuelve JSON, nunca HTML.
+
+        Estrategia de autenticación (en orden):
+          1. Cookie session_id  → la carga Odoo automáticamente en request.session
+          2. Header X-Openerp-Session-Id → la leemos manualmente del session store
         """
+        # 1. Cookie estándar (funciona tras login o si NetworkModule envía Cookie header)
         uid = request.session.uid
-        if not uid:
-            return None, self._err("No autenticado. Por favor inicia sesión.", 401)
-        return uid, None
+        if uid:
+            return uid, None
+
+        # 2. Header X-Openerp-Session-Id (app Android sin cookie)
+        session_id = (
+            request.httprequest.headers.get("X-Openerp-Session-Id") or
+            request.httprequest.headers.get("X-Openerp-Session-id") or ""
+        ).strip()
+        if session_id:
+            try:
+                from odoo.http import root as http_root
+                stored = http_root.session_store.get(session_id)
+                if stored and stored.uid:
+                    return stored.uid, None
+            except Exception as e:
+                _logger.warning("_require_uid: fallo al cargar sesión '%s': %s", session_id, e)
+
+        return None, self._err("No autenticado. Por favor inicia sesión.", 401)
 
     def _get_partner_type(self, partner):
         if partner.is_company:
