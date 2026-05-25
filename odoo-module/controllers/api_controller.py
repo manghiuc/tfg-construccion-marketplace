@@ -12,6 +12,17 @@ class ConstructionAPI(http.Controller):
     def _err(self, msg, code=400):
         return request.make_json_response(dict(success=False, error=dict(code=code, message=msg)), status=code)
 
+    def _require_uid(self):
+        """
+        Devuelve (uid, None) si hay sesión válida, o (None, response_401) si no.
+        Funciona con auth="none": Odoo carga la sesión aunque no la valide.
+        Así todos los endpoints protegidos siempre devuelven JSON, nunca HTML.
+        """
+        uid = request.session.uid
+        if not uid:
+            return None, self._err("No autenticado. Por favor inicia sesión.", 401)
+        return uid, None
+
     def _get_partner_type(self, partner):
         if partner.is_company:
             return "empresa"
@@ -91,13 +102,15 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en login: %s", str(e))
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/obras", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/obras", type="http", auth="none", methods=["GET"], csrf=False)
     def get_obras(self, state=None, limit=None, offset="0", page="0", page_size="20", **kw):
+        uid, err = self._require_uid()
+        if err: return err
         try:
             orm = request.env
             _limit = int(limit) if limit else int(page_size)
             _offset = int(offset) if int(offset) > 0 else int(page) * _limit
-            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            partner = orm["res.users"].sudo().browse(uid).partner_id
             d = [("partner_id", "=", partner.id)]
             if state:
                 d.append(("state", "=", state))
@@ -112,8 +125,10 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/obras", type="http", auth="user", methods=["POST"], csrf=False)
+    @http.route("/api/construction/obras", type="http", auth="none", methods=["POST"], csrf=False)
     def create_obra(self, **kw):
+        uid, err = self._require_uid()
+        if err: return err
         try:
             orm = request.env
             p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
@@ -121,8 +136,8 @@ class ConstructionAPI(http.Controller):
             if not name:
                 return self._err("El nombre de la obra es obligatorio", 400)
             address = (p.get("address") or "").strip()
-            partner = orm["res.users"].sudo().browse(request.uid).partner_id
-            code = orm["ir.sequence"].sudo().next_by_code("construction.obra") or ("OBR-%d" % request.uid)
+            partner = orm["res.users"].sudo().browse(uid).partner_id
+            code = orm["ir.sequence"].sudo().next_by_code("construction.obra") or ("OBR-%d" % uid)
             vals = {
                 "name": name,
                 "code": code,
@@ -149,8 +164,10 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en create_obra: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/material_request", type="http", auth="user", methods=["POST"], csrf=False)
+    @http.route("/api/construction/material_request", type="http", auth="none", methods=["POST"], csrf=False)
     def create_request(self, **kw):
+        uid, err = self._require_uid()
+        if err: return err
         try:
             orm = request.env
             p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
@@ -164,7 +181,7 @@ class ConstructionAPI(http.Controller):
                     return self._err("Obra no encontrada", 404)
                 partner_id = obra.partner_id.id or False
             else:
-                partner_id = orm["res.users"].sudo().browse(request.uid).partner_id.id
+                partner_id = orm["res.users"].sudo().browse(uid).partner_id.id
             raw_lines = p.get("lines", [])
             if not raw_lines:
                 return self._err("El pedido no tiene productos", 400)
@@ -187,7 +204,7 @@ class ConstructionAPI(http.Controller):
                 delivery_address = raw_notes.split("\n")[0].replace("📍 Dirección de entrega:", "").strip()
             is_urgent = bool(p.get("is_urgent", False))
             vals = {
-                "user_id": request.uid,
+                "user_id": uid,
                 "partner_id": partner_id,
                 "notes": raw_notes,
                 "delivery_address": delivery_address,
@@ -206,13 +223,15 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en create_request: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/material_request", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/material_request", type="http", auth="none", methods=["GET"], csrf=False)
     def get_material_requests(self, state=None, page="0", page_size="20", **kw):
+        uid, err = self._require_uid()
+        if err: return err
         try:
             orm = request.env
             _limit = int(page_size)
             _offset = int(page) * _limit
-            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            partner = orm["res.users"].sudo().browse(uid).partner_id
             domain = [("partner_id", "=", partner.id)]
             if state:
                 domain.append(("state", "=", state))
@@ -222,7 +241,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/material_request/<int:rid>/status", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/material_request/<int:rid>/status", type="http", auth="none", methods=["GET"], csrf=False)
     def request_status(self, rid, **kw):
         try:
             orm = request.env
@@ -403,7 +422,7 @@ class ConstructionAPI(http.Controller):
             _logger.error("Error en catalog_calculator: %s", str(e), exc_info=True)
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/recommendations", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/recommendations", type="http", auth="none", methods=["GET"], csrf=False)
     def recommendations(self, obra_id=None, obra_type="reforma", category=None, limit="10", **kw):
         try:
             orm = request.env
@@ -414,7 +433,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/chatbot", type="json", auth="user", methods=["POST"], csrf=False)
+    @http.route("/api/construction/chatbot", type="json", auth="none", methods=["POST"], csrf=False)
     def chatbot(self):
         try:
             p = request.get_json_data() or {}
@@ -430,7 +449,7 @@ class ConstructionAPI(http.Controller):
     # Transporte
     # =========================================================================
 
-    @http.route("/api/construction/calculate_transport", type="http", auth="user", methods=["POST"], csrf=False)
+    @http.route("/api/construction/calculate_transport", type="http", auth="none", methods=["POST"], csrf=False)
     def calculate_transport(self, **kw):
         """
         Calcula el coste de transporte para unas coordenadas y peso dados.
@@ -495,24 +514,13 @@ class ConstructionAPI(http.Controller):
     # Fidelización
     # =========================================================================
 
-    @http.route("/api/construction/loyalty/status", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/loyalty/status", type="http", auth="none", methods=["GET"], csrf=False)
     def loyalty_status(self, **kw):
-        """
-        Devuelve el estado del programa de fidelización del usuario autenticado.
-
-        Respuesta:
-          {
-            "success": true,
-            "data": {
-              "points_balance":    <float>,
-              "loyalty_level":     "bronze"|"silver"|"gold",
-              "points_to_next_level": <float>
-            }
-          }
-        """
+        uid, err = self._require_uid()
+        if err: return err
         try:
             orm = request.env
-            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            partner = orm["res.users"].sudo().browse(uid).partner_id
             if not partner.exists():
                 return self._err("Partner no encontrado", 404)
             next_level_info = partner._get_points_to_next_level()
@@ -526,27 +534,10 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/loyalty/redeem", type="http", auth="user", methods=["POST"], csrf=False)
+    @http.route("/api/construction/loyalty/redeem", type="http", auth="none", methods=["POST"], csrf=False)
     def loyalty_redeem(self, **kw):
-        """
-        Canjea puntos de fidelización.
-
-        Body JSON esperado:
-          {
-            "points_to_redeem": <float>,
-            "request_id":       <int, opcional>
-          }
-
-        Respuesta:
-          {
-            "success": true,
-            "data": {
-              "redeemed_points":  <float>,
-              "new_balance":      <float>,
-              "loyalty_level":    <str>
-            }
-          }
-        """
+        uid, err = self._require_uid()
+        if err: return err
         try:
             orm = request.env
             p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
@@ -556,7 +547,7 @@ class ConstructionAPI(http.Controller):
             if points <= 0:
                 return self._err("points_to_redeem debe ser mayor que 0", 400)
 
-            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            partner = orm["res.users"].sudo().browse(uid).partner_id
             partner.redeem_points(points, request_id=request_id)
 
             return self._ok(data={
@@ -573,7 +564,7 @@ class ConstructionAPI(http.Controller):
     # Detalle de obra y producto
     # =========================================================================
 
-    @http.route("/api/construction/obras/<int:obra_id>", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/obras/<int:obra_id>", type="http", auth="none", methods=["GET"], csrf=False)
     def get_obra_detail(self, obra_id, **kw):
         try:
             obra = request.env["construction.obra"].sudo().browse(obra_id)
@@ -595,7 +586,7 @@ class ConstructionAPI(http.Controller):
         except Exception as e:
             return self._err(str(e), 500)
 
-    @http.route("/api/construction/products/<int:product_id>", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/products/<int:product_id>", type="http", auth="none", methods=["GET"], csrf=False)
     def get_product_detail(self, product_id, **kw):
         try:
             prod = request.env["product.product"].sudo().browse(product_id)
@@ -711,11 +702,13 @@ class ConstructionAPI(http.Controller):
     # Listar solicitudes de material del usuario
     # =========================================================================
 
-    @http.route("/api/construction/user_requests", type="http", auth="user", methods=["GET"], csrf=False)
+    @http.route("/api/construction/user_requests", type="http", auth="none", methods=["GET"], csrf=False)
     def list_requests(self, state=None, limit="50", offset="0", **kw):
+        uid, err = self._require_uid()
+        if err: return err
         try:
             orm = request.env
-            partner = orm["res.users"].sudo().browse(request.uid).partner_id
+            partner = orm["res.users"].sudo().browse(uid).partner_id
             domain = [("partner_id", "=", partner.id)]
             if state:
                 domain.append(("state", "=", state))
@@ -737,37 +730,6 @@ class ConstructionAPI(http.Controller):
                 })
             total = orm["construction.material.request"].sudo().search_count(domain)
             return self._ok(data=data, total=total)
-        except Exception as e:
-            return self._err(str(e), 500)
-
-    # =========================================================================
-    # Crear obra desde el portal (REST — no ORM directo)
-    # =========================================================================
-
-    @http.route("/api/construction/obras", type="http", auth="user", methods=["POST"], csrf=False)
-    def create_obra(self, **kw):
-        try:
-            p = json.loads(request.httprequest.get_data(as_text=True) or "{}")
-            name = (p.get("name") or "").strip()
-            if not name:
-                return self._err("El nombre es obligatorio", 400)
-            address = p.get("address", "")
-            partner = request.env["res.users"].sudo().browse(request.uid).partner_id
-            obra = request.env["construction.obra"].sudo().create({
-                "name": name,
-                "partner_id": partner.id,
-                "state": "active",  # Activar directamente — visible en Odoo sin filtros extra
-            })
-            if address and hasattr(obra, 'address'):
-                obra.sudo().write({"address": address})
-            return self._ok(data={
-                "id": obra.id,
-                "name": obra.name,
-                "code": obra.code if hasattr(obra, 'code') else "",
-                "state": obra.state,
-            })
-        except (ValidationError, UserError) as e:
-            return self._err(str(e), 422)
         except Exception as e:
             return self._err(str(e), 500)
 
