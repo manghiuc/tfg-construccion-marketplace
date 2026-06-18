@@ -1,3 +1,11 @@
+/**
+ * Pantalla de checkout (confirmación de pedido).
+ *
+ * Permite seleccionar o crear una obra destino, introducir dirección de entrega,
+ * marcar urgencia, ver el desglose de costes (materiales + transporte + descuento),
+ * y confirmar el pedido que se envía al backend de Odoo.
+ * Usa [CheckoutViewModel] para la lógica de negocio.
+ */
 package com.construccion.marketplace.ui.screens.cart
 
 import androidx.compose.animation.AnimatedContent
@@ -109,8 +117,15 @@ fun CheckoutScreen(
     val datePickerState = rememberDatePickerState()
 
     val costoMateriales = cartItems.sumOf { it.priceUnit * it.qty }
-    val costoTransporteBase = if (costoMateriales > 1000) 0.0 else 15.0
-    val costoTransporte = if (isUrgent && costoTransporteBase > 0.0) costoTransporteBase * 1.5 else costoTransporteBase
+    val pesoTotalKg = cartItems.sumOf { it.weightKg * it.qty }
+    val transportMethod = checkoutState.transportMethod
+
+    // Transporte gratuito si el total de materiales supera 1000 EUR
+    val costoTransporte = if (costoMateriales > 1000) {
+        0.0
+    } else {
+        checkoutViewModel.calculateWeightBasedTransport(pesoTotalKg, isUrgent)
+    }
     val total = costoMateriales + costoTransporte
 
     // Auto-seleccionar obra recién creada
@@ -257,13 +272,18 @@ fun CheckoutScreen(
                         total = total,
                         isUrgent = isUrgent,
                         isSubmitting = checkoutState.isSubmitting,
+                        transportMethod = transportMethod,
+                        pesoTotalKg = pesoTotalKg,
                         onConfirmar = {
                             checkoutViewModel.createOrder(
                                 cartItems = cartItems,
-                                obraId = obraSeleccionada?.id ?: 0,
+                                obraId = obraSeleccionada?.id,
                                 deliveryAddress = "$calle $numero, $ciudad $codigoPostal".trim(),
                                 notes = notasEntrega,
-                                isUrgent = isUrgent
+                                isUrgent = isUrgent,
+                                transportCost = if (transportMethod == TransportMethod.WEIGHT_BASED && costoTransporte > 0.0) {
+                                    costoTransporte
+                                } else null
                             )
                         }
                     )
@@ -756,6 +776,8 @@ private fun StepResumen(
     total: Double,
     isUrgent: Boolean = false,
     isSubmitting: Boolean,
+    transportMethod: TransportMethod = TransportMethod.WEIGHT_BASED,
+    pesoTotalKg: Double = 0.0,
     onConfirmar: () -> Unit
 ) {
     val fechaFormateada = fechaEntregaMs?.let {
@@ -906,6 +928,38 @@ private fun StepResumen(
                 )
                 HorizontalDivider()
                 LineaPrecio("Materiales", costoMateriales)
+
+                // Indicador del metodo de calculo de transporte
+                if (costoTransporte > 0.0) {
+                    val metodoLabel = when (transportMethod) {
+                        TransportMethod.GPS -> "Transporte (por distancia GPS)"
+                        TransportMethod.WEIGHT_BASED -> "Transporte (por peso: ${
+                            String.format("%.1f", pesoTotalKg)
+                        } kg)"
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = when (transportMethod) {
+                                TransportMethod.GPS -> Icons.Default.LocationOn
+                                TransportMethod.WEIGHT_BASED -> Icons.Default.Business
+                            },
+                            contentDescription = null,
+                            tint = Color(0xFF757575),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = metodoLabel,
+                            fontSize = 11.sp,
+                            color = Color(0xFF757575)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
                 LineaPrecio(
                     when {
                         costoTransporte == 0.0 -> "Transporte (gratuito)"

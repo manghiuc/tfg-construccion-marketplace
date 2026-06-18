@@ -1,3 +1,10 @@
+/**
+ * Pantalla del carrito de compras.
+ *
+ * Muestra la lista de artículos añadidos con controles para cambiar
+ * cantidad (+/-), eliminar artículos, y un resumen con subtotal,
+ * transporte estimado y total. Botón "Tramitar pedido" lleva al Checkout.
+ */
 package com.construccion.marketplace.ui.screens.cart
 
 import androidx.compose.animation.AnimatedVisibility
@@ -378,11 +385,17 @@ private fun TransportSummaryCard(
 
             SummaryRow(label = "Materiales", amount = uiState.materialTotal)
 
-            val transportBase = uiState.flatRateTransportBase
-            val transportFinal = uiState.flatRateTransport
+            val transportBase = uiState.weightBasedTransportBase
+            val transportFinal = uiState.weightBasedTransport
             val urgentColor = MaterialTheme.colorScheme.primary
             if (transportBase > 0.0) {
-                SummaryRow(label = "Transporte base", amount = transportBase)
+                // Mostrar peso total y tramo aplicado
+                Text(
+                    text = "Peso total: ${String.format(Locale("es", "ES"), "%.1f", uiState.totalWeightKg)} kg",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                SummaryRow(label = "Transporte (por peso)", amount = transportBase)
                 if (uiState.isUrgent) {
                     SummaryRow(
                         label = "⚡ Recargo urgente (+50%)",

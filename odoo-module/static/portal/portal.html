@@ -440,7 +440,7 @@ footer{border-top:1px solid var(--border);padding:34px 0}
     <div class="loyalty-card"><div class="tier-badge" style="background:#A0714F">BCR</div><h4>Bronce</h4><p>Acceso al catálogo completo, historial de pedidos y asistente IA básico.</p><div class="tier-thresh">Desde 0 € / año</div></div>
     <div class="loyalty-card"><div class="tier-badge" style="background:#7E8C8D">PLT</div><h4>Plata</h4><p>Descuento del 3 % en todas las familias de producto y soporte prioritario.</p><div class="tier-thresh">Desde 5.000 € / año</div></div>
     <div class="loyalty-card" style="border-color:rgba(184,134,11,.35);background:#FDFAF0"><div class="tier-badge" style="background:#B8860B">ORO</div><h4>Oro</h4><p>Descuento del 6 %, entrega a obra en 12 h y gestor de cuenta personal asignado.</p><div class="tier-thresh">Desde 20.000 € / año</div></div>
-    <div class="loyalty-card" style="border-color:var(--accent-mid);background:#FFFCFA"><div class="tier-badge" style="background:var(--accent)">PLA</div><h4>Platino</h4><p>Descuento máximo, SLA garantizado, acceso anticipado a ofertas privadas y stock reservado.</p><div class="tier-thresh">Desde 60.000 € / año</div></div>
+    <div class="loyalty-card" style="border-color:var(--accent-mid);background:#FFFCFA"><div class="tier-badge" style="background:var(--accent)">PLA</div><h4>Platino</h4><p>Descuento del 10 %, SLA garantizado, acceso anticipado a ofertas privadas y stock reservado.</p><div class="tier-thresh">Desde 60.000 € / año</div></div>
   </div>
 </div></section>
 
@@ -744,7 +744,7 @@ async function doLogin() {
     const result = await post('/auth/login', { login: email, password: pass });
     if (result && result.success && result.data && result.data.user) {
       const u = result.data.user;
-      saveSess({ uid: u.id, name: u.name, login: u.login, loyalty_level: u.loyalty_level });
+      saveSess({ uid: u.id, name: u.name, login: u.login, loyalty_level: u.loyalty_level, loyalty_discount: u.loyalty_discount || 0 });
       // Limpiar carrito con productos demo al iniciar sesión
       cart = []; cartSave(); cartUpdateBadge();
       closeModal('login');
@@ -791,7 +791,7 @@ async function doRegister() {
     if (result && result.success && result.data) {
       const d = result.data;
       if (d.auto_login && d.user && d.user.id) {
-        saveSess({ uid: d.user.id, name: d.user.name, login: d.user.login, loyalty_level: d.user.loyalty_level });
+        saveSess({ uid: d.user.id, name: d.user.name, login: d.user.login, loyalty_level: d.user.loyalty_level, loyalty_discount: d.user.loyalty_discount || 0 });
         // Limpiar carrito con productos demo al registrarse
         cart = []; cartSave(); cartUpdateBadge();
         renderNav();
@@ -988,14 +988,25 @@ function filterCat(c) { CS.cat=c; CS.page=0; document.getElementById('cat-select
 
 async function loadProducts() {
   skeletons(8);
-  const params = new URLSearchParams({ limit: 20 });
+  const params = new URLSearchParams({ limit: 80 });
   if (CS.search) params.set('search', CS.search);
-  if (CS.cat) params.set('search', (CS.search ? CS.search + ' ' : '') + CS.cat);
   if (CS.page) params.set('page', CS.page);
   try {
     const data = await get('/products?' + params);
     if (data && data.success && data.data && data.data.length > 0) {
-      renderProducts(data.data, data.total);
+      let items = data.data;
+      if (CS.cat) {
+        const c = CS.cat.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+        items = items.filter(p => {
+          const cn = ((p.category && p.category.name) || p.categ_name || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+          return cn.includes(c);
+        });
+      }
+      if (items.length > 0) {
+        renderProducts(items, items.length);
+      } else {
+        renderFallback('Sin resultados para esta categoría');
+      }
       document.getElementById('cat-auth-note').textContent = '';
       // Limpiar del carrito cualquier producto demo (IDs no presentes en catálogo real)
       const realIds = new Set(data.data.map(p => p.id));
@@ -1045,10 +1056,28 @@ const CALC_LABELS = {
 };
 
 const CALC_FALLBACK = {
-  banyo:           [{m:'Azulejo',u:'m²',f:m2=>+(m2*1.1).toFixed(2)},{m:'Mortero cola C2',u:'kg',f:m2=>+(m2*5).toFixed(1)},{m:'Lechada de juntas',u:'kg',f:m2=>+(m2*0.3).toFixed(2)}],
-  solera:          [{m:'Cemento Portland CEM I',u:'sacos 25 kg',f:m2=>+(m2*0.3).toFixed(1)},{m:'Arena de río 0–4 mm',u:'m³',f:m2=>+(m2*0.02).toFixed(3)},{m:'Agua',u:'litros',f:m2=>+(m2*15).toFixed(0)}],
-  tabique_ladrillo:[{m:'Ladrillo hueco 7 cm',u:'ud',f:m2=>+(m2*50).toFixed(0)},{m:'Cemento Portland',u:'sacos 25 kg',f:m2=>+(m2*0.1).toFixed(2)},{m:'Arena fina',u:'m³',f:m2=>+(m2*0.01).toFixed(3)}],
-  pintura:         [{m:'Pintura plástica mate',u:'litros',f:m2=>+(m2*0.3).toFixed(2)},{m:'Imprimación selladora',u:'litros',f:m2=>+(m2*0.1).toFixed(2)}],
+  banyo:           [
+    {m:'Azulejo porcelánico (+10% merma)',u:'m²',f:m2=>+(m2*1.1).toFixed(2)},
+    {m:'Mortero Cola C2',u:'kg',f:m2=>+(m2*5).toFixed(1)},
+    {m:'Lechada de juntas',u:'kg',f:m2=>+(m2*0.7).toFixed(2)},
+    {m:'Silicona sanitaria',u:'cartuchos',f:m2=>+(m2*0.15).toFixed(1)},
+    {m:'Imprimación techo',u:'litros',f:m2=>+(m2*0.12).toFixed(2)},
+    {m:'Pintura antihumedad',u:'litros',f:m2=>+(m2*0.3).toFixed(2)},
+  ],
+  solera:          [
+    {m:'Cemento Portland (saco 25 kg)',u:'sacos',f:m2=>+(m2*0.8).toFixed(1)},
+    {m:'Arena de río 0-4 mm',u:'m³',f:m2=>+(m2*0.06).toFixed(3)},
+    {m:'Grava 6-12 mm',u:'m³',f:m2=>+(m2*0.08).toFixed(3)},
+    {m:'Mallazo electrosoldado 15×15',u:'m²',f:m2=>+(m2*1.05).toFixed(2)},
+  ],
+  tabique_ladrillo:[
+    {m:'Ladrillo perforado',u:'ud',f:m2=>+(m2*55).toFixed(0)},
+    {m:'Mortero de agarre (saco 25 kg)',u:'sacos',f:m2=>+(m2*1.0).toFixed(1)},
+    {m:'Yeso proyectado',u:'kg',f:m2=>+(m2*10).toFixed(1)},
+    {m:'Imprimación selladora',u:'litros',f:m2=>+(m2*0.15).toFixed(2)},
+    {m:'Pintura plástica',u:'litros',f:m2=>+(m2*0.4).toFixed(2)},
+  ],
+  pintura:         [{m:'Imprimación selladora',u:'litros',f:m2=>+(m2*0.15).toFixed(2)},{m:'Pintura plástica mate',u:'litros',f:m2=>+(m2*0.4).toFixed(2)}],
   cocina:          [
     {m:'Azulejo suelo/pared (+10% merma)',u:'m²',f:m2=>+(m2*1.1).toFixed(2)},
     {m:'Mortero cola C2 gris',u:'kg',f:m2=>+(m2*5).toFixed(1)},
@@ -1058,14 +1087,22 @@ const CALC_FALLBACK = {
     {m:'Imprimación',u:'litros',f:m2=>+(m2*1.8*0.1).toFixed(2)},
   ],
   reforma_integral:[
-    {m:'Cemento Portland CEM I',u:'sacos 25 kg',f:m2=>+(m2*0.5).toFixed(1)},
+    {m:'Cemento Portland CEM II (saco 25 kg)',u:'sacos 25 kg',f:m2=>+(m2*0.5).toFixed(1)},
+    {m:'Arena de río 0-4 mm',u:'m³',f:m2=>+(m2*0.02).toFixed(3)},
+    {m:'Ladrillo perforado 24×11,5×9 cm',u:'ud',f:m2=>+(m2*12).toFixed(0)},
     {m:'Yeso proyectado para paredes',u:'kg',f:m2=>+(m2*2.5).toFixed(1)},
-    {m:'Pintura plástica paredes/techo',u:'litros',f:m2=>+(m2*1.8*0.3).toFixed(2)},
-    {m:'Azulejo / tarima (zonas húmedas)',u:'m²',f:m2=>+(m2*0.45*1.1).toFixed(2)},
-    {m:'Mortero cola C2',u:'kg',f:m2=>+(m2*0.45*5).toFixed(1)},
+    {m:'Azulejo porcelánico (zonas húmedas ~45%)',u:'m²',f:m2=>+(m2*0.5).toFixed(2)},
+    {m:'Mortero cola C2',u:'kg',f:m2=>+(m2*2.25).toFixed(1)},
+    {m:'Lechada de juntas',u:'kg',f:m2=>+(m2*0.32).toFixed(2)},
+    {m:'Silicona sanitaria',u:'cartuchos',f:m2=>+(m2*0.05).toFixed(1)},
+    {m:'Imprimación selladora',u:'litros',f:m2=>+(m2*0.27).toFixed(2)},
+    {m:'Pintura plástica interior mate',u:'litros',f:m2=>+(m2*0.72).toFixed(2)},
     {m:'Cable LSZH 2,5 mm²',u:'metros',f:m2=>+(m2*3).toFixed(0)},
     {m:'Tubo corrugado Ø20 mm',u:'metros',f:m2=>+(m2*1.5).toFixed(0)},
+    {m:'Cuadro eléctrico 8 elementos',u:'ud',f:m2=>+(m2*0.01).toFixed(1)},
     {m:'Tubo PVC evacuación 110 mm',u:'metros',f:m2=>+(m2*0.4).toFixed(1)},
+    {m:'Grifo monomando lavabo',u:'ud',f:m2=>+(m2*0.02).toFixed(1)},
+    {m:'Lana de roca aislante 40 mm',u:'m²',f:m2=>+(m2*0.3).toFixed(2)},
   ],
 };
 
@@ -1537,7 +1574,7 @@ Ayudas a contratistas, autónomos y particulares con:
 - Cálculos de cantidades y rendimientos (incluye siempre un 10% de merma)
 - Técnicas constructivas y normativa española (CTE, EHE-08, REBT)
 - Uso de la plataforma ConstruApp y sus funciones (calculadora, obras, pedidos, seguimiento de entrega)
-- Programa de fidelización: Bronce (0€/año), Plata (5.000€ · 3% dto.), Oro (20.000€ · 6% dto. + entrega 12 h), Platino (60.000€ · dto. máximo + entrega 12 h + gestor personal)
+- Programa de fidelización: Bronce (0€/año · 0%), Plata (5.000€ · 3%), Oro (20.000€ · 6% + entrega 12 h), Platino (60.000€ · 10% + entrega 12 h + gestor personal)
 - Logística: entrega a pie de obra, coste de transporte desde 15 € según peso/volumen, seguimiento en tiempo real
 Responde SIEMPRE en español. Sé conciso y técnicamente preciso. Si no tienes certeza, dilo.`;
 
@@ -1730,13 +1767,13 @@ function chatLocalAnswer(msg) {
   if (/pintura|litro|imprimaci/.test(m))
     return 'Rendimiento medio de pintura plástica mate: 8–10 m²/L en paredes nuevas (con imprimación) y 10–12 m²/L en repintado. Para 15 m² de pared necesitas ~3 L de pintura + 1 L de imprimación.';
   if (/precio|coste|costo|caro|barato|tarifa/.test(m))
-    return 'Los precios varían por proveedor y nivel de fidelización. Inicia sesión para ver la tarifa actualizada. Los clientes Platino tienen hasta un 12% de descuento en todas las familias de producto.';
+    return 'Los precios varían por proveedor y nivel de fidelización. Inicia sesión para ver la tarifa actualizada. Los clientes Platino tienen un 10% de descuento en todas las familias de producto.';
   if (/entrega|plazo|envio|envío|transporte|tiempo|cuándo|llevan|lleváis|traen/.test(m))
     return 'ConstruApp lleva los materiales directamente a tu obra. El coste de transporte parte desde 15 € y varía según el peso y volumen del pedido. El plazo estándar es 24 h; clientes Oro y Platino tienen entrega garantizada en 12 h.';
   if (/pedido|compra|carrito|factura|albar/.test(m))
     return 'Gestiona tus pedidos desde el panel "Mis Obras". Cada pedido tiene albarán descargable en PDF y seguimiento de envío en tiempo real.';
   if (/fidelidad|punto|nivel|bronce|plata|oro|platino|descuento/.test(m))
-    return 'El programa tiene 4 niveles: Bronce (0€/año), Plata (5.000€ · 3% dto.), Oro (20.000€ · 6% dto.) y Platino (60.000€ · dto. máximo + SLA 12 h). Acumulas 1 punto por cada € de compra.';
+    return 'El programa tiene 4 niveles: Bronce (0%), Plata (3%), Oro (6%) y Platino (10% + SLA 12 h). Se acumula 1 punto por cada euro gastado. Los puntos determinan tu nivel y el nivel aplica el descuento automáticamente en tus pedidos.';
   if (/calculadora|calcular|m²|m2/.test(m))
     return 'La calculadora cubre 4 partidas: Alicatado/Baño, Solera de hormigón, Tabique de ladrillo y Pintura de paredes. ¿Quieres que la abra? Pulsa en "Calculadora" en la barra de navegación.';
   if (/hola|buenos|buenas|hey/.test(m))
@@ -1804,12 +1841,23 @@ function chatLocalAnswer(msg) {
         </div>
       </div>
       <div>
+        <label id="checkout-urgent-label" for="checkout-urgent" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:all .2s">
+          <input type="checkbox" id="checkout-urgent" style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer" onchange="updateUrgentStyle()">
+          <div style="flex:1">
+            <span style="font-size:13px;font-weight:660">⚡ Pedido urgente</span>
+            <p style="font-size:11.5px;color:var(--muted);margin:2px 0 0">Entrega en 24h · Recargo +50% en transporte</p>
+          </div>
+        </label>
+      </div>
+      <div>
         <label style="font-size:13px;font-weight:560;display:block;margin-bottom:6px">Notas adicionales</label>
         <textarea id="checkout-notes" rows="3" placeholder="Horario de entrega, instrucciones, contacto en obra…" style="width:100%;border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:14px;font-family:var(--font);outline:none;resize:vertical" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
       </div>
       <div style="background:var(--accent-dim);border-radius:var(--r-sm);padding:12px 14px;font-size:13px">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted)">Subtotal</span><span id="co-subtotal">—</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted)">🚚 Transporte a obra</span><span id="co-transport">—</span></div>
+        <div id="co-discount-row" style="display:none;justify-content:space-between;margin-bottom:4px"><span style="color:var(--green)">🏷️ Dto. fidelización (<span id="co-discount-pct">0</span>%)</span><span id="co-discount-val" style="color:var(--green)">—</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:var(--muted)">🚚 Transporte a obra</span><span id="co-transport">—</span></div>
+        <div id="co-transport-method" style="font-size:10.5px;color:var(--muted);text-align:right;margin-bottom:4px"></div>
         <div style="display:flex;justify-content:space-between;font-weight:720;font-size:15px;border-top:1px solid var(--accent-mid);padding-top:8px;margin-top:4px"><span>Total</span><span id="co-total">—</span></div>
       </div>
       <button class="btn btn-primary btn-full btn-lg" id="checkout-btn" onclick="confirmCheckout()">Confirmar pedido</button>
@@ -1856,8 +1904,104 @@ function cartTransport() {
   if (w <= 500) return 35;
   return 55;
 }
+function cartTransportUrgent() {
+  const base = _gpsTransportCost != null ? _gpsTransportCost : cartTransport();
+  const urg = document.getElementById('checkout-urgent');
+  return (urg && urg.checked) ? Math.round(base * 1.5 * 100) / 100 : base;
+}
 function cartTotal() { return cartSubtotal() + cartTransport(); }
 function cartSave()  { localStorage.setItem('construapp_cart', JSON.stringify(cart)); }
+
+/* ── GPS Transport ── */
+let _gpsLat = null;
+let _gpsLon = null;
+let _gpsTransportCost = null;   // coste base devuelto por API (sin urgente)
+let _gpsDistanceKm = null;
+let _gpsPending = false;        // petición en curso
+
+function _updateTransportMethodLabel() {
+  const el = document.getElementById('co-transport-method');
+  if (!el) return;
+  if (_gpsTransportCost != null) {
+    el.innerHTML = '📍 Calculado por ubicación' + (_gpsDistanceKm != null ? ' (~' + _gpsDistanceKm.toFixed(1) + ' km)' : '');
+  } else {
+    el.textContent = '📦 Calculado por peso';
+  }
+}
+
+function _getLoyaltyDiscount() {
+  const s = JSON.parse(localStorage.getItem('construapp_session') || '{}');
+  return parseFloat(s.loyalty_discount || 0);
+}
+function _refreshCheckoutPrices() {
+  const sub = cartSubtotal();
+  const t = cartTransportUrgent();
+  const discPct = _getLoyaltyDiscount();
+  const discAmt = Math.round(sub * discPct / 100 * 100) / 100;
+  const el = document.getElementById('co-transport');
+  if (el) el.textContent = fmtP(t);
+  const discRow = document.getElementById('co-discount-row');
+  if (discRow) {
+    if (discPct > 0) {
+      discRow.style.display = 'flex';
+      document.getElementById('co-discount-pct').textContent = discPct;
+      document.getElementById('co-discount-val').textContent = '-' + fmtP(discAmt);
+    } else {
+      discRow.style.display = 'none';
+    }
+  }
+  const tot = document.getElementById('co-total');
+  if (tot) tot.textContent = fmtP(sub - discAmt + t);
+  _updateTransportMethodLabel();
+}
+
+async function _fetchGpsTransport() {
+  if (_gpsLat == null || _gpsLon == null) return;
+  _gpsPending = true;
+  try {
+    const isUrgent = document.getElementById('checkout-urgent')?.checked || false;
+    const res = await post('/calculate_transport', {
+      delivery_lat: _gpsLat,
+      delivery_lon: _gpsLon,
+      weight_kg: cartWeightKg(),
+      is_urgent: false          // siempre pedimos coste base; urgente se aplica en front
+    });
+    if (res && res.success && res.data && typeof res.data.total_cost === 'number') {
+      _gpsTransportCost = res.data.total_cost;
+      _gpsDistanceKm = res.data.distance_km ?? null;
+      _refreshCheckoutPrices();
+    }
+  } catch (_) { /* GPS transport no disponible — se mantiene cálculo por peso */ }
+  _gpsPending = false;
+}
+
+function _requestGeoAndCalc() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      _gpsLat = pos.coords.latitude;
+      _gpsLon = pos.coords.longitude;
+      _fetchGpsTransport();
+    },
+    function () { /* permiso denegado o error — fallback silencioso */ },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+  );
+}
+
+function updateUrgentStyle() {
+  const cb = document.getElementById('checkout-urgent');
+  const lbl = document.getElementById('checkout-urgent-label');
+  if (cb && lbl) {
+    lbl.style.borderColor = cb.checked ? 'var(--accent)' : 'var(--border)';
+    lbl.style.background = cb.checked ? 'var(--accent-dim)' : 'transparent';
+  }
+  // Recalcular transporte en el resumen del checkout
+  // Si hay GPS disponible, re-pedir con los mismos coords (por si cambió peso/urgente)
+  if (_gpsLat != null && _gpsLon != null) {
+    _fetchGpsTransport();
+  }
+  _refreshCheckoutPrices();
+}
 
 function cartUpdateBadge() {
   const b = document.getElementById('cart-badge-nav');
@@ -1982,10 +2126,15 @@ async function doCheckout() {
   if (!session) { closeCart(); openModal('login'); toast('Inicia sesión para tramitar el pedido', 'info'); return; }
   if (!cart.length) return;
   closeCart();
-  // fill summary
+  // Resetear GPS transport para esta sesión de checkout
+  _gpsTransportCost = null;
+  _gpsDistanceKm = null;
+  // fill summary — primero con cálculo por peso (inmediato)
   document.getElementById('co-subtotal').textContent  = fmtP(cartSubtotal());
-  document.getElementById('co-transport').textContent = fmtP(cartTransport());
-  document.getElementById('co-total').textContent     = fmtP(cartTotal());
+  _refreshCheckoutPrices();
+  _updateTransportMethodLabel();
+  // Solicitar GPS en paralelo — no bloquea la apertura del modal
+  _requestGeoAndCalc();
   // load obras
   try {
     const obras = await get('/obras');
@@ -2073,7 +2222,8 @@ async function confirmCheckout() {
   if (!address) { err('checkout', 'La dirección de entrega es obligatoria'); return; }
   const obra_id = document.getElementById('checkout-obra').value;
   const notes   = (document.getElementById('checkout-notes').value || '').trim();
-  const transport = cartTransport();
+  const is_urgent = document.getElementById('checkout-urgent')?.checked || false;
+  const transport = cartTransportUrgent();
 
   // Eliminar del carrito cualquier producto demo (IDs >= 1001) que no exista en Odoo
   const realCart = cart.filter(item => item.id < 1001);
@@ -2099,9 +2249,16 @@ async function confirmCheckout() {
     const body = {
       obra_id: obra_id ? parseInt(obra_id) : false,
       delivery_address: address,
-      notes: `📍 Dirección de entrega: ${address}\n🚚 Coste de transporte: ${fmtP(transport)}\n${notes}`.trim(),
+      is_urgent: is_urgent,
+      transport_cost: transport,
+      notes: `📍 Dirección de entrega: ${address}\n🚚 Coste de transporte: ${fmtP(transport)}${is_urgent ? ' (urgente ×1.5)' : ''}${_gpsTransportCost != null ? ' (GPS)' : ' (peso)'}\n${notes}`.trim(),
       lines
     };
+    // Enviar coordenadas GPS si están disponibles para cálculo backend
+    if (_gpsLat != null && _gpsLon != null) {
+      body.delivery_lat = _gpsLat;
+      body.delivery_lon = _gpsLon;
+    }
     const result = await post('/material_request', body);
     if (result && result.success) {
       cart = []; cartSave(); cartUpdateBadge();
@@ -2135,7 +2292,7 @@ async function openPedidos() {
     '<div style="text-align:center;padding:40px;color:var(--muted)">Cargando…</div>';
   openModal('pedidos');
   try {
-    const data = await get('/user_requests?limit=50');
+    const data = await get('/material_request?limit=50');
     if (data && data.success && data.data && data.data.length) {
       // Agrupar pedidos por obra
       const groups = {};

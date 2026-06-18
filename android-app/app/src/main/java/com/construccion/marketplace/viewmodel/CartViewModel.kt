@@ -1,9 +1,3 @@
-/*
- * CartViewModel.kt
- * Este archivo gestiona el carrito de la compra de la aplicacion.
- * Controla los productos que el usuario quiere comprar, calcula precios,
- * aplica descuentos por fidelidad y gestiona las opciones de envio.
- */
 package com.construccion.marketplace.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -22,6 +16,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Estado de la UI del carrito de compras.
+ *
+ * Contiene los artículos, configuración de entrega, transporte calculado,
+ * descuentos de fidelización y propiedades calculadas (totales, peso, etc.).
+ */
 data class CartUiState(
     val items: List<CartItem> = emptyList(),
     val transport: TransportCalc? = null,
@@ -41,17 +41,39 @@ data class CartUiState(
 ) {
     val materialTotal: Double get() = items.sumOf { it.subtotal }
     val transportTotal: Double get() = transport?.total ?: 0.0
-    /** Tarifa plana: 15€ si total ≤ 1000€, gratis si > 1000€ */
-    val flatRateTransportBase: Double get() = if (materialTotal > 1000.0) 0.0 else 15.0
-    /** Tarifa plana con recargo urgente ×1.5 */
-    val flatRateTransport: Double get() = if (isUrgent && flatRateTransportBase > 0.0) flatRateTransportBase * 1.5 else flatRateTransportBase
-    val grossTotal: Double get() = materialTotal + flatRateTransport
-    val netTotal: Double get() = grossTotal - loyaltyDiscountAmount
     val totalWeightKg: Double get() = items.sumOf { it.weightKg * it.qty }
+
+    /**
+     * Transporte por tramos de peso (mismas tarifas que portal web):
+     * <=50kg: 15EUR, <=200kg: 22EUR, <=500kg: 35EUR, >500kg: 55EUR.
+     * Gratuito si el total de materiales supera 1000 EUR.
+     */
+    val weightBasedTransportBase: Double get() = if (materialTotal > 1000.0) 0.0 else when {
+        totalWeightKg <= 50.0 -> 15.0
+        totalWeightKg <= 200.0 -> 22.0
+        totalWeightKg <= 500.0 -> 35.0
+        else -> 55.0
+    }
+    /** Transporte por peso con recargo urgente x1.5 */
+    val weightBasedTransport: Double get() = if (isUrgent && weightBasedTransportBase > 0.0) weightBasedTransportBase * 1.5 else weightBasedTransportBase
+
+    // Aliases para compatibilidad (ahora usan tramos por peso)
+    val flatRateTransportBase: Double get() = weightBasedTransportBase
+    val flatRateTransport: Double get() = weightBasedTransport
+
+    val grossTotal: Double get() = materialTotal + weightBasedTransport
+    val netTotal: Double get() = grossTotal - loyaltyDiscountAmount
     val isEmpty: Boolean get() = items.isEmpty()
     val itemCount: Int get() = items.size
 }
 
+/**
+ * ViewModel del carrito de compras.
+ *
+ * Gestiona los artículos del carrito (añadir, eliminar, cambiar cantidad),
+ * el cálculo de transporte vía API, y los descuentos de fidelización.
+ * El estado completo se expone como un único [CartUiState] reactivo.
+ */
 @HiltViewModel
 class CartViewModel @Inject constructor(
     private val apiService: OdooApiService,

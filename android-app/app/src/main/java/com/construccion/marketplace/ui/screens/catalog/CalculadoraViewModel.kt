@@ -14,10 +14,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Estados posibles de la pantalla de la calculadora de materiales. */
 sealed class CalculadoraUiState {
+    /** Estado inicial: esperando que el usuario introduzca datos. */
     object Idle : CalculadoraUiState()
+    /** Calculando en el backend. */
     object Loading : CalculadoraUiState()
+    /** Cálculo completado con éxito. */
     data class Success(val resultado: CalculatorResultOdoo) : CalculadoraUiState()
+    /** Error durante el cálculo. */
     data class Error(val message: String) : CalculadoraUiState()
 }
 
@@ -28,12 +33,20 @@ data class CartMaterial(
     val qty: Double = material.quantity
 )
 
+/** Estado del proceso de búsqueda de productos para añadir al carrito. */
 sealed class CartAddState {
     object Idle : CartAddState()
     object Searching : CartAddState()
     data class Ready(val items: List<CartMaterial>) : CartAddState()
 }
 
+/**
+ * ViewModel de la calculadora de materiales.
+ *
+ * Permite al usuario seleccionar un tipo de obra y una superficie (m²),
+ * calcula los materiales necesarios vía el backend de Odoo, y ofrece
+ * la opción de añadir todos los materiales al carrito con un clic.
+ */
 @HiltViewModel
 class CalculadoraViewModel @Inject constructor(
     private val apiService: OdooApiService

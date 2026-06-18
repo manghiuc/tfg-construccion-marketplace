@@ -94,15 +94,18 @@
                             <field name="total_amount"
                                    widget="monetary"
                                    options="{'currency_field': 'currency_id'}"
-                                   readonly="1"/>
+                                   readonly="1"
+                                   string="Importe Total"/>
                             <field name="transport_cost"
                                    widget="monetary"
                                    options="{'currency_field': 'currency_id'}"
-                                   readonly="1"/>
+                                   readonly="1"
+                                   string="Coste de Transporte (€)"/>
                             <field name="total_with_transport"
                                    widget="monetary"
                                    options="{'currency_field': 'currency_id'}"
-                                   readonly="1"/>
+                                   readonly="1"
+                                   string="Total con Transporte (€)"/>
                         </group>
                     </group>
 

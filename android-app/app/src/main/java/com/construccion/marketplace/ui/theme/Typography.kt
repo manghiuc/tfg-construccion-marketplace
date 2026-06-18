@@ -6,6 +6,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+/**
+ * Escala tipográfica de ConstruApp basada en Material 3.
+ *
+ * Usa la familia por defecto del sistema (Roboto en Android).
+ * Los tamaños siguen las guías de Material Design 3 con ajustes
+ * de peso para mejorar la legibilidad en pantallas de obra
+ * (luz solar directa, manos sucias, etc.).
+ */
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = FontFamily.Default,

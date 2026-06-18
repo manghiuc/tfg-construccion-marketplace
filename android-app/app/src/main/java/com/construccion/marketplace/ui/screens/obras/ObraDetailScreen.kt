@@ -1,3 +1,11 @@
+/**
+ * Pantalla de detalle de una obra.
+ *
+ * Muestra información completa: nombre, código, dirección, estado,
+ * fechas de inicio/fin, descripción, coordenadas GPS (si tiene),
+ * y acceso a pedir materiales para esa obra.
+ * Usa [ObraDetailViewModel] con fallback a datos mock sin conexión.
+ */
 package com.construccion.marketplace.ui.screens.obras
 
 import androidx.compose.foundation.background

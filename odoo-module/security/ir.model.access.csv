@@ -8,3 +8,4 @@ access_construction_material_request_portal,construction.material.request.portal
 access_construction_material_request_line_user,construction.material.request.line.user,model_construction_material_request_line,base.group_user,1,1,1,0
 access_construction_material_request_line_manager,construction.material.request.line.manager,model_construction_material_request_line,base.group_system,1,1,1,1
 access_construction_material_request_line_portal,construction.material.request.line.portal,model_construction_material_request_line,base.group_portal,1,1,1,0
+access_mail_activity_portal,mail.activity.portal,mail.model_mail_activity,base.group_portal,1,0,0,0

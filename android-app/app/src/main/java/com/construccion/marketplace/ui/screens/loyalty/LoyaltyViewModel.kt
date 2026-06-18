@@ -12,22 +12,33 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel de la pantalla de fidelización.
+ *
+ * Carga el estado del programa de puntos desde el backend (nivel actual,
+ * puntos acumulados, historial de transacciones) y permite canjear puntos
+ * por descuentos en futuros pedidos.
+ */
 @HiltViewModel
 class LoyaltyViewModel @Inject constructor(
     private val apiService: OdooApiService
 ) : ViewModel() {
 
+    // Estado completo de fidelización (puntos, nivel, historial)
     private val _status = MutableStateFlow<LoyaltyStatus?>(null)
     val status: StateFlow<LoyaltyStatus?> = _status.asStateFlow()
 
+    // Indicador de carga para la UI
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // Flag que se activa tras un canje exitoso para mostrar confirmación
     private val _redeemSuccess = MutableStateFlow(false)
     val redeemSuccess: StateFlow<Boolean> = _redeemSuccess.asStateFlow()
 
     init { loadStatus() }
 
+    /** Carga el estado de fidelización del usuario autenticado. */
     fun loadStatus() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -43,6 +54,7 @@ class LoyaltyViewModel @Inject constructor(
         }
     }
 
+    /** Canjea puntos de fidelización por descuento. Recarga el estado tras canjear. */
     fun redeemPoints(points: Int) {
         viewModelScope.launch {
             try {

@@ -11,8 +11,13 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
-/* ─── Modelos de datos ─────────────────────────────────────────── */
+/* ─── Modelos de datos para la API de Ollama ──────────────────── */
 
+/**
+ * Mensaje individual en la conversación con Ollama.
+ * Sigue el formato estándar: role indica quién habla
+ * ("system", "user" o "assistant") y content es el texto.
+ */
 data class OllamaMessage(
     val role: String,    // "system" | "user" | "assistant"
     val content: String
@@ -48,19 +53,39 @@ private data class OllamaModelInfo(
     val name: String
 )
 
-/* ─── Resultado sellado ────────────────────────────────────────── */
+/* ─── Resultado sellado: éxito con texto o error con motivo ───── */
 
+/**
+ * Resultado de una llamada al modelo local Ollama.
+ * Sellado (sealed) para que el compilador obligue a manejar ambos casos.
+ */
 sealed class OllamaResult {
+    /** Respuesta exitosa del modelo con el texto generado. */
     data class Success(val text: String) : OllamaResult()
+    /** Error con la descripción del problema. */
     data class Error(val reason: String) : OllamaResult()
 }
 
-/* ─── Estado de conexión ───────────────────────────────────────── */
+/* ─── Estado de conexión con Ollama (para la UI del chatbot) ──── */
 
+/**
+ * Estados posibles de la conexión con el servidor Ollama local.
+ * La UI del chatbot muestra un indicador diferente según el estado.
+ */
 enum class OllamaEstado { CONECTANDO, CONECTADO, SIN_MODELOS, CORS, OFFLINE }
 
-/* ─── Repositorio principal ────────────────────────────────────── */
+/* ─── Repositorio principal del chatbot ConstruBot ────────────── */
 
+/**
+ * Repositorio para comunicarse con un modelo LLM local vía Ollama.
+ *
+ * ConstruBot funciona 100% local: Ollama corre en el PC del usuario
+ * (10.0.2.2 = host desde el emulador Android) y este repositorio
+ * maneja la detección de modelos y el envío de mensajes al chat.
+ *
+ * No se inyecta con Hilt porque es opcional (el chatbot puede no estar
+ * disponible si Ollama no está instalado).
+ */
 class OllamaRepository {
 
     private val gson = Gson()

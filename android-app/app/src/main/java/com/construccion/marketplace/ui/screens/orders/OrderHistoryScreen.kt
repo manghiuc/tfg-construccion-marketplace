@@ -1,3 +1,10 @@
+/**
+ * Pantalla de historial de pedidos (Mis Pedidos).
+ *
+ * Muestra los pedidos agrupados por obra con chips de filtro por estado.
+ * Cada pedido muestra código, fecha, estado con color, importe total
+ * y badge de urgente si aplica. Clic navega al detalle del pedido.
+ */
 package com.construccion.marketplace.ui.screens.orders
 
 import androidx.compose.foundation.background

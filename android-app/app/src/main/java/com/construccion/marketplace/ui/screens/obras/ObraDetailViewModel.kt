@@ -12,12 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Estados posibles de la pantalla de detalle de obra. */
 sealed class ObraDetailUiState {
     object Loading : ObraDetailUiState()
     data class Success(val obra: Obra) : ObraDetailUiState()
     data class Error(val message: String) : ObraDetailUiState()
 }
 
+/** Datos mock para que la demo funcione sin conexión al backend. */
 private fun mockObra(id: Int) = Obra(
     id = id,
     name = "Reforma Integral Vivienda Madrid",
@@ -33,6 +35,12 @@ private fun mockObra(id: Int) = Obra(
     description = "Reforma integral de vivienda de 90m². Incluye demolición de tabiques, instalación eléctrica, fontanería, solados y pinturas."
 )
 
+/**
+ * ViewModel del detalle de una obra.
+ *
+ * Carga la información completa de la obra desde la API de Odoo.
+ * Si falla la conexión, muestra datos mock para que la demo funcione.
+ */
 @HiltViewModel
 class ObraDetailViewModel @Inject constructor(
     private val apiService: OdooApiService

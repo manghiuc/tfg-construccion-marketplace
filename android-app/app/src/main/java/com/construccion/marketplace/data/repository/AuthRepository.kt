@@ -55,6 +55,9 @@ class AuthRepository @Inject constructor(
                     val loginResponse = body.data
                     val user = loginResponse.user
 
+                    val computedLevel = user.loyaltyLevel
+                        ?: LoyaltyLevel.fromPoints(user.pointsBalance)
+
                     // Persistir la sesión de forma cifrada
                     sessionManager.saveSession(
                         sessionId = user.sessionId,
@@ -63,7 +66,7 @@ class AuthRepository @Inject constructor(
                         userLogin = user.login,
                         userType = user.partnerType,
                         loyaltyPoints = user.pointsBalance,
-                        loyaltyLevel = user.loyaltyLevel ?: LoyaltyLevel.BRONCE,
+                        loyaltyLevel = computedLevel,
                         accessToken = loginResponse.accessToken
                     )
 
@@ -113,6 +116,9 @@ class AuthRepository @Inject constructor(
                     val loginResponse = body.data
                     val user = loginResponse.user
 
+                    val computedLevel = user.loyaltyLevel
+                        ?: LoyaltyLevel.fromPoints(user.pointsBalance)
+
                     sessionManager.saveSession(
                         sessionId = user.sessionId,
                         userId = user.id,
@@ -120,7 +126,7 @@ class AuthRepository @Inject constructor(
                         userLogin = user.login,
                         userType = user.partnerType,
                         loyaltyPoints = user.pointsBalance,
-                        loyaltyLevel = user.loyaltyLevel ?: LoyaltyLevel.BRONCE,
+                        loyaltyLevel = computedLevel,
                         accessToken = loginResponse.accessToken
                     )
 

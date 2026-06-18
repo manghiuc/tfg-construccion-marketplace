@@ -21,6 +21,9 @@ import javax.inject.Singleton
 /**
  * CookieJar en memoria — persiste las cookies de sesión de Odoo
  * (session_id) entre peticiones dentro de la misma ejecución de la app.
+ *
+ * Al reiniciar la app se pierde, pero el interceptor de sesión
+ * (ver provideOkHttpClient) reinyecta la cookie desde SessionManager.
  */
 class InMemoryCookieJar : CookieJar {
     private val store = mutableMapOf<String, MutableList<Cookie>>()
@@ -39,10 +42,18 @@ class InMemoryCookieJar : CookieJar {
         store[url.host] ?: emptyList()
 }
 
+/**
+ * Módulo Hilt de red — configura el stack HTTP completo:
+ * OkHttpClient → Retrofit → OdooApiService.
+ *
+ * Todas las dependencias se proporcionan como Singleton para
+ * reutilizar conexiones y el pool de hilos de OkHttp.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    /** CookieJar compartido para todas las peticiones de la app. */
     @Provides
     @Singleton
     fun provideCookieJar(): InMemoryCookieJar = InMemoryCookieJar()
@@ -58,7 +69,7 @@ object NetworkModule {
             .connectTimeout(AppConfig.CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(AppConfig.READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(AppConfig.WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            // Interceptor: añade session_id de Odoo como header Y cookie en todas las peticiones.
+            // Interceptor 1: Inyecta session_id de Odoo como header Y cookie en todas las peticiones.
             // Odoo auth="user" solo acepta la sesión vía cookie "session_id".
             // Sin esto, al reiniciar la app el InMemoryCookieJar está vacío y Odoo
             // devuelve HTML en lugar de JSON → IllegalStateException en Gson.
@@ -69,10 +80,23 @@ object NetworkModule {
                 if (sessionId.isNotBlank()) {
                     reqBuilder
                         .addHeader("X-Openerp-Session-Id", sessionId)
-                        // Forzar cookie de sesión para que auth="user" funcione
                         .addHeader("Cookie", "session_id=$sessionId")
                 }
                 chain.proceed(reqBuilder.build())
+            }
+            // Interceptor 2: Detecta 401 en endpoints que NO son login/register
+            // (esos devuelven 401 legítimamente por credenciales incorrectas).
+            // Si la sesión expiró en Odoo, limpia la sesión local y notifica a la UI.
+            .addInterceptor { chain ->
+                val response = chain.proceed(chain.request())
+                if (response.code == 401) {
+                    val path = chain.request().url.encodedPath
+                    val isAuthEndpoint = path.contains("/auth/login") || path.contains("/auth/register")
+                    if (!isAuthEndpoint) {
+                        sessionManager.onSessionExpired()
+                    }
+                }
+                response
             }
 
         if (AppConfig.ENABLE_HTTP_LOGS) {
@@ -83,6 +107,10 @@ object NetworkModule {
         return builder.build()
     }
 
+    /**
+     * Configura Retrofit apuntando a la URL base de Odoo.
+     * Usa Gson en modo lenient para tolerar respuestas HTML inesperadas.
+     */
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
@@ -92,6 +120,7 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setLenient().create()))
             .build()
 
+    /** Crea la implementación de la interfaz [OdooApiService] vía Retrofit. */
     @Provides
     @Singleton
     fun provideOdooApiService(retrofit: Retrofit): OdooApiService =

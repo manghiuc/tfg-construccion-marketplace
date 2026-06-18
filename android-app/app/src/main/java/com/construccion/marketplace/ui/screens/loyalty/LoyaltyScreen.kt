@@ -1,3 +1,11 @@
+/**
+ * Pantalla del programa de fidelización.
+ *
+ * Muestra el nivel actual (Bronce/Plata/Oro/Platino), puntos acumulados,
+ * barra de progreso hacia el siguiente nivel, porcentaje de descuento activo,
+ * formulario para canjear puntos, e historial de transacciones de puntos.
+ * Datos cargados vía [LoyaltyViewModel].
+ */
 package com.construccion.marketplace.ui.screens.loyalty
 
 import androidx.compose.animation.animateContentSize

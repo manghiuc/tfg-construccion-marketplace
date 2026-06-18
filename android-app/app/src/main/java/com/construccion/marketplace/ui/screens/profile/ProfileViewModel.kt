@@ -24,7 +24,12 @@ class ProfileViewModel @Inject constructor(
     val userLogin: String get() = sessionManager.getUserLogin()
     val userType: PartnerType get() = sessionManager.getUserType()
     val loyaltyPoints: Int get() = sessionManager.getLoyaltyPoints()
-    val loyaltyLevel: LoyaltyLevel get() = sessionManager.getLoyaltyLevel()
+    val loyaltyLevel: LoyaltyLevel get() {
+        val stored = sessionManager.getLoyaltyLevel()
+        val computed = LoyaltyLevel.fromPoints(sessionManager.getLoyaltyPoints())
+        // Usa el nivel más alto entre el guardado y el calculado por puntos
+        return if (computed.minPoints > stored.minPoints) computed else stored
+    }
 
     /** Cierra sesión en el servidor y limpia la sesión local. */
     fun logout(onDone: () -> Unit) {

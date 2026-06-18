@@ -1,3 +1,11 @@
+/**
+ * Pantalla de inicio (Home) de ConstruApp.
+ *
+ * Muestra un saludo al usuario, accesos rápidos a las secciones principales
+ * (obras, pedidos, chatbot, calculadora, fidelización), categorías de productos
+ * como chips filtrables, y una cuadrícula de productos destacados cargados
+ * desde el backend de Odoo vía [HomeViewModel].
+ */
 package com.construccion.marketplace.ui.screens.home
 
 import androidx.compose.foundation.background
@@ -187,7 +195,7 @@ fun HomeScreen(
 
             // ── Productos populares ──
             Text(
-                text = if (selectedCategory != null) selectedCategory!! else "Productos populares",
+                text = "Productos populares",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)

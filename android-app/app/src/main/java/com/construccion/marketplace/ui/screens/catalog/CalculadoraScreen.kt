@@ -1,3 +1,11 @@
+/**
+ * Pantalla de la calculadora de materiales.
+ *
+ * El usuario selecciona un tipo de obra (tabique, solera, cubierta, etc.)
+ * y una superficie en m². El backend calcula los materiales necesarios
+ * con las cantidades exactas. Desde aquí se pueden añadir todos los
+ * materiales calculados al carrito con un solo botón.
+ */
 package com.construccion.marketplace.ui.screens.catalog
 
 import androidx.compose.foundation.background

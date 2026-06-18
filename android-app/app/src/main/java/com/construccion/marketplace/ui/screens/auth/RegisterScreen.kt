@@ -1,3 +1,10 @@
+/**
+ * Pantalla de registro de nuevo usuario.
+ *
+ * Formulario con: nombre, email, contraseña, tipo de cuenta
+ * (particular/autónomo/empresa), teléfono, y campos adicionales
+ * para empresas (nombre comercial, CIF). Usa [AuthViewModel].
+ */
 package com.construccion.marketplace.ui.screens.auth
 
 import androidx.compose.foundation.border

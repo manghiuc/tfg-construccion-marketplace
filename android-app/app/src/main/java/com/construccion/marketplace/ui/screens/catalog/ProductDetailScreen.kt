@@ -1,3 +1,10 @@
+/**
+ * Pantalla de detalle de un producto.
+ *
+ * Muestra imagen ampliada, nombre, código, categoría, precio, stock disponible,
+ * peso, marca, descripción, y permite seleccionar cantidad y añadir al carrito.
+ * Los datos se cargan del backend vía [ProductViewModel].
+ */
 package com.construccion.marketplace.ui.screens.catalog
 
 import androidx.compose.animation.animateContentSize

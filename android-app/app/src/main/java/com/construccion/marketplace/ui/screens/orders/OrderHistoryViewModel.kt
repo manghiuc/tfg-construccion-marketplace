@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Agrupación de pedidos pertenecientes a una misma obra */
+/**
+ * Agrupación de pedidos pertenecientes a una misma obra.
+ * Se usa para mostrar el historial organizado por obra en la UI.
+ */
 data class ObraOrderGroup(
     val obraName: String,   // "" = sin obra asignada
     val obraId: Int,        // 0 = sin obra
@@ -19,6 +22,7 @@ data class ObraOrderGroup(
     val totalAmount: Double
 )
 
+/** Estados posibles de la pantalla de historial de pedidos. */
 sealed class OrderHistoryUiState {
     object Loading : OrderHistoryUiState()
     data class Success(val groups: List<ObraOrderGroup>) : OrderHistoryUiState()
@@ -26,6 +30,12 @@ sealed class OrderHistoryUiState {
     object Empty : OrderHistoryUiState()
 }
 
+/**
+ * ViewModel del historial de pedidos.
+ *
+ * Carga todos los pedidos del usuario, los agrupa por obra y permite
+ * filtrar por estado (borrador, confirmado, enviado, etc.).
+ */
 @HiltViewModel
 class OrderHistoryViewModel @Inject constructor(
     private val orderRepository: OrderRepository

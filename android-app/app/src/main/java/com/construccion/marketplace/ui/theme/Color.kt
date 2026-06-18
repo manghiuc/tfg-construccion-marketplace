@@ -2,7 +2,16 @@ package com.construccion.marketplace.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ---- Paleta principal (Naranja construcción) ----
+/**
+ * Paleta de colores de ConstruApp.
+ *
+ * Organizada por roles (primario, secundario, terciario, superficies,
+ * errores, estados de obra/pedido y niveles de fidelización).
+ * Los colores se usan en Theme.kt para construir los esquemas
+ * claro y oscuro de Material 3.
+ */
+
+// ---- Paleta principal (Naranja construcción — identidad de marca) ----
 val OrangeConstruction = Color(0xFFE65100)
 val OrangeConstructionLight = Color(0xFFFF8330)
 val OrangeConstructionDark = Color(0xFFAC1900)

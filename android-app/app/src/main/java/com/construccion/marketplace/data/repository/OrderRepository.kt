@@ -16,12 +16,13 @@ import javax.inject.Singleton
  * más cómoda al ViewModel.
  */
 data class CreateRequestBody(
-    val obraId: Int,
+    val obraId: Int?,
     val lines: List<OrderLine>,
     val deliveryAddress: String? = null,
     val isUrgent: Boolean = false,
     val deliveryLat: Double? = null,
     val deliveryLon: Double? = null,
+    val transportCost: Double? = null,
     val notes: String? = null,
     val useLoyaltyPoints: Boolean = false,
     val loyaltyPointsAmount: Int = 0
@@ -66,6 +67,7 @@ class OrderRepository @Inject constructor(
                 isUrgent = requestBody.isUrgent,
                 deliveryLat = requestBody.deliveryLat,
                 deliveryLon = requestBody.deliveryLon,
+                transportCost = requestBody.transportCost,
                 notes = requestBody.notes,
                 useLoyaltyPoints = requestBody.useLoyaltyPoints,
                 loyaltyPointsAmount = requestBody.loyaltyPointsAmount
@@ -81,8 +83,17 @@ class OrderRepository @Inject constructor(
                     Result.failure(Exception(body?.message ?: "Error al crear el pedido"))
                 }
             } else {
-                val errorMsg = when (response.code()) {
+                // Intentar leer el mensaje real de error del servidor
+                val serverMsg = try {
+                    val errBody = response.errorBody()?.string() ?: ""
+                    val json = com.google.gson.JsonParser.parseString(errBody).asJsonObject
+                    json.getAsJsonObject("error")?.get("message")?.asString
+                        ?: json.get("message")?.asString
+                } catch (_: Exception) { null }
+
+                val errorMsg = serverMsg ?: when (response.code()) {
                     400 -> "Datos del pedido inválidos"
+                    401 -> "Sesión expirada. Inicia sesión de nuevo"
                     403 -> "No tienes permiso para crear pedidos en esta obra"
                     404 -> "Obra no encontrada"
                     422 -> "Revisa las líneas del pedido"
@@ -130,7 +141,13 @@ class OrderRepository @Inject constructor(
                     Result.failure(Exception(body?.message ?: "Error al cargar los pedidos"))
                 }
             } else {
-                Result.failure(Exception("Error ${response.code()} al obtener pedidos"))
+                val errorMsg = when (response.code()) {
+                    401 -> "Sesión expirada. Inicia sesión de nuevo"
+                    403 -> "No tienes permiso para ver los pedidos"
+                    500 -> "Error del servidor. Inténtalo más tarde"
+                    else -> "Error ${response.code()} al obtener pedidos"
+                }
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(Exception("Error de conexión: ${e.localizedMessage}"))

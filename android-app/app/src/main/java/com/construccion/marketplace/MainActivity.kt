@@ -1,11 +1,3 @@
-/*
- * MainActivity.kt
- * Pantalla principal de la aplicacion.
- * Controla la navegacion entre todas las secciones: inicio, catalogo,
- * carrito, calculadora, perfil, pedidos, obras, chatbot, etc.
- * Tambien muestra la barra inferior con los botones de navegacion
- * y gestiona la pantalla de carga inicial (splash).
- */
 package com.construccion.marketplace
 
 import android.os.Bundle
@@ -76,26 +68,32 @@ import com.construccion.marketplace.ui.screens.profile.ProfileScreen
 import com.construccion.marketplace.ui.theme.ConstruAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
-// Actividad principal de la app (la unica pantalla "real" de Android)
+/**
+ * Activity principal de ConstruApp.
+ *
+ * Es el único punto de entrada de la aplicación. Configura:
+ * - Splash screen nativa de Android 12+
+ * - Tema Material 3 con ConstruAppTheme
+ * - NavHost con todas las rutas de la app
+ * - CartViewModel compartido a nivel de Activity (scope singleton)
+ * - Detección de sesión expirada para redirección automática al login
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    // Gestor de sesion del usuario (sabe si esta logueado o no)
+    // SessionManager inyectado por Hilt para consultar el estado de sesión
     @Inject
     lateinit var sessionManager: SessionManager
 
-    // Se ejecuta cuando se abre la app
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Muestra la pantalla de carga con el logo
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
-        // Permite que la app use toda la pantalla (sin bordes)
         enableEdgeToEdge()
 
-        // Mantiene la pantalla de carga visible un momento
         var keepSplash = true
         splashScreen.setKeepOnScreenCondition { keepSplash }
 
@@ -103,10 +101,9 @@ class MainActivity : ComponentActivity() {
             ConstruAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
-                    // Carrito de compras compartido en toda la app
+                    // CartViewModel con scope de Activity para compartirlo entre todas las pantallas
                     val cartViewModel: CartViewModel = hiltViewModel()
 
-                    // Oculta la pantalla de carga tras medio segundo
                     LaunchedEffect(Unit) {
                         delay(500)
                         keepSplash = false
@@ -123,7 +120,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Lista de pantallas donde NO se muestra la barra inferior (login, registro, pago)
+// Pantallas donde NO se muestra la barra de navegación inferior (login, registro, checkout)
 private val noBottomBarRoutes = setOf(
     Screen.Splash.route,
     Screen.Login.route,
@@ -131,7 +128,10 @@ private val noBottomBarRoutes = setOf(
     Screen.Checkout.route,
 )
 
-// Barra de navegacion inferior con 5 botones: Inicio, Catalogo, Carrito, Calculadora, Perfil
+/**
+ * Barra de navegación inferior con 5 secciones: Inicio, Catálogo, Carrito, Calculadora y Perfil.
+ * El icono del carrito muestra un badge con el número de artículos.
+ */
 @Composable
 private fun ConstruAppBottomBar(navController: NavHostController, cartItemCount: Int = 0) {
     val backStack by navController.currentBackStackEntryAsState()
@@ -215,16 +215,30 @@ private fun ConstruAppBottomBar(navController: NavHostController, cartItemCount:
     }
 }
 
-// Sistema de navegacion: decide que pantalla mostrar segun donde pulse el usuario
+/**
+ * NavHost principal que define todas las rutas de navegación de la app.
+ *
+ * Decide la pantalla de inicio según si hay sesión activa.
+ * Observa el evento [SessionManager.sessionExpired] para redirigir al login
+ * cuando el servidor devuelve 401 (sesión expirada).
+ */
 @Composable
 fun ConstruAppNavHost(
     navController: NavHostController,
     sessionManager: SessionManager,
     cartViewModel: CartViewModel
 ) {
-    // Si el usuario ya inicio sesion, va directo al inicio; si no, al splash/login
     val startDestination = remember {
         if (sessionManager.isLoggedIn()) Screen.Home.route else Screen.Splash.route
+    }
+
+    // Observar evento de sesión expirada (401 en endpoints protegidos)
+    LaunchedEffect(Unit) {
+        sessionManager.sessionExpired.collectLatest {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
     }
 
     val backStack by navController.currentBackStackEntryAsState()
@@ -469,7 +483,7 @@ fun ConstruAppNavHost(
     } // cierra Scaffold
 }
 
-// ---- Splash mientras carga ----
+/** Splash screen: espera 1.2s y redirige al Home o Login según sesión. */
 @Composable
 private fun SplashDestination(
     isLoggedIn: Boolean,
@@ -482,7 +496,7 @@ private fun SplashDestination(
     }
 }
 
-// ---- Placeholder para pantallas en desarrollo ----
+/** Placeholder genérico para pantallas que aún no están implementadas. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlaceholderScreen(title: String, onNavigateBack: () -> Unit) {

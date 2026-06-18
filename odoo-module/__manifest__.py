@@ -10,7 +10,7 @@
     'name': 'Construction Marketplace',
 
     # Versión del módulo (17.0 = versión de Odoo, 1.23.4 = nuestra versión)
-    'version': '17.0.1.24.0',
+    'version': '17.0.1.25.0',
 
     # Categoría para organizar el módulo en Odoo
     'category': 'Construction',

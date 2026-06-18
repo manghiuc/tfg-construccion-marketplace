@@ -1,3 +1,10 @@
+/**
+ * Pantalla de inicio de sesión.
+ *
+ * Muestra el logo de ConstruApp, campos de email y contraseña,
+ * botón de login, y enlace para registrarse. Observa el estado
+ * de [AuthViewModel] para mostrar loading, errores o navegar al Home.
+ */
 package com.construccion.marketplace.ui.screens.auth
 
 import androidx.compose.foundation.layout.*

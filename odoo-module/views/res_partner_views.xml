@@ -32,6 +32,32 @@
                        decoration-warning="partner_type == 'autonomo'"
                        decoration-info="partner_type == 'particular'"/>
             </xpath>
+
+            <!-- Sección de fidelización en la ficha del cliente -->
+            <xpath expr="//page[1]" position="before">
+                <page string="Fidelización" name="loyalty_page">
+                    <group>
+                        <group string="Nivel y Puntos">
+                            <field name="loyalty_level" widget="badge"
+                                   decoration-info="loyalty_level == 'bronze'"
+                                   decoration-warning="loyalty_level == 'silver'"
+                                   decoration-success="loyalty_level == 'gold'"
+                                   decoration-danger="loyalty_level == 'platinum'"/>
+                            <field name="points_balance"/>
+                            <field name="loyalty_discount" string="Descuento (%)"/>
+                        </group>
+                        <group string="Información">
+                            <div colspan="2" class="text-muted">
+                                <p><strong>Bronce</strong> (&lt; 500 pts): Sin descuento</p>
+                                <p><strong>Plata</strong> (500 – 2.000 pts): 3% descuento</p>
+                                <p><strong>Oro</strong> (2.000 – 6.000 pts): 6% descuento</p>
+                                <p><strong>Platino</strong> (&gt; 6.000 pts): 10% descuento</p>
+                                <p class="mt-2"><em>Se acumula 1 punto por cada 1 € gastado</em></p>
+                            </div>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
         </field>
     </record>
 

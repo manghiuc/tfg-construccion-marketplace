@@ -16,6 +16,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Metodo utilizado para calcular el coste de transporte.
+ */
+enum class TransportMethod {
+    /** Calculo basado en GPS (coordenadas enviadas al backend). */
+    GPS,
+    /** Fallback: calculo local por tramos de peso. */
+    WEIGHT_BASED
+}
+
 data class CheckoutUiState(
     val obras: List<Obra> = emptyList(),
     val isLoadingObras: Boolean = false,
@@ -25,7 +35,13 @@ data class CheckoutUiState(
     val submittedOrderId: Int? = null,
     val isCreatingObra: Boolean = false,
     val newlyCreatedObraId: Int? = null,
-    val obraCreateError: String? = null
+    val obraCreateError: String? = null,
+    /** Metodo de transporte activo (GPS o por peso). */
+    val transportMethod: TransportMethod = TransportMethod.WEIGHT_BASED,
+    /** Latitud de entrega (solo cuando GPS disponible). */
+    val deliveryLat: Double? = null,
+    /** Longitud de entrega (solo cuando GPS disponible). */
+    val deliveryLon: Double? = null
 )
 
 @HiltViewModel
@@ -66,16 +82,71 @@ class CheckoutViewModel @Inject constructor(
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Calculo de transporte por peso (fallback sin GPS)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calcula el coste de transporte basado en tramos de peso,
+     * con las mismas tarifas que el portal web:
+     * - <=50kg  -> 15EUR
+     * - <=200kg -> 22EUR
+     * - <=500kg -> 35EUR
+     * - >500kg  -> 55EUR
+     * Si el pedido es urgente, se aplica multiplicador x1.5.
+     */
+    fun calculateWeightBasedTransport(totalWeightKg: Double, isUrgent: Boolean): Double {
+        val baseCost = when {
+            totalWeightKg <= 50.0 -> 15.0
+            totalWeightKg <= 200.0 -> 22.0
+            totalWeightKg <= 500.0 -> 35.0
+            else -> 55.0
+        }
+        return if (isUrgent) baseCost * 1.5 else baseCost
+    }
+
+    /**
+     * Establece la ubicacion GPS del punto de entrega.
+     * Cambia el metodo de transporte a GPS.
+     */
+    fun setDeliveryLocation(lat: Double, lon: Double) {
+        _uiState.value = _uiState.value.copy(
+            deliveryLat = lat,
+            deliveryLon = lon,
+            transportMethod = TransportMethod.GPS
+        )
+    }
+
+    /**
+     * Indica que el GPS no esta disponible y se usara calculo por peso.
+     */
+    fun setGpsUnavailable() {
+        _uiState.value = _uiState.value.copy(
+            deliveryLat = null,
+            deliveryLon = null,
+            transportMethod = TransportMethod.WEIGHT_BASED
+        )
+    }
+
     fun createOrder(
         cartItems: List<CartItem>,
-        obraId: Int,
+        obraId: Int?,
         deliveryAddress: String,
         notes: String,
-        isUrgent: Boolean = false
+        isUrgent: Boolean = false,
+        transportCost: Double? = null
     ) {
         if (cartItems.isEmpty()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSubmitting = true, submitError = null)
+            val state = _uiState.value
+
+            // Si usamos GPS, enviamos lat/lon y el backend calcula.
+            // Si usamos peso, enviamos transport_cost calculado localmente.
+            val useGps = state.transportMethod == TransportMethod.GPS
+                    && state.deliveryLat != null
+                    && state.deliveryLon != null
+
             val result = orderRepository.createOrder(
                 CreateRequestBody(
                     obraId = obraId,
@@ -88,6 +159,9 @@ class CheckoutViewModel @Inject constructor(
                     },
                     deliveryAddress = deliveryAddress,
                     isUrgent = isUrgent,
+                    deliveryLat = if (useGps) state.deliveryLat else null,
+                    deliveryLon = if (useGps) state.deliveryLon else null,
+                    transportCost = if (!useGps) transportCost else null,
                     notes = notes.ifBlank { null }
                 )
             )

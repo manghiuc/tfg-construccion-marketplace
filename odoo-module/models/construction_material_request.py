@@ -210,6 +210,14 @@ class ConstructionMaterialRequest(models.Model):
         help='Distancia en km entre el almacén y el punto de entrega',
     )
 
+    # Descuento por nivel de fidelización del cliente (% aplicado al crear el pedido)
+    discount_percent = fields.Float(
+        string='Descuento Fidelización (%)',
+        digits=(5, 2),
+        default=0.0,
+        help='Porcentaje de descuento aplicado automáticamente según el nivel de fidelización del cliente',
+    )
+
     # Total final = precio materiales + coste transporte
     total_with_transport = fields.Float(
         string='Total con Transporte (€)',

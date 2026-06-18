@@ -1,10 +1,10 @@
-/*
- * CatalogScreen.kt
+/**
+ * Pantalla del catálogo de productos.
  *
- * Pantalla del catalogo de materiales de construccion.
- * Aqui el usuario puede buscar productos, filtrar por categoria,
- * ordenar por precio o nombre, y ver los resultados en una cuadricula.
- * Tambien incluye la logica (ViewModel) que gestiona los filtros y la busqueda.
+ * Permite buscar productos con un campo de texto con debounce,
+ * filtrar por categoría mediante chips horizontales, y muestra
+ * los resultados en una cuadrícula con imagen, precio y botón
+ * de añadir al carrito. Incluye skeleton loading animado.
  */
 package com.construccion.marketplace.ui.screens.catalog
 
@@ -35,8 +35,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 // ─── Modelos ─────────────────────────────────────────────────────────────────
-
-// Filtros que el usuario puede aplicar al catalogo (precio, orden, stock)
 
 data class CatalogFilters(
     val minPrice: Float = 0f,

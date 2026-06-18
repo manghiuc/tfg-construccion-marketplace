@@ -1,3 +1,12 @@
+/**
+ * Pantalla del chatbot ConstruBot.
+ *
+ * Interfaz de chat con un modelo LLM local (Ollama). El usuario puede
+ * hacer preguntas sobre materiales de construcción, cálculos, uso de la app, etc.
+ * Muestra indicador de conexión (conectado/sin modelos/offline),
+ * historial de mensajes con burbujas diferenciadas, y sugerencias rápidas.
+ * Usa [OllamaRepository] para comunicarse con el servidor Ollama local.
+ */
 package com.construccion.marketplace.ui.screens.chatbot
 
 import androidx.compose.animation.core.LinearEasing

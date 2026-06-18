@@ -1,3 +1,10 @@
+/**
+ * Pantalla de perfil del usuario.
+ *
+ * Muestra avatar, nombre, email, tipo de cuenta y nivel de fidelización.
+ * Accesos rápidos a: Mis Obras, Historial, Calculadora, Fidelización,
+ * Chatbot, Panel Admin (solo empresas) y botón de cerrar sesión.
+ */
 package com.construccion.marketplace.ui.screens.profile
 
 import androidx.compose.foundation.background
@@ -70,8 +77,8 @@ private val PrimaryOrange = Color(0xFFE65100)
 
 enum class NivelFidelidad(val label: String, val color: Color, val puntosParaSiguiente: Int) {
     BRONCE("Bronce", Color(0xFFCD7F32), 500),
-    PLATA("Plata", Color(0xFF9E9E9E), 2001),
-    ORO("Oro", Color(0xFFFFD700), 6001),
+    PLATA("Plata", Color(0xFF9E9E9E), 2000),
+    ORO("Oro", Color(0xFFFFD700), 5000),
     PLATINO("Platino", Color(0xFFE5E4E2), Int.MAX_VALUE)
 }
 

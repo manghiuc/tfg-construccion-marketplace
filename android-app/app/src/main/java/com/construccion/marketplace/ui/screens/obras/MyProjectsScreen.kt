@@ -1,3 +1,10 @@
+/**
+ * Pantalla de listado de obras del usuario (Mis Obras).
+ *
+ * Muestra las obras registradas con estado, dirección y número de pedidos.
+ * Permite crear nuevas obras y navegar al detalle de cada una.
+ * Los datos se cargan desde el endpoint GET /api/construction/obras.
+ */
 package com.construccion.marketplace.ui.screens.obras
 
 import androidx.compose.foundation.background

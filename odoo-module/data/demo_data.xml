@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--
-        DATOS DEMO - Construction Marketplace
-        3 obras y 5 solicitudes de materiales con líneas de productos de construcción.
-        Se cargan junto con el módulo (no son datos de demo separados).
-    -->
 
     <!-- ==============================================================
          SOCIOS / EMPRESAS DE EJEMPLO

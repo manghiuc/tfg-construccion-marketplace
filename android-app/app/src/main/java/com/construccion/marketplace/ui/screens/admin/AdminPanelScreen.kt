@@ -1,3 +1,10 @@
+/**
+ * Panel de administración (solo para cuentas de tipo EMPRESA).
+ *
+ * Muestra estadísticas del negocio: pedidos del mes, facturación,
+ * obras activas, y accesos rápidos a la gestión de obras y pedidos.
+ * Protegido en MainActivity: si el userType no es EMPRESA, se redirige.
+ */
 package com.construccion.marketplace.ui.screens.admin
 
 import androidx.compose.foundation.background

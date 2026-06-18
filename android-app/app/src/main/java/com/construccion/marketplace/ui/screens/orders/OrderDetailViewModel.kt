@@ -11,12 +11,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Estados posibles de la pantalla de detalle de pedido. */
 sealed class OrderDetailUiState {
     object Loading : OrderDetailUiState()
     data class Success(val order: MaterialRequest) : OrderDetailUiState()
     data class Error(val message: String) : OrderDetailUiState()
 }
 
+/**
+ * ViewModel del detalle de un pedido.
+ *
+ * Carga el estado actualizado y la información de seguimiento
+ * de un pedido específico por su ID.
+ */
 @HiltViewModel
 class OrderDetailViewModel @Inject constructor(
     private val orderRepository: OrderRepository

@@ -395,11 +395,14 @@ class ConstructionAPI(http.Controller):
             elif float(p.get("transport_cost", 0) or 0) > 0:
                 req.sudo().write({"transport_cost": float(p["transport_cost"])})
 
-            # Aplicar descuento por nivel de fidelización del cliente
-            partner = orm["res.users"].sudo().browse(uid).partner_id
-            discount_pct = float(partner.loyalty_discount or 0)
-            if discount_pct > 0:
-                req.sudo().write({"discount_percent": discount_pct})
+            # Aplicar descuento por nivel de fidelización del cliente (si el campo existe)
+            try:
+                partner = orm["res.users"].sudo().browse(uid).partner_id
+                discount_pct = float(getattr(partner, 'loyalty_discount', 0) or 0)
+                if discount_pct > 0 and 'discount_percent' in orm["construction.material.request"]._fields:
+                    req.sudo().write({"discount_percent": discount_pct})
+            except Exception as e:
+                _logger.warning("No se pudo aplicar descuento de fidelización: %s", e)
 
             # Confirmar pedido (pasa de Borrador a Tramitando y suma puntos)
             req.sudo().action_confirm()
@@ -409,7 +412,7 @@ class ConstructionAPI(http.Controller):
             return self._err(str(e), 422)
         except Exception as e:
             _logger.error("Error en create_request: %s", str(e), exc_info=True)
-            return self._err(str(e), 500)
+            return self._err("Error interno: %s" % str(e), 500)
 
     @http.route("/api/construction/material_request", type="http", auth="public", methods=["GET"], csrf=False)
     def get_material_requests(self, state=None, page="0", page_size="20", **kw):

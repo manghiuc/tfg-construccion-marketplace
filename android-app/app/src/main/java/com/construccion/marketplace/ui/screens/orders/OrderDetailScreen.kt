@@ -1,3 +1,11 @@
+/**
+ * Pantalla de detalle de un pedido.
+ *
+ * Muestra el estado con timeline visual (borrador → confirmado → preparación →
+ * reparto → entregado), líneas de producto, desglose de costes,
+ * información de tracking (transportista, nº seguimiento, ubicación),
+ * y datos de la obra destino.
+ */
 package com.construccion.marketplace.ui.screens.orders
 
 import androidx.compose.animation.animateColorAsState
