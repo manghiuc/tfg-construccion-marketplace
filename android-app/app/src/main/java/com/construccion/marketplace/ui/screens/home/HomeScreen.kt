@@ -106,7 +106,13 @@ fun HomeScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     // Usa los datos reales si ya llegaron; si no, muestra el fallback sample
-    val displayProducts = if (!isLoading && apiProducts.isNotEmpty()) apiProducts else sampleProducts
+    val allProducts = if (!isLoading && apiProducts.isNotEmpty()) apiProducts else sampleProducts
+    // Filtra por categoría seleccionada (si hay alguna)
+    val displayProducts = if (selectedCategory != null) {
+        allProducts.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+    } else {
+        allProducts
+    }
 
     Scaffold(
         topBar = {
@@ -181,7 +187,7 @@ fun HomeScreen(
 
             // ── Productos populares ──
             Text(
-                text = "Productos populares",
+                text = if (selectedCategory != null) selectedCategory!! else "Productos populares",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)

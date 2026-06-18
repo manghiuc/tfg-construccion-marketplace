@@ -31,10 +31,10 @@ enum class PartnerType(val label: String) {
 }
 
 enum class LoyaltyLevel(val label: String, val minPoints: Int) {
-    @SerializedName("bronce") BRONCE("Bronce", 0),
-    @SerializedName("plata") PLATA("Plata", 500),
-    @SerializedName("oro") ORO("Oro", 2000),
-    @SerializedName("platino") PLATINO("Platino", 5000)
+    @SerializedName("bronze") BRONCE("Bronce", 0),
+    @SerializedName("silver") PLATA("Plata", 500),
+    @SerializedName("gold") ORO("Oro", 2001),
+    @SerializedName("platinum") PLATINO("Platino", 6001)
 }
 
 data class LoginRequest(
