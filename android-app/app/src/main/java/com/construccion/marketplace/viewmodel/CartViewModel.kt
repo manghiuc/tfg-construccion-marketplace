@@ -1,3 +1,9 @@
+/*
+ * CartViewModel.kt
+ * Este archivo gestiona el carrito de la compra de la aplicacion.
+ * Controla los productos que el usuario quiere comprar, calcula precios,
+ * aplica descuentos por fidelidad y gestiona las opciones de envio.
+ */
 package com.construccion.marketplace.viewmodel
 
 import androidx.lifecycle.ViewModel

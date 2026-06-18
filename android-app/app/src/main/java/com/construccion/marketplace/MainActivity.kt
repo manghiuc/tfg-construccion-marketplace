@@ -1,3 +1,11 @@
+/*
+ * MainActivity.kt
+ * Pantalla principal de la aplicacion.
+ * Controla la navegacion entre todas las secciones: inicio, catalogo,
+ * carrito, calculadora, perfil, pedidos, obras, chatbot, etc.
+ * Tambien muestra la barra inferior con los botones de navegacion
+ * y gestiona la pantalla de carga inicial (splash).
+ */
 package com.construccion.marketplace
 
 import android.os.Bundle
@@ -70,18 +78,24 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import javax.inject.Inject
 
+// Actividad principal de la app (la unica pantalla "real" de Android)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    // Gestor de sesion del usuario (sabe si esta logueado o no)
     @Inject
     lateinit var sessionManager: SessionManager
 
+    // Se ejecuta cuando se abre la app
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Muestra la pantalla de carga con el logo
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
+        // Permite que la app use toda la pantalla (sin bordes)
         enableEdgeToEdge()
 
+        // Mantiene la pantalla de carga visible un momento
         var keepSplash = true
         splashScreen.setKeepOnScreenCondition { keepSplash }
 
@@ -89,9 +103,10 @@ class MainActivity : ComponentActivity() {
             ConstruAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
-                    // CartViewModel con scope de Activity para compartirlo entre todas las pantallas
+                    // Carrito de compras compartido en toda la app
                     val cartViewModel: CartViewModel = hiltViewModel()
 
+                    // Oculta la pantalla de carga tras medio segundo
                     LaunchedEffect(Unit) {
                         delay(500)
                         keepSplash = false
@@ -108,7 +123,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Pantallas donde NO se muestra el bottom bar (auth + checkout)
+// Lista de pantallas donde NO se muestra la barra inferior (login, registro, pago)
 private val noBottomBarRoutes = setOf(
     Screen.Splash.route,
     Screen.Login.route,
@@ -116,6 +131,7 @@ private val noBottomBarRoutes = setOf(
     Screen.Checkout.route,
 )
 
+// Barra de navegacion inferior con 5 botones: Inicio, Catalogo, Carrito, Calculadora, Perfil
 @Composable
 private fun ConstruAppBottomBar(navController: NavHostController, cartItemCount: Int = 0) {
     val backStack by navController.currentBackStackEntryAsState()
@@ -199,12 +215,14 @@ private fun ConstruAppBottomBar(navController: NavHostController, cartItemCount:
     }
 }
 
+// Sistema de navegacion: decide que pantalla mostrar segun donde pulse el usuario
 @Composable
 fun ConstruAppNavHost(
     navController: NavHostController,
     sessionManager: SessionManager,
     cartViewModel: CartViewModel
 ) {
+    // Si el usuario ya inicio sesion, va directo al inicio; si no, al splash/login
     val startDestination = remember {
         if (sessionManager.isLoggedIn()) Screen.Home.route else Screen.Splash.route
     }

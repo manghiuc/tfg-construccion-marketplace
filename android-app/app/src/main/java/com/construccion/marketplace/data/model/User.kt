@@ -1,7 +1,15 @@
+/*
+ * User.kt
+ * Este archivo define los datos del usuario de la aplicacion.
+ * Contiene la informacion personal, el tipo de cliente (particular,
+ * autonomo o empresa), el sistema de fidelizacion (puntos y niveles),
+ * y los datos necesarios para iniciar sesion y registrarse.
+ */
 package com.construccion.marketplace.data.model
 
 import com.google.gson.annotations.SerializedName
 
+// Datos principales del usuario que llegan del servidor
 data class User(
     @SerializedName("id") val id: Int,
     @SerializedName("name") val name: String,
